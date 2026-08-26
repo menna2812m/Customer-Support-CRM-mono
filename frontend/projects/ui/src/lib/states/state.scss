@@ -1,0 +1,37 @@
+// Shared layout for the screen-state components.
+// Logical properties only: direction is applied globally from the active language (FR-037).
+.crm-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--crm-space-sm);
+  padding-block: var(--crm-space-xl);
+  padding-inline: var(--crm-space-md);
+  text-align: center;
+}
+
+.crm-state__title {
+  margin: 0;
+  font: var(--mat-sys-title-medium);
+}
+
+.crm-state__message {
+  margin: 0;
+  max-inline-size: 40rem;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.crm-state__list {
+  margin: 0;
+  padding-inline-start: var(--crm-space-lg);
+  text-align: start;
+}
+
+.crm-state__reference {
+  margin: 0;
+  font: var(--mat-sys-body-small);
+}
+
+.crm-state--error .crm-state__title {
+  color: var(--mat-sys-error);
+}

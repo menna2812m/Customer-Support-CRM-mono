@@ -1,0 +1,26 @@
+<a class="crm-shell__skip" href="#crm-main">{{ 'app.skipToContent' | transloco }}</a>
+
+<mat-toolbar class="crm-shell__bar" color="primary">
+  <span class="crm-shell__title">{{ 'app.title' | transloco }}</span>
+
+  <nav class="crm-shell__nav" [attr.aria-label]="'app.primaryNavigation' | transloco">
+    @for (item of navigation(); track item.path) {
+      <a
+        class="crm-shell__link"
+        [routerLink]="item.path"
+        routerLinkActive="crm-shell__link--active"
+        [routerLinkActiveOptions]="{ exact: false }"
+        >{{ item.labelKey | transloco }}</a
+      >
+    }
+  </nav>
+
+  <span class="crm-shell__spacer"></span>
+
+  <crm-language-switcher />
+  <ng-content select="[crmShellActions]" />
+</mat-toolbar>
+
+<main id="crm-main" class="crm-shell__content" tabindex="-1">
+  <router-outlet />
+</main>

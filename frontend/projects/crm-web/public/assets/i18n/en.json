@@ -1,0 +1,93 @@
+{
+  "app": {
+    "title": "Customer Support CRM",
+    "skipToContent": "Skip to main content",
+    "primaryNavigation": "Primary",
+    "language": {
+      "label": "Language",
+      "switchTo": "Switch to Arabic",
+      "current": "English"
+    }
+  },
+  "nav": {
+    "home": "Home",
+    "diagnostics": "Diagnostics"
+  },
+  "states": {
+    "loading": "Loading...",
+    "empty": {
+      "title": "Nothing here yet",
+      "message": "There is nothing to show for the current selection."
+    },
+    "validation": {
+      "title": "Some values need attention"
+    },
+    "forbidden": {
+      "title": "You do not have access to this",
+      "message": "Ask an administrator if you believe you should have access."
+    },
+    "unauthenticated": {
+      "title": "Please sign in",
+      "message": "This screen requires you to sign in."
+    },
+    "notFound": {
+      "title": "Not available",
+      "message": "This item is not available."
+    },
+    "server": {
+      "title": "Something went wrong",
+      "message": "The request could not be completed. Please try again.",
+      "reference": "Reference:",
+      "retry": "Try again"
+    }
+  },
+  "errors": {
+    "kind": {
+      "network": "The server could not be reached. Check your connection and try again.",
+      "validation": "Some values need attention.",
+      "unauthenticated": "Please sign in to continue.",
+      "forbidden": "You do not have access to this.",
+      "notFound": "This item is not available.",
+      "server": "Something went wrong. Please try again."
+    },
+    "code": {
+      "validation_failed": "Some values need attention.",
+      "malformed_request": "The request could not be read.",
+      "unsupported_api_version": "This version of the application is out of date. Please reload.",
+      "unauthenticated": "Please sign in to continue.",
+      "forbidden": "You do not have access to this.",
+      "origin_not_allowed": "This application is not allowed to call the server.",
+      "not_found": "This item is not available.",
+      "conflict": "Someone else changed this. Reload and try again.",
+      "unexpected_error": "Something went wrong. Please try again.",
+      "network_unavailable": "The server could not be reached."
+    },
+    "field": {
+      "required": "This value is required.",
+      "range": "This value is out of range.",
+      "max_length": "This value is too long.",
+      "format": "This value could not be read.",
+      "not_unique": "This value is already in use.",
+      "not_sortable": "This column cannot be sorted.",
+      "unknown_parameter": "This filter is not supported.",
+      "too_many_items": "Too many items were supplied."
+    }
+  },
+  "home": {
+    "title": "Platform status",
+    "apiReports": "API reports",
+    "milliseconds": "ms"
+  },
+  "diagnostics": {
+    "title": "Diagnostics",
+    "items": "Items",
+    "echo": "Echo",
+    "message": "Message",
+    "repeatCount": "Repeat count",
+    "send": "Send",
+    "previous": "Previous",
+    "next": "Next",
+    "pageOf": "Page {{page}} of {{totalPages}} ({{totalCount}} items)",
+    "rejected": "The request was rejected ({{code}})."
+  }
+}

@@ -1,0 +1,86 @@
+<h1>{{ 'diagnostics.title' | transloco }}</h1>
+
+<section class="crm-diagnostics__section">
+  <h2>{{ 'diagnostics.items' | transloco }}</h2>
+
+  <crm-state-container [state]="items.value()" (retry)="load()">
+    <mat-card appearance="outlined">
+      <mat-card-content>
+        <ul>
+          @for (item of items.data()?.items ?? []; track item.id) {
+            <li>
+              {{ item.name }} &mdash; {{ item.createdAt | date: 'medium' : undefined : locale() }}
+            </li>
+          }
+        </ul>
+
+        <div class="crm-diagnostics__pager">
+          <button
+            matButton="outlined"
+            type="button"
+            [disabled]="page() <= 1"
+            (click)="goTo(page() - 1)"
+          >
+            {{ 'diagnostics.previous' | transloco }}
+          </button>
+
+          <span aria-live="polite">
+            {{
+              'diagnostics.pageOf'
+                | transloco
+                  : {
+                      page: items.data()?.page,
+                      totalPages: items.data()?.totalPages,
+                      totalCount: items.data()?.totalCount,
+                    }
+            }}
+          </span>
+
+          <button
+            matButton="outlined"
+            type="button"
+            [disabled]="(items.data()?.totalPages ?? 1) <= page()"
+            (click)="goTo(page() + 1)"
+          >
+            {{ 'diagnostics.next' | transloco }}
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </crm-state-container>
+</section>
+
+<section class="crm-diagnostics__section">
+  <h2>{{ 'diagnostics.echo' | transloco }}</h2>
+
+  <form class="crm-diagnostics__form" [formGroup]="form" (ngSubmit)="submit()">
+    <mat-form-field>
+      <mat-label>{{ 'diagnostics.message' | transloco }}</mat-label>
+      <input matInput formControlName="message" />
+      @for (code of serverCodes('message'); track code) {
+        <mat-error>{{ 'errors.field.' + code | transloco }}</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field>
+      <mat-label>{{ 'diagnostics.repeatCount' | transloco }}</mat-label>
+      <input matInput type="number" formControlName="repeatCount" />
+      @for (code of serverCodes('repeatCount'); track code) {
+        <mat-error>{{ 'errors.field.' + code | transloco }}</mat-error>
+      }
+    </mat-form-field>
+
+    <button matButton="filled" type="submit">{{ 'diagnostics.send' | transloco }}</button>
+  </form>
+
+  @if (echoResult(); as result) {
+    <p role="status">{{ result.message }}</p>
+  }
+
+  @if (echoError(); as error) {
+    <p role="alert">
+      {{ 'diagnostics.rejected' | transloco: { code: error.code } }}
+      {{ 'states.server.reference' | transloco }} <code>{{ error.correlationId }}</code>
+    </p>
+  }
+</section>

@@ -1,0 +1,60 @@
+// Logical properties only - the shell must mirror under RTL with no per-rule exception (FR-037).
+:host {
+  display: flex;
+  flex-direction: column;
+  min-block-size: 100vh;
+}
+
+.crm-shell__skip {
+  position: absolute;
+  inset-block-start: -3rem;
+  inset-inline-start: var(--crm-space-sm);
+  z-index: 10;
+  padding: var(--crm-space-sm) var(--crm-space-md);
+  border-radius: var(--crm-radius);
+  background: var(--mat-sys-surface);
+  color: var(--mat-sys-on-surface);
+
+  &:focus-visible {
+    inset-block-start: var(--crm-space-sm);
+  }
+}
+
+.crm-shell__bar {
+  display: flex;
+  gap: var(--crm-space-md);
+}
+
+.crm-shell__title {
+  font: var(--mat-sys-title-medium);
+}
+
+.crm-shell__nav {
+  display: flex;
+  gap: var(--crm-space-sm);
+}
+
+.crm-shell__link {
+  padding-inline: var(--crm-space-sm);
+  padding-block: var(--crm-space-xs);
+  border-radius: var(--crm-radius);
+  color: inherit;
+  text-decoration: none;
+
+  &--active {
+    background: color-mix(in srgb, currentColor 16%, transparent);
+  }
+}
+
+.crm-shell__spacer {
+  flex: 1 1 auto;
+}
+
+.crm-shell__content {
+  flex: 1 1 auto;
+  inline-size: 100%;
+  max-inline-size: var(--crm-content-max);
+  margin-inline: auto;
+  padding-inline: var(--crm-space-md);
+  padding-block: var(--crm-space-lg);
+}

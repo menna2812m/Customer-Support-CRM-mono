@@ -362,8 +362,13 @@ database.
 **Alternatives**: FluentAssertions (rejected - version 8 carries a commercial licence for
 non-open-source use; Shouldly is Apache-2.0 and avoids the question entirely); Respawn against a
 shared database (rejected by Q4); EF Core in-memory or SQLite (rejected - proves nothing about
-SQL Server constraints, indexes, or migrations); NetArchTest (viable, less actively maintained
-than ArchUnitNET).
+SQL Server constraints, indexes, or migrations).
+
+**Amended 2026-08-26 during implementation (T006)**: ArchUnitNET publishes no stable version -
+`dotnet add package` resolves only `2.4.0-alpha.1`. A pre-release package that fails the build is
+a poor foundation for a permanent quality gate, so the architecture tests use **NetArchTest.Rules
+1.3.2** instead. The rules expressed are the same; only the fluent API differs. If ArchUnitNET
+ships a stable release, switching is a contained change inside `Crm.ArchitectureTests`.
 
 ---
 
@@ -389,7 +394,7 @@ not a foundation requirement).
 
 | Item | Handling |
 |------|----------|
-| Frontend unit-test builder name in CLI 22.1.6 | Verified during the first scaffolding task; Karma fallback documented above |
-| Which host-side secret store operations will use | The `ISecretsSource` seam ships with a DPAPI-file default; swapping it is a configuration and one-class change |
-| Log retention numbers | Configuration-driven with a documented default (30 daily files); the spec left the number to operations |
-| Corporate identity provider metadata | Not needed here - the `Staff` scheme is configuration-driven and disabled by default; the authentication feature supplies real values |
+| Frontend unit-test builder name in CLI 22.1.6 | **Resolved 2026-08-26 (T011)**: `@angular/build:unit-test` with the Vitest runner is the default for every project the CLI generates (vitest 4.0.8 and jsdom 28 arrive in devDependencies). No Karma fallback was needed. |
+| Which host-side secret store operations will use | **Still open for operations.** The `ISecretsSource` seam shipped with a DPAPI-protected-file default reading `CRM_SECRETS_FILE`; swapping it is one class plus registration. |
+| Log retention numbers | **Resolved**: 30 daily files, 64 MB per file, configurable via `Observability:RetainedFileCount`. Verified 2026-08-26 - a dated compact-JSON file is written and carries the correlation identifier. |
+| Corporate identity provider metadata | **Still open for the identity owners.** Both schemes ship registered, lazily configured, and disabled; the authentication feature supplies real values. Tests exercise them with locally signed tokens. |

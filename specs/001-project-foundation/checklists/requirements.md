@@ -53,4 +53,5 @@
   observed rather than asserted; SC-006 caps dependency-check caching at 5 seconds. Tasks were
   renumbered to T001-T138 with seven added (production settings, IIS packaging, artifact
   validation, auditing test, OpenAPI exposure test, HTTPS/HSTS test, SC-002 measurement).
+- **Implementation complete 2026-08-26**: 136 of 138 tasks done; 87 backend and 25 frontend tests pass; both verification gates green. Constitution re-verified with no violations (see compliance.md). The two open tasks (T054, T135) both need a local SQL Server instance to finish executing the getting-started walkthrough end to end.
 - Items marked incomplete require spec updates before `/speckit.clarify` or `/speckit.plan`.

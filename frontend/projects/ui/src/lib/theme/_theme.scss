@@ -1,0 +1,58 @@
+// The single theme definition for the CRM (Constitution VII, spec FR-032).
+//
+// Every application in this workspace imports this file and nothing else for
+// theming. Features never define colors, typography, or spacing primitives -
+// they consume Angular Material system variables (--mat-sys-*) so a theme change
+// lands in one place.
+//
+// Direction is NOT set here. It is applied at runtime from the active language
+// by @crm/core (spec FR-037), and all spacing below uses logical properties so
+// no component needs a right-to-left special case.
+
+@use '@angular/material' as mat;
+
+@mixin crm-theme() {
+  html {
+    height: 100%;
+
+    @include mat.theme(
+      (
+        color: (
+          primary: mat.$azure-palette,
+          tertiary: mat.$blue-palette,
+        ),
+        typography: Roboto,
+        density: 0,
+      )
+    );
+  }
+
+  body {
+    // Follow the operating system preference rather than forcing light.
+    color-scheme: light dark;
+
+    background-color: var(--mat-sys-surface);
+    color: var(--mat-sys-on-surface);
+    font: var(--mat-sys-body-medium);
+
+    margin: 0;
+    height: 100%;
+  }
+
+  // Shared spacing scale. Logical properties only - see FR-037.
+  :root {
+    --crm-space-xs: 0.25rem;
+    --crm-space-sm: 0.5rem;
+    --crm-space-md: 1rem;
+    --crm-space-lg: 1.5rem;
+    --crm-space-xl: 2.5rem;
+    --crm-radius: 0.5rem;
+    --crm-content-max: 80rem;
+  }
+
+  // Visible focus for every interactive element (spec FR-057).
+  :focus-visible {
+    outline: 2px solid var(--mat-sys-primary);
+    outline-offset: 2px;
+  }
+}

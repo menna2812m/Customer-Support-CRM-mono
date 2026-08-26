@@ -40,20 +40,20 @@ were tightened. Numbering is continuous, so IDs from the previous revision are n
 
 **Purpose**: Repository, solution, workspace, and tooling exist and build empty.
 
-- [ ] T001 [P] Add `.gitignore` (bin, obj, node_modules, dist, logs, `*.user`), `.gitattributes`, and `.editorconfig` with shared formatting and analyzer severities at repository root
-- [ ] T002 [P] Add `global.json` at repository root pinning SDK `10.0.400` with `rollForward: latestFeature`
-- [ ] T003 Create `backend/Crm.sln` with `Crm.Api` (webapi), `Crm.Application`, `Crm.Domain`, `Crm.Infrastructure` (classlib) and wire references: Api→Application+Infrastructure, Application→Domain, Infrastructure→Application
-- [ ] T004 [P] Add `backend/Directory.Build.props` (nullable enable, `TreatWarningsAsErrors`, `EnforceCodeStyleInBuild`, latest analysis level) and `backend/Directory.Packages.props` (central package management)
-- [ ] T005 Create `backend/tests/Crm.UnitTests`, `Crm.IntegrationTests`, `Crm.ArchitectureTests` (xUnit v3), add project references and add all to `Crm.sln`
-- [ ] T006 [P] Register Shouldly, NSubstitute, Testcontainers.MsSql, and ArchUnitNET versions in `backend/Directory.Packages.props` and reference them from the matching test projects
-- [ ] T007 Create the Angular workspace at `frontend/` with a single standalone application `crm-web` (SCSS, no SSR, routing enabled)
-- [ ] T008 Generate workspace libraries `core` (`@crm/core`) and `ui` (`@crm/ui`) under `frontend/projects/`, with `public-api.ts` surfaces and tsconfig path mappings
-- [ ] T009 [P] Install Angular Material and CDK and create the single theme definition in `frontend/projects/ui/src/lib/theme/`
-- [ ] T010 [P] Configure ESLint (angular-eslint) and Prettier in `frontend/eslint.config.js` and `frontend/.prettierrc`
-- [ ] T011 Verify the `@angular/build:unit-test` builder with the Vitest runner is available in CLI 22.1.6 and configure it in `frontend/angular.json`; if unavailable, configure Karma + Jasmine instead and record the outcome in `specs/001-project-foundation/research.md` open items
-- [ ] T012 [P] Create argument-free `scripts/verify-backend.ps1` and `scripts/verify-frontend.ps1` stubs that exit non-zero on any failure
-- [ ] T013 [P] Create `docs/` skeleton: `getting-started.md`, `conventions.md`, `production-configuration.md`, `testing.md`
-- [ ] T014 [P] Add `frontend/.nvmrc` (22), an `engines` field, and npm scripts `start`, `build`, `test`, `lint`, `format:check` in `frontend/package.json`
+- [X] T001 [P] Add `.gitignore` (bin, obj, node_modules, dist, logs, `*.user`), `.gitattributes`, and `.editorconfig` with shared formatting and analyzer severities at repository root
+- [X] T002 [P] Add `global.json` at repository root pinning SDK `10.0.400` with `rollForward: latestFeature`
+- [X] T003 Create `backend/Crm.sln` with `Crm.Api` (webapi), `Crm.Application`, `Crm.Domain`, `Crm.Infrastructure` (classlib) and wire references: Api→Application+Infrastructure, Application→Domain, Infrastructure→Application
+- [X] T004 [P] Add `backend/Directory.Build.props` (nullable enable, `TreatWarningsAsErrors`, `EnforceCodeStyleInBuild`, latest analysis level) and `backend/Directory.Packages.props` (central package management)
+- [X] T005 Create `backend/tests/Crm.UnitTests`, `Crm.IntegrationTests`, `Crm.ArchitectureTests` (xUnit v3), add project references and add all to `Crm.sln`
+- [X] T006 [P] Register Shouldly, NSubstitute, Testcontainers.MsSql, and ArchUnitNET versions in `backend/Directory.Packages.props` and reference them from the matching test projects
+- [X] T007 Create the Angular workspace at `frontend/` with a single standalone application `crm-web` (SCSS, no SSR, routing enabled)
+- [X] T008 Generate workspace libraries `core` (`@crm/core`) and `ui` (`@crm/ui`) under `frontend/projects/`, with `public-api.ts` surfaces and tsconfig path mappings
+- [X] T009 [P] Install Angular Material and CDK and create the single theme definition in `frontend/projects/ui/src/lib/theme/`
+- [X] T010 [P] Configure ESLint (angular-eslint) and Prettier in `frontend/eslint.config.js` and `frontend/.prettierrc`
+- [X] T011 Verify the `@angular/build:unit-test` builder with the Vitest runner is available in CLI 22.1.6 and configure it in `frontend/angular.json`; if unavailable, configure Karma + Jasmine instead and record the outcome in `specs/001-project-foundation/research.md` open items
+- [X] T012 [P] Create argument-free `scripts/verify-backend.ps1` and `scripts/verify-frontend.ps1` stubs that exit non-zero on any failure
+- [X] T013 [P] Create `docs/` skeleton: `getting-started.md`, `conventions.md`, `production-configuration.md`, `testing.md`
+- [X] T014 [P] Add `frontend/.nvmrc` (22), an `engines` field, and npm scripts `start`, `build`, `test`, `lint`, `format:check` in `frontend/package.json`
 
 **Checkpoint**: Both stacks build and their empty test suites run.
 
@@ -66,34 +66,34 @@ error contract, correlation, versioning, and the frontend core.
 
 **⚠️ CRITICAL**: No user story phase can begin until this phase completes.
 
-- [ ] T015 Add `appsettings.json` and `appsettings.Development.json` in `backend/src/Crm.Api/` with non-secret defaults (logging, CORS allowlist, database options, auth switches)
-- [ ] T016 Add strongly-typed options with validation (`DatabaseOptions`, `CorsOptions`, `AuthOptions`, `LoggingOptions`) plus `ValidateOnStart` in `backend/src/Crm.Api/Configuration/`
-- [ ] T017 Add the `ISecretsSource` seam with a DPAPI-protected-file default implementation in `backend/src/Crm.Infrastructure/Configuration/` and register it as a configuration source
-- [ ] T018 Implement fail-fast startup in `backend/src/Crm.Api/Program.cs` that aggregates every missing or invalid required setting into one message naming each setting
-- [ ] T019 [P] Add `Entity<TId>`, `IAuditableEntity`, `ISoftDeletable`, `IHasOrganizationScope` in `backend/src/Crm.Domain/Common/`
-- [ ] T020 [P] Register `TimeProvider.System` and expose it to Application handlers via DI in `backend/src/Crm.Api/Program.cs`
-- [ ] T021 Create `CrmDbContext` in `backend/src/Crm.Infrastructure/Persistence/` applying the conventions from data-model.md (naming, bounded strings, decimal precision, `DateTimeOffset`, `DeleteBehavior.Restrict`, configuration assembly scan)
-- [ ] T022 Add `AuditingSaveChangesInterceptor` and the soft-delete global query filter in `backend/src/Crm.Infrastructure/Persistence/Interceptors/`
-- [ ] T023 Register EF Core SQL Server in `backend/src/Crm.Api/Program.cs` using `DatabaseOptions`, with retry-on-failure and an explicit command timeout
-- [ ] T024 Create the empty baseline migration in `backend/src/Crm.Infrastructure/Persistence/Migrations/` and add configuration-gated startup migration that is off outside Development
-- [ ] T025 Add correlation middleware in `backend/src/Crm.Api/Common/Correlation/` that reuses an inbound `X-Correlation-Id`, otherwise uses the current `Activity` trace id, pushes it to `LogContext`, and writes it to the response header
-- [ ] T026 [P] Add `ErrorCodes` constants and problem `type` URIs in `backend/src/Crm.Application/Common/`
-- [ ] T027 Implement the global `IExceptionHandler` plus `AddProblemDetails` customization in `backend/src/Crm.Api/Common/Errors/`, emitting `code`, `correlationId`, and `errors[]` exactly as `contracts/error-contract.md` specifies
-- [ ] T028 Configure API versioning (Asp.Versioning) with URL segment reader, default 1.0, and ApiExplorer in `backend/src/Crm.Api/Configuration/`, mapping unsupported versions to the error contract
-- [ ] T029 [P] Add `PageRequest` and `PagedResult<T>` in `backend/src/Crm.Application/Common/` per `contracts/pagination-contract.md` (default page size 25, maximum 100)
-- [ ] T030 Build the integration test fixture in `backend/tests/Crm.IntegrationTests/Infrastructure/` that starts one `Testcontainers.MsSql` container per run, creates a uniquely named database, applies migrations, disposes at the end, and fails with a message naming Docker when the runtime is unavailable
-- [ ] T031 Add `CrmWebApplicationFactory` in `backend/tests/Crm.IntegrationTests/Infrastructure/` overriding configuration to target the container and supporting test-issued tokens for both schemes and a configurable hosting environment name
-- [ ] T032 [P] Add the ArchUnitNET assembly-loading base class in `backend/tests/Crm.ArchitectureTests/`
-- [ ] T033 Implement `AppConfig` token, `assets/config.json` loading during app initialization, and `provideCrmCore()` in `frontend/projects/core/src/lib/config/`
-- [ ] T034 [P] Add `frontend/projects/crm-web/public/assets/config.json` and local development defaults
-- [ ] T035 [P] Add `AppError` and `RequestState<T>` types with signal helpers in `frontend/projects/core/src/lib/state/`
-- [ ] T036 Implement the functional interceptor chain in `frontend/projects/core/src/lib/http/` in fixed order: base URL, correlation id, auth token stub, error normalization to `AppError`
-- [ ] T037 Add the global `ErrorHandler` in `frontend/projects/core/src/lib/errors/` that reports anything escaping a feature
-- [ ] T038 Add `AppShellComponent` (audience-neutral navigation and content outlet) in `frontend/projects/ui/src/lib/shell/`, and in `frontend/projects/crm-web/src/app/app.routes.ts` add lazy feature routing plus the named route-guard extension point (`authGuard` placeholder returning true, wired into the route definitions so the authentication feature only replaces its body)
-- [ ] T039 [P] Add the six state components and `StateContainerComponent` in `frontend/projects/ui/src/lib/states/`, built to FR-057 from the start: every interactive element keyboard-operable with a visible focus indicator and an accessible name, and loading and error state changes announced to assistive technology (T134 verifies, it does not retrofit)
-- [ ] T040 [P] Add shared frontend test providers and harness helpers in `frontend/projects/core/src/testing/`
-- [ ] T041 Add ESLint boundary rules in `frontend/eslint.config.js` forbidding cross-feature imports and deep library imports
-- [ ] T042 Add the ESLint rule in `frontend/eslint.config.js` restricting `HttpClient` injection to files matching `*-api.service.ts`
+- [X] T015 Add `appsettings.json` and `appsettings.Development.json` in `backend/src/Crm.Api/` with non-secret defaults (logging, CORS allowlist, database options, auth switches)
+- [X] T016 Add strongly-typed options with validation (`DatabaseOptions`, `CorsOptions`, `AuthOptions`, `LoggingOptions`) plus `ValidateOnStart` in `backend/src/Crm.Api/Configuration/`
+- [X] T017 Add the `ISecretsSource` seam with a DPAPI-protected-file default implementation in `backend/src/Crm.Infrastructure/Configuration/` and register it as a configuration source
+- [X] T018 Implement fail-fast startup in `backend/src/Crm.Api/Program.cs` that aggregates every missing or invalid required setting into one message naming each setting
+- [X] T019 [P] Add `Entity<TId>`, `IAuditableEntity`, `ISoftDeletable`, `IHasOrganizationScope` in `backend/src/Crm.Domain/Common/`
+- [X] T020 [P] Register `TimeProvider.System` and expose it to Application handlers via DI in `backend/src/Crm.Api/Program.cs`
+- [X] T021 Create `CrmDbContext` in `backend/src/Crm.Infrastructure/Persistence/` applying the conventions from data-model.md (naming, bounded strings, decimal precision, `DateTimeOffset`, `DeleteBehavior.Restrict`, configuration assembly scan)
+- [X] T022 Add `AuditingSaveChangesInterceptor` and the soft-delete global query filter in `backend/src/Crm.Infrastructure/Persistence/Interceptors/`
+- [X] T023 Register EF Core SQL Server in `backend/src/Crm.Api/Program.cs` using `DatabaseOptions`, with retry-on-failure and an explicit command timeout
+- [X] T024 Create the empty baseline migration in `backend/src/Crm.Infrastructure/Persistence/Migrations/` and add configuration-gated startup migration that is off outside Development
+- [X] T025 Add correlation middleware in `backend/src/Crm.Api/Common/Correlation/` that reuses an inbound `X-Correlation-Id`, otherwise uses the current `Activity` trace id, pushes it to `LogContext`, and writes it to the response header
+- [X] T026 [P] Add `ErrorCodes` constants and problem `type` URIs in `backend/src/Crm.Application/Common/`
+- [X] T027 Implement the global `IExceptionHandler` plus `AddProblemDetails` customization in `backend/src/Crm.Api/Common/Errors/`, emitting `code`, `correlationId`, and `errors[]` exactly as `contracts/error-contract.md` specifies
+- [X] T028 Configure API versioning (Asp.Versioning) with URL segment reader, default 1.0, and ApiExplorer in `backend/src/Crm.Api/Configuration/`, mapping unsupported versions to the error contract
+- [X] T029 [P] Add `PageRequest` and `PagedResult<T>` in `backend/src/Crm.Application/Common/` per `contracts/pagination-contract.md` (default page size 25, maximum 100)
+- [X] T030 Build the integration test fixture in `backend/tests/Crm.IntegrationTests/Infrastructure/` that starts one `Testcontainers.MsSql` container per run, creates a uniquely named database, applies migrations, disposes at the end, and fails with a message naming Docker when the runtime is unavailable
+- [X] T031 Add `CrmWebApplicationFactory` in `backend/tests/Crm.IntegrationTests/Infrastructure/` overriding configuration to target the container and supporting test-issued tokens for both schemes and a configurable hosting environment name
+- [X] T032 [P] Add the ArchUnitNET assembly-loading base class in `backend/tests/Crm.ArchitectureTests/`
+- [X] T033 Implement `AppConfig` token, `assets/config.json` loading during app initialization, and `provideCrmCore()` in `frontend/projects/core/src/lib/config/`
+- [X] T034 [P] Add `frontend/projects/crm-web/public/assets/config.json` and local development defaults
+- [X] T035 [P] Add `AppError` and `RequestState<T>` types with signal helpers in `frontend/projects/core/src/lib/state/`
+- [X] T036 Implement the functional interceptor chain in `frontend/projects/core/src/lib/http/` in fixed order: base URL, correlation id, auth token stub, error normalization to `AppError`
+- [X] T037 Add the global `ErrorHandler` in `frontend/projects/core/src/lib/errors/` that reports anything escaping a feature
+- [X] T038 Add `AppShellComponent` (audience-neutral navigation and content outlet) in `frontend/projects/ui/src/lib/shell/`, and in `frontend/projects/crm-web/src/app/app.routes.ts` add lazy feature routing plus the named route-guard extension point (`authGuard` placeholder returning true, wired into the route definitions so the authentication feature only replaces its body)
+- [X] T039 [P] Add the six state components and `StateContainerComponent` in `frontend/projects/ui/src/lib/states/`, built to FR-057 from the start: every interactive element keyboard-operable with a visible focus indicator and an accessible name, and loading and error state changes announced to assistive technology (T134 verifies, it does not retrofit)
+- [X] T040 [P] Add shared frontend test providers and harness helpers in `frontend/projects/core/src/testing/`
+- [X] T041 Add ESLint boundary rules in `frontend/eslint.config.js` forbidding cross-feature imports and deep library imports
+- [X] T042 Add the ESLint rule in `frontend/eslint.config.js` restricting `HttpClient` injection to files matching `*-api.service.ts`
 
 **Checkpoint**: Platform ready. User stories can now proceed; US2-US5 may run in parallel after US1.
 
@@ -108,19 +108,19 @@ working together, with health reflecting reality.
 `docs/getting-started.md`; the API starts, migrations apply to an empty database, the frontend
 loads and reaches the API, and `/health/ready` reports the database status correctly.
 
-- [ ] T043 [US1] Register health checks and map anonymous `/health/live` and `/health/ready` (SQL Server check, short timeout, result cached for **5 seconds** so SC-006's 30-second window always holds) in `backend/src/Crm.Api/Diagnostics/HealthEndpoints.cs`
-- [ ] T044 [US1] Implement the minimal health response writer in `backend/src/Crm.Api/Diagnostics/` emitting only status, check name, and duration - never exception text, server names, or connection strings
-- [ ] T045 [P] [US1] Add the development frontend origin to the CORS allowlist in `backend/src/Crm.Api/appsettings.Development.json` and apply the named policy in `backend/src/Crm.Api/Configuration/CorsSetup.cs` (development entry only - per-environment enforcement and wildcard rejection arrive in T108)
-- [ ] T046 [US1] Bootstrap the application with `provideCrmCore()` and `AppShellComponent`, and add the home page showing API reachability in `frontend/projects/crm-web/src/app/features/home/`
-- [ ] T047 [P] [US1] Add `health-api.service.ts` in `frontend/projects/crm-web/src/app/features/home/` as the only HTTP caller for the home page
-- [ ] T048 [P] [US1] Integration test in `backend/tests/Crm.IntegrationTests/Health/` asserting `/health/live` and `/health/ready` return Healthy against the container database
-- [ ] T049 [P] [US1] Integration test in `backend/tests/Crm.IntegrationTests/Health/` asserting an unreachable database yields an unhealthy readiness response containing no connection details or exception text
-- [ ] T050 [P] [US1] Unit test in `backend/tests/Crm.UnitTests/Configuration/` asserting options validation fails fast and names every missing required setting, and asserting the startup auto-migration switch resolves to disabled for every non-Development environment
-- [ ] T051 [P] [US1] Integration test in `backend/tests/Crm.IntegrationTests/Persistence/` asserting the baseline migration applies to an empty database, creates no business tables, and can be applied a second time without error
-- [ ] T052 [P] [US1] Integration test in `backend/tests/Crm.IntegrationTests/Persistence/` using a test-only auditable, soft-deletable entity: insert stamps `CreatedAt`/`CreatedBy` and leaves the update fields null, update stamps `UpdatedAt`/`UpdatedBy` without altering the created fields, and a soft delete removes the row from default queries while leaving it in the table
-- [ ] T053 [P] [US1] Frontend test in `frontend/projects/crm-web/src/app/features/home/` asserting the home page renders the healthy state and the error state from the service
+- [X] T043 [US1] Register health checks and map anonymous `/health/live` and `/health/ready` (SQL Server check, short timeout, result cached for **5 seconds** so SC-006's 30-second window always holds) in `backend/src/Crm.Api/Diagnostics/HealthEndpoints.cs`
+- [X] T044 [US1] Implement the minimal health response writer in `backend/src/Crm.Api/Diagnostics/` emitting only status, check name, and duration - never exception text, server names, or connection strings
+- [X] T045 [P] [US1] Add the development frontend origin to the CORS allowlist in `backend/src/Crm.Api/appsettings.Development.json` and apply the named policy in `backend/src/Crm.Api/Configuration/CorsSetup.cs` (development entry only - per-environment enforcement and wildcard rejection arrive in T108)
+- [X] T046 [US1] Bootstrap the application with `provideCrmCore()` and `AppShellComponent`, and add the home page showing API reachability in `frontend/projects/crm-web/src/app/features/home/`
+- [X] T047 [P] [US1] Add `health-api.service.ts` in `frontend/projects/crm-web/src/app/features/home/` as the only HTTP caller for the home page
+- [X] T048 [P] [US1] Integration test in `backend/tests/Crm.IntegrationTests/Health/` asserting `/health/live` and `/health/ready` return Healthy against the container database
+- [X] T049 [P] [US1] Integration test in `backend/tests/Crm.IntegrationTests/Health/` asserting an unreachable database yields an unhealthy readiness response containing no connection details or exception text
+- [X] T050 [P] [US1] Unit test in `backend/tests/Crm.UnitTests/Configuration/` asserting options validation fails fast and names every missing required setting, and asserting the startup auto-migration switch resolves to disabled for every non-Development environment
+- [X] T051 [P] [US1] Integration test in `backend/tests/Crm.IntegrationTests/Persistence/` asserting the baseline migration applies to an empty database, creates no business tables, and can be applied a second time without error
+- [X] T052 [P] [US1] Integration test in `backend/tests/Crm.IntegrationTests/Persistence/` using a test-only auditable, soft-deletable entity: insert stamps `CreatedAt`/`CreatedBy` and leaves the update fields null, update stamps `UpdatedAt`/`UpdatedBy` without altering the created fields, and a soft delete removes the row from default queries while leaving it in the table
+- [X] T053 [P] [US1] Frontend test in `frontend/projects/crm-web/src/app/features/home/` asserting the home page renders the healthy state and the error state from the service
 - [ ] T054 [US1] Write `docs/getting-started.md` from `specs/001-project-foundation/quickstart.md` and confirm each step by executing it
-- [ ] T055 [US1] Verify the frontend reaches the API with no source edits (CORS or dev proxy), and record the resolved approach in `docs/getting-started.md`
+- [X] T055 [US1] Verify the frontend reaches the API with no source edits (CORS or dev proxy), and record the resolved approach in `docs/getting-started.md`
 
 **Checkpoint**: The platform runs end to end. This is the MVP - demonstrable on its own.
 
@@ -136,37 +136,37 @@ non-business endpoint plus screen; it inherits versioned routing, validation, th
 pagination, permission enforcement, and the migration workflow with at most one shared registration
 point touched per side.
 
-- [ ] T056 [P] [US2] Add the `Permissions` catalog (grouped `const string` members, including the constitution's example names and `diagnostics.read`) with a reflection-based registry in `backend/src/Crm.Application/Authorization/Permissions.cs`
-- [ ] T057 [P] [US2] Add `CallerPopulation`, `OrganizationScope`, and `ICurrentUser` in `backend/src/Crm.Application/Abstractions/`
-- [ ] T058 [US2] Implement `CurrentUser` over `IHttpContextAccessor` claims in `backend/src/Crm.Api/Common/Security/`, resolving population from the authenticating scheme and never from a client-supplied claim
-- [ ] T059 [US2] Register the `Staff` and `Portal` JWT bearer schemes with an issuer-based policy scheme selector, configuration-driven and disabled by default, in `backend/src/Crm.Api/Configuration/AuthenticationSetup.cs`
-- [ ] T060 [US2] Implement `RequirePermissionAttribute`, `PermissionRequirement`, its handler, and the dynamic `IAuthorizationPolicyProvider` in `backend/src/Crm.Api/Common/Security/`
-- [ ] T061 [US2] Implement the population admission attribute and handler in `backend/src/Crm.Api/Common/Security/`
-- [ ] T062 [US2] Configure the fallback authorization policy (authenticated by default) in `backend/src/Crm.Api/Program.cs` and mark only health and the development OpenAPI endpoints `[AllowAnonymous]`
-- [ ] T063 [P] [US2] Add `IAuditRecorder` and `AuditEntry` in `backend/src/Crm.Application/Abstractions/`
-- [ ] T064 [US2] Register FluentValidation by assembly scan and add the validation filter emitting the error contract in `backend/src/Crm.Api/Common/Validation/`
-- [ ] T065 [US2] Configure JSON options (camelCase, `MaxDepth` 32, enum handling, no reference loops) in `backend/src/Crm.Api/Configuration/`
-- [ ] T066 [US2] Add the built-in OpenAPI document plus Scalar UI, registered only in Development, with both security schemes described, in `backend/src/Crm.Api/Configuration/OpenApiSetup.cs`
-- [ ] T067 [P] [US2] Add `EchoRequest`/`EchoResponse` DTOs and the FluentValidation validator in `backend/src/Crm.Application/Diagnostics/`
-- [ ] T068 [P] [US2] Add the `DiagnosticItem` DTO and the paged query handler returning `PagedResult<T>` over a generated in-memory sequence in `backend/src/Crm.Application/Diagnostics/`
-- [ ] T069 [US2] Add `DiagnosticsController` in `backend/src/Crm.Api/Diagnostics/` with the versioned route, `[RequirePermission(Permissions.Diagnostics.Read)]`, and declared admitted populations, matching `contracts/foundation-api.yaml`
-- [ ] T070 [P] [US2] Add `diagnostics-api.service.ts` in `frontend/projects/crm-web/src/app/features/diagnostics/`
-- [ ] T071 [US2] Add the diagnostics page in `frontend/projects/crm-web/src/app/features/diagnostics/` using `StateContainerComponent` and paging controls bound to the pagination contract
-- [ ] T072 [US2] Add `applyServerErrors(form, error)` in `frontend/projects/core/src/lib/forms/` and use it in the diagnostics echo typed reactive form
-- [ ] T073 [P] [US2] Unit tests in `backend/tests/Crm.UnitTests/Diagnostics/` for the paging math and validator rules (business-rule test example)
-- [ ] T074 [P] [US2] Integration test in `backend/tests/Crm.IntegrationTests/Authorization/`: anonymous returns 401, authenticated without permission returns 403, with permission returns 200 - all in the error contract - and a caller forbidden on an existing resource receives a response body indistinguishable from the one returned for a resource that does not exist
-- [ ] T075 [P] [US2] Integration test in `backend/tests/Crm.IntegrationTests/Authorization/`: a Portal token is refused on a Staff-only endpoint even when it carries the same permission name
-- [ ] T076 [P] [US2] Integration test in `backend/tests/Crm.IntegrationTests/Validation/`: invalid payload returns 400 with one `errors[]` entry per field and stable codes
-- [ ] T077 [P] [US2] Integration test in `backend/tests/Crm.IntegrationTests/Diagnostics/`: default paging, explicit paging, out-of-range page, `pageSize` above maximum, descending sort, unsortable field, unknown filter parameter
-- [ ] T078 [P] [US2] Integration test in `backend/tests/Crm.IntegrationTests/Versioning/`: an unknown API version returns the error contract with `unsupported_api_version`
-- [ ] T079 [P] [US2] Integration test in `backend/tests/Crm.IntegrationTests/Errors/`: a deliberately thrown exception returns a generic 500 with `correlationId` and no stack trace, exception type, SQL, or connection string in the body
-- [ ] T080 [P] [US2] Integration test in `backend/tests/Crm.IntegrationTests/Contracts/`: the live OpenAPI document's paths, status codes, and security requirements match `specs/001-project-foundation/contracts/foundation-api.yaml`
-- [ ] T081 [P] [US2] Integration test in `backend/tests/Crm.IntegrationTests/Contracts/`: with the factory hosting environment set to Production, both the OpenAPI document path and the Scalar UI path return 404 to an anonymous caller (AR-002)
-- [ ] T082 [P] [US2] Architecture test in `backend/tests/Crm.ArchitectureTests/`: `Crm.Domain` has no outbound project dependencies and `Crm.Application` does not depend on `Crm.Infrastructure`
-- [ ] T083 [P] [US2] Architecture test in `backend/tests/Crm.ArchitectureTests/`: controllers contain no business logic - no `DbContext` usage, no direct persistence access
-- [ ] T084 [P] [US2] Architecture test in `backend/tests/Crm.ArchitectureTests/`: no EF entity type appears in a controller signature, and vendor SDK packages are referenced only by `Crm.Infrastructure`
-- [ ] T085 [P] [US2] Frontend test in `frontend/projects/crm-web/src/app/features/diagnostics/` asserting the data-access service maps each API failure to the correct `AppError.kind`
-- [ ] T086 [P] [US2] Frontend test in `frontend/projects/crm-web/src/app/features/diagnostics/` asserting the page renders each of the six mandated states
+- [X] T056 [P] [US2] Add the `Permissions` catalog (grouped `const string` members, including the constitution's example names and `diagnostics.read`) with a reflection-based registry in `backend/src/Crm.Application/Authorization/Permissions.cs`
+- [X] T057 [P] [US2] Add `CallerPopulation`, `OrganizationScope`, and `ICurrentUser` in `backend/src/Crm.Application/Abstractions/`
+- [X] T058 [US2] Implement `CurrentUser` over `IHttpContextAccessor` claims in `backend/src/Crm.Api/Common/Security/`, resolving population from the authenticating scheme and never from a client-supplied claim
+- [X] T059 [US2] Register the `Staff` and `Portal` JWT bearer schemes with an issuer-based policy scheme selector, configuration-driven and disabled by default, in `backend/src/Crm.Api/Configuration/AuthenticationSetup.cs`
+- [X] T060 [US2] Implement `RequirePermissionAttribute`, `PermissionRequirement`, its handler, and the dynamic `IAuthorizationPolicyProvider` in `backend/src/Crm.Api/Common/Security/`
+- [X] T061 [US2] Implement the population admission attribute and handler in `backend/src/Crm.Api/Common/Security/`
+- [X] T062 [US2] Configure the fallback authorization policy (authenticated by default) in `backend/src/Crm.Api/Program.cs` and mark only health and the development OpenAPI endpoints `[AllowAnonymous]`
+- [X] T063 [P] [US2] Add `IAuditRecorder` and `AuditEntry` in `backend/src/Crm.Application/Abstractions/`
+- [X] T064 [US2] Register FluentValidation by assembly scan and add the validation filter emitting the error contract in `backend/src/Crm.Api/Common/Validation/`
+- [X] T065 [US2] Configure JSON options (camelCase, `MaxDepth` 32, enum handling, no reference loops) in `backend/src/Crm.Api/Configuration/`
+- [X] T066 [US2] Add the built-in OpenAPI document plus Scalar UI, registered only in Development, with both security schemes described, in `backend/src/Crm.Api/Configuration/OpenApiSetup.cs`
+- [X] T067 [P] [US2] Add `EchoRequest`/`EchoResponse` DTOs and the FluentValidation validator in `backend/src/Crm.Application/Diagnostics/`
+- [X] T068 [P] [US2] Add the `DiagnosticItem` DTO and the paged query handler returning `PagedResult<T>` over a generated in-memory sequence in `backend/src/Crm.Application/Diagnostics/`
+- [X] T069 [US2] Add `DiagnosticsController` in `backend/src/Crm.Api/Diagnostics/` with the versioned route, `[RequirePermission(Permissions.Diagnostics.Read)]`, and declared admitted populations, matching `contracts/foundation-api.yaml`
+- [X] T070 [P] [US2] Add `diagnostics-api.service.ts` in `frontend/projects/crm-web/src/app/features/diagnostics/`
+- [X] T071 [US2] Add the diagnostics page in `frontend/projects/crm-web/src/app/features/diagnostics/` using `StateContainerComponent` and paging controls bound to the pagination contract
+- [X] T072 [US2] Add `applyServerErrors(form, error)` in `frontend/projects/core/src/lib/forms/` and use it in the diagnostics echo typed reactive form
+- [X] T073 [P] [US2] Unit tests in `backend/tests/Crm.UnitTests/Diagnostics/` for the paging math and validator rules (business-rule test example)
+- [X] T074 [P] [US2] Integration test in `backend/tests/Crm.IntegrationTests/Authorization/`: anonymous returns 401, authenticated without permission returns 403, with permission returns 200 - all in the error contract - and a caller forbidden on an existing resource receives a response body indistinguishable from the one returned for a resource that does not exist
+- [X] T075 [P] [US2] Integration test in `backend/tests/Crm.IntegrationTests/Authorization/`: a Portal token is refused on a Staff-only endpoint even when it carries the same permission name
+- [X] T076 [P] [US2] Integration test in `backend/tests/Crm.IntegrationTests/Validation/`: invalid payload returns 400 with one `errors[]` entry per field and stable codes
+- [X] T077 [P] [US2] Integration test in `backend/tests/Crm.IntegrationTests/Diagnostics/`: default paging, explicit paging, out-of-range page, `pageSize` above maximum, descending sort, unsortable field, unknown filter parameter
+- [X] T078 [P] [US2] Integration test in `backend/tests/Crm.IntegrationTests/Versioning/`: an unknown API version returns the error contract with `unsupported_api_version`
+- [X] T079 [P] [US2] Integration test in `backend/tests/Crm.IntegrationTests/Errors/`: a deliberately thrown exception returns a generic 500 with `correlationId` and no stack trace, exception type, SQL, or connection string in the body
+- [X] T080 [P] [US2] Integration test in `backend/tests/Crm.IntegrationTests/Contracts/`: the live OpenAPI document's paths, status codes, and security requirements match `specs/001-project-foundation/contracts/foundation-api.yaml`
+- [X] T081 [P] [US2] Integration test in `backend/tests/Crm.IntegrationTests/Contracts/`: with the factory hosting environment set to Production, both the OpenAPI document path and the Scalar UI path return 404 to an anonymous caller (AR-002)
+- [X] T082 [P] [US2] Architecture test in `backend/tests/Crm.ArchitectureTests/`: `Crm.Domain` has no outbound project dependencies and `Crm.Application` does not depend on `Crm.Infrastructure`
+- [X] T083 [P] [US2] Architecture test in `backend/tests/Crm.ArchitectureTests/`: controllers contain no business logic - no `DbContext` usage, no direct persistence access
+- [X] T084 [P] [US2] Architecture test in `backend/tests/Crm.ArchitectureTests/`: no EF entity type appears in a controller signature, and vendor SDK packages are referenced only by `Crm.Infrastructure`
+- [X] T085 [P] [US2] Frontend test in `frontend/projects/crm-web/src/app/features/diagnostics/` asserting the data-access service maps each API failure to the correct `AppError.kind`
+- [X] T086 [P] [US2] Frontend test in `frontend/projects/crm-web/src/app/features/diagnostics/` asserting the page renders each of the six mandated states
 
 **Checkpoint**: A new vertical feature can be built by copying the diagnostics slice.
 
@@ -180,19 +180,19 @@ strings and no per-screen RTL exceptions.
 **Independent Test**: Open the shell, switch language; every visible string changes, the layout
 mirrors, formatting follows the locale, and the selection survives a reload.
 
-- [ ] T087 [US3] Configure Transloco in `frontend/projects/core/src/lib/i18n/` with `ar`/`en` loaders, documented fallback, and a missing-key handler that reports to developers
-- [ ] T088 [P] [US3] Add `ar.json` and `en.json` in `frontend/projects/crm-web/public/i18n/` covering shell, six states, error codes, home, and diagnostics
-- [ ] T089 [US3] Implement `LanguageService` in `frontend/projects/core/src/lib/i18n/` exposing `language()`/`direction()` signals, persisting the choice, and restoring it at bootstrap
-- [ ] T090 [US3] Wire direction in `frontend/projects/core/src/lib/i18n/`: set `dir` and `lang` on the document element and provide the CDK `Directionality` value atomically with the language change
-- [ ] T091 [P] [US3] Add the language switcher component in `frontend/projects/ui/src/lib/shell/` and place it in `AppShellComponent`, meeting FR-057 as built: keyboard-operable, an accessible name that does not rely on the flag or glyph alone, a visible focus indicator, and the active language exposed as state rather than by styling alone
-- [ ] T092 [US3] Replace every hard-coded user-visible string in the shell, state components, home, and diagnostics with translation keys
-- [ ] T093 [US3] Add the error-code to translated-message mapping in `frontend/projects/core/src/lib/errors/` so no server-supplied text is ever rendered
-- [ ] T094 [P] [US3] Add locale-aware date and number formatting helpers in `frontend/projects/core/src/lib/i18n/` and use them in the diagnostics list
-- [ ] T095 [P] [US3] Add the lint rule in `frontend/eslint.config.js` (or stylelint config) forbidding physical direction properties (`margin-left`, `padding-right`, `left:`, `right:`, `text-align: left|right`) in component styles
-- [ ] T096 [P] [US3] Add the translation key-parity check script in `scripts/` and call it from `scripts/verify-frontend.ps1`
-- [ ] T097 [P] [US3] Frontend test in `frontend/projects/core/src/lib/i18n/` asserting a language switch changes strings and direction together and persists across a reload
-- [ ] T098 [P] [US3] Frontend test in `frontend/projects/core/src/lib/i18n/` asserting a missing key renders the documented fallback and is reported
-- [ ] T099 [US3] Run an RTL pass over shell, home, and diagnostics; fix any physical-direction violation the lint rule surfaces, and confirm by observation that a language switch is visibly complete within a second (SC-004 design target - no timing assertion)
+- [X] T087 [US3] Configure Transloco in `frontend/projects/core/src/lib/i18n/` with `ar`/`en` loaders, documented fallback, and a missing-key handler that reports to developers
+- [X] T088 [P] [US3] Add `ar.json` and `en.json` in `frontend/projects/crm-web/public/i18n/` covering shell, six states, error codes, home, and diagnostics
+- [X] T089 [US3] Implement `LanguageService` in `frontend/projects/core/src/lib/i18n/` exposing `language()`/`direction()` signals, persisting the choice, and restoring it at bootstrap
+- [X] T090 [US3] Wire direction in `frontend/projects/core/src/lib/i18n/`: set `dir` and `lang` on the document element and provide the CDK `Directionality` value atomically with the language change
+- [X] T091 [P] [US3] Add the language switcher component in `frontend/projects/ui/src/lib/shell/` and place it in `AppShellComponent`, meeting FR-057 as built: keyboard-operable, an accessible name that does not rely on the flag or glyph alone, a visible focus indicator, and the active language exposed as state rather than by styling alone
+- [X] T092 [US3] Replace every hard-coded user-visible string in the shell, state components, home, and diagnostics with translation keys
+- [X] T093 [US3] Add the error-code to translated-message mapping in `frontend/projects/core/src/lib/errors/` so no server-supplied text is ever rendered
+- [X] T094 [P] [US3] Add locale-aware date and number formatting helpers in `frontend/projects/core/src/lib/i18n/` and use them in the diagnostics list
+- [X] T095 [P] [US3] Add the lint rule in `frontend/eslint.config.js` (or stylelint config) forbidding physical direction properties (`margin-left`, `padding-right`, `left:`, `right:`, `text-align: left|right`) in component styles
+- [X] T096 [P] [US3] Add the translation key-parity check script in `scripts/` and call it from `scripts/verify-frontend.ps1`
+- [X] T097 [P] [US3] Frontend test in `frontend/projects/core/src/lib/i18n/` asserting a language switch changes strings and direction together and persists across a reload
+- [X] T098 [P] [US3] Frontend test in `frontend/projects/core/src/lib/i18n/` asserting a missing key renders the documented fallback and is reported
+- [X] T099 [US3] Run an RTL pass over shell, home, and diagnostics; fix any physical-direction violation the lint rule surfaces, and confirm by observation that a language switch is visibly complete within a second (SC-004 design target - no timing assertion)
 
 **Checkpoint**: The empty shell is genuinely bilingual and bidirectional.
 
@@ -206,23 +206,23 @@ secrets, and the edge is hardened.
 **Independent Test**: Trigger a deliberate failure from the frontend, take the correlation id shown,
 and retrieve the complete server-side trail from the log files.
 
-- [ ] T100 [US4] Configure Serilog in `backend/src/Crm.Api/Configuration/LoggingSetup.cs`: compact JSON rolling file sink with configurable rotation and retention, plus a readable console sink in Development
-- [ ] T101 [US4] Add request log enrichment (correlation id, request path, user id, population) in `backend/src/Crm.Api/Common/Correlation/`
-- [ ] T102 [P] [US4] Add the destructuring and redaction policy for sensitive members (`password`, `token`, `secret`, `authorization`, `connectionString`) in `backend/src/Crm.Api/Configuration/LoggingSetup.cs`
-- [ ] T103 [P] [US4] Make log verbosity configurable per environment through `appsettings.{Environment}.json` with no code change
-- [ ] T104 [US4] Implement the logging `IAuditRecorder` in `backend/src/Crm.Infrastructure/Auditing/` writing structured audit entries with the correlation id
-- [ ] T105 [US4] Log authentication and authorization failures with the correlation id and attempted operation - never the submitted credentials - in `backend/src/Crm.Api/Common/Security/`
-- [ ] T106 [US4] Add HTTPS redirection and HSTS outside Development in `backend/src/Crm.Api/Program.cs`
-- [ ] T107 [P] [US4] Add the security-header middleware in `backend/src/Crm.Api/Common/Security/SecurityHeadersMiddleware.cs` emitting exactly the FR-053 baseline set: `Content-Security-Policy`, `X-Content-Type-Options`, `Referrer-Policy`, `X-Frame-Options` with CSP `frame-ancestors`, and `Permissions-Policy`
-- [ ] T108 [US4] Generalize the CORS policy in `backend/src/Crm.Api/Configuration/CorsSetup.cs` to read a per-environment allowlist from configuration, and fail startup when a wildcard origin is configured in any environment (extends the development-only entry from T045)
-- [ ] T109 [P] [US4] Enforce the remaining request limits centrally: request body at most 10 MB (Kestrel and IIS) and a shared validator rule capping any request collection at 500 items, each producing the error contract rather than a framework failure. JSON nesting depth is owned by T065 - do not set `MaxDepth` again here; instead confirm the configured value is 32 and that exceeding it surfaces as `malformed_request` rather than an unhandled failure
-- [ ] T110 [P] [US4] Integration test in `backend/tests/Crm.IntegrationTests/Correlation/`: an inbound correlation id is reused, an absent one is generated, and both appear in the response header and in error bodies
-- [ ] T111 [P] [US4] Integration test in `backend/tests/Crm.IntegrationTests/Logging/`: a full request cycle carrying credentials produces log entries with those values redacted
-- [ ] T112 [P] [US4] Integration test in `backend/tests/Crm.IntegrationTests/Security/`: every response carries the baseline security headers
-- [ ] T113 [P] [US4] Integration test in `backend/tests/Crm.IntegrationTests/Security/`: outside Development an insecure request is redirected or rejected and responses carry `Strict-Transport-Security`, while Development is unaffected (FR-052)
-- [ ] T114 [P] [US4] Integration test in `backend/tests/Crm.IntegrationTests/Security/`: an origin outside the allowlist is refused, and a wildcard configuration fails startup
-- [ ] T115 [P] [US4] Integration test in `backend/tests/Crm.IntegrationTests/Security/`: oversized bodies, over-deep nesting, and over-length collections each return 400 in the error contract
-- [ ] T116 [US4] Verify log rolling and retention against the configured policy and document the defaults in `docs/production-configuration.md`
+- [X] T100 [US4] Configure Serilog in `backend/src/Crm.Api/Configuration/LoggingSetup.cs`: compact JSON rolling file sink with configurable rotation and retention, plus a readable console sink in Development
+- [X] T101 [US4] Add request log enrichment (correlation id, request path, user id, population) in `backend/src/Crm.Api/Common/Correlation/`
+- [X] T102 [P] [US4] Add the destructuring and redaction policy for sensitive members (`password`, `token`, `secret`, `authorization`, `connectionString`) in `backend/src/Crm.Api/Configuration/LoggingSetup.cs`
+- [X] T103 [P] [US4] Make log verbosity configurable per environment through `appsettings.{Environment}.json` with no code change
+- [X] T104 [US4] Implement the logging `IAuditRecorder` in `backend/src/Crm.Infrastructure/Auditing/` writing structured audit entries with the correlation id
+- [X] T105 [US4] Log authentication and authorization failures with the correlation id and attempted operation - never the submitted credentials - in `backend/src/Crm.Api/Common/Security/`
+- [X] T106 [US4] Add HTTPS redirection and HSTS outside Development in `backend/src/Crm.Api/Program.cs`
+- [X] T107 [P] [US4] Add the security-header middleware in `backend/src/Crm.Api/Common/Security/SecurityHeadersMiddleware.cs` emitting exactly the FR-053 baseline set: `Content-Security-Policy`, `X-Content-Type-Options`, `Referrer-Policy`, `X-Frame-Options` with CSP `frame-ancestors`, and `Permissions-Policy`
+- [X] T108 [US4] Generalize the CORS policy in `backend/src/Crm.Api/Configuration/CorsSetup.cs` to read a per-environment allowlist from configuration, and fail startup when a wildcard origin is configured in any environment (extends the development-only entry from T045)
+- [X] T109 [P] [US4] Enforce the remaining request limits centrally: request body at most 10 MB (Kestrel and IIS) and a shared validator rule capping any request collection at 500 items, each producing the error contract rather than a framework failure. JSON nesting depth is owned by T065 - do not set `MaxDepth` again here; instead confirm the configured value is 32 and that exceeding it surfaces as `malformed_request` rather than an unhandled failure
+- [X] T110 [P] [US4] Integration test in `backend/tests/Crm.IntegrationTests/Correlation/`: an inbound correlation id is reused, an absent one is generated, and both appear in the response header and in error bodies
+- [X] T111 [P] [US4] Integration test in `backend/tests/Crm.IntegrationTests/Logging/`: a full request cycle carrying credentials produces log entries with those values redacted
+- [X] T112 [P] [US4] Integration test in `backend/tests/Crm.IntegrationTests/Security/`: every response carries the baseline security headers
+- [X] T113 [P] [US4] Integration test in `backend/tests/Crm.IntegrationTests/Security/`: outside Development an insecure request is redirected or rejected and responses carry `Strict-Transport-Security`, while Development is unaffected (FR-052)
+- [X] T114 [P] [US4] Integration test in `backend/tests/Crm.IntegrationTests/Security/`: an origin outside the allowlist is refused, and a wildcard configuration fails startup
+- [X] T115 [P] [US4] Integration test in `backend/tests/Crm.IntegrationTests/Security/`: oversized bodies, over-deep nesting, and over-length collections each return 400 in the error contract
+- [X] T116 [US4] Verify log rolling and retention against the configured policy and document the defaults in `docs/production-configuration.md`
 
 **Checkpoint**: The system is diagnosable and hardened at the edge.
 
@@ -236,19 +236,19 @@ loudly on any violation - and produces the deployable artifacts.
 **Independent Test**: From a clean checkout run both scripts and see success; introduce a
 deliberate lint, format, or test violation and see a failure naming the offending file.
 
-- [ ] T117 [US5] Complete `scripts/verify-backend.ps1`: restore, build with warnings as errors, unit + integration + architecture tests, `dotnet format --verify-no-changes`
-- [ ] T118 [US5] Complete `scripts/verify-frontend.ps1`: clean install, lint, unit tests, Prettier check, translation key parity
-- [ ] T119 [P] [US5] Configure test reporters and coverage thresholds for both stacks in `frontend/angular.json` and `backend/tests/*/`, recording in `docs/testing.md` that thresholds are a team convention rather than a product requirement
-- [ ] T120 [P] [US5] Negative verification: deliberately break a lint rule, a format rule, and a test, confirm each produces a non-zero exit naming the file, then revert and record the procedure in `docs/testing.md`
-- [ ] T121 [P] [US5] Write `docs/conventions.md`: layer rules, permission declaration, error codes, pagination usage, i18n workflow, how to add a vertical feature, and an explicit note that rate limiting is deferred to the authentication feature and must not be reinvented locally (FR-056)
-- [ ] T122 [P] [US5] Write `docs/production-configuration.md`: IIS deployment layout, the full required-settings list marking secrets, the `ISecretsSource` seam, and log retention
-- [ ] T123 [US5] Add `appsettings.Production.json` in `backend/src/Crm.Api/` containing non-secret production defaults only, with every secret-bearing key absent and resolved through the secrets source, and assert in `backend/tests/Crm.UnitTests/Configuration/` that it contains no secret-bearing key
-- [ ] T124 [US5] Add the IIS deployment inputs: `frontend/deploy/web.config` with rewrite rules serving `index.html` for any non-file path while leaving `/api` untouched, copied into the frontend build output, and an IIS-targeted publish configuration for `backend/src/Crm.Api/`
-- [ ] T125 [US5] Extend `scripts/verify-backend.ps1` and `scripts/verify-frontend.ps1` to produce and validate the deployment artifacts: `dotnet publish` output contains the entry assembly and `appsettings.Production.json` and no `.pdb`-only surprises, and the frontend build output contains `index.html`, hashed assets, `assets/config.json`, and `web.config`
-- [ ] T126 [P] [US5] Write `docs/testing.md`: how to run each suite, the Docker requirement, how to add each mandated test kind, the coverage-threshold convention, and the concurrency guarantee that each run uses a uniquely named database so parallel runs on one machine cannot interfere
-- [ ] T127 [US5] Confirm both verification scripts take no arguments and are callable unchanged by a future pipeline; document invocation in `README.md`
-- [ ] T128 [P] [US5] Write the root `README.md` linking the constitution, docs, and the feature specs directory
-- [ ] T129 [US5] Measure a full verification run from a clean checkout and record the elapsed time against the 10-minute budget in `docs/testing.md`
+- [X] T117 [US5] Complete `scripts/verify-backend.ps1`: restore, build with warnings as errors, unit + integration + architecture tests, `dotnet format --verify-no-changes`
+- [X] T118 [US5] Complete `scripts/verify-frontend.ps1`: clean install, lint, unit tests, Prettier check, translation key parity
+- [X] T119 [P] [US5] Configure test reporters and coverage thresholds for both stacks in `frontend/angular.json` and `backend/tests/*/`, recording in `docs/testing.md` that thresholds are a team convention rather than a product requirement
+- [X] T120 [P] [US5] Negative verification: deliberately break a lint rule, a format rule, and a test, confirm each produces a non-zero exit naming the file, then revert and record the procedure in `docs/testing.md`
+- [X] T121 [P] [US5] Write `docs/conventions.md`: layer rules, permission declaration, error codes, pagination usage, i18n workflow, how to add a vertical feature, and an explicit note that rate limiting is deferred to the authentication feature and must not be reinvented locally (FR-056)
+- [X] T122 [P] [US5] Write `docs/production-configuration.md`: IIS deployment layout, the full required-settings list marking secrets, the `ISecretsSource` seam, and log retention
+- [X] T123 [US5] Add `appsettings.Production.json` in `backend/src/Crm.Api/` containing non-secret production defaults only, with every secret-bearing key absent and resolved through the secrets source, and assert in `backend/tests/Crm.UnitTests/Configuration/` that it contains no secret-bearing key
+- [X] T124 [US5] Add the IIS deployment inputs: `frontend/deploy/web.config` with rewrite rules serving `index.html` for any non-file path while leaving `/api` untouched, copied into the frontend build output, and an IIS-targeted publish configuration for `backend/src/Crm.Api/`
+- [X] T125 [US5] Extend `scripts/verify-backend.ps1` and `scripts/verify-frontend.ps1` to produce and validate the deployment artifacts: `dotnet publish` output contains the entry assembly and `appsettings.Production.json` and no `.pdb`-only surprises, and the frontend build output contains `index.html`, hashed assets, `assets/config.json`, and `web.config`
+- [X] T126 [P] [US5] Write `docs/testing.md`: how to run each suite, the Docker requirement, how to add each mandated test kind, the coverage-threshold convention, and the concurrency guarantee that each run uses a uniquely named database so parallel runs on one machine cannot interfere
+- [X] T127 [US5] Confirm both verification scripts take no arguments and are callable unchanged by a future pipeline; document invocation in `README.md`
+- [X] T128 [P] [US5] Write the root `README.md` linking the constitution, docs, and the feature specs directory
+- [X] T129 [US5] Measure a full verification run from a clean checkout and record the elapsed time against the 10-minute budget in `docs/testing.md`
 
 **Checkpoint**: Constitutional rules are executable gates, and the system is packageable for IIS.
 
@@ -256,15 +256,15 @@ deliberate lint, format, or test violation and see a failure naming the offendin
 
 ## Phase 8: Polish & Cross-Cutting Concerns
 
-- [ ] T130 [P] Removability check: on a scratch branch delete `backend/src/Crm.Api/Diagnostics/`, `backend/src/Crm.Application/Diagnostics/`, and `frontend/projects/crm-web/src/app/features/diagnostics/`, confirm build and tests still pass, then document the procedure in `docs/conventions.md`
-- [ ] T131 Measure SC-002: following only `docs/conventions.md`, add a throwaway endpoint plus screen on a scratch branch, count the shared files touched per side, confirm it is at most one registration point each, and record the count and the files in `docs/conventions.md`
-- [ ] T132 [P] Update the open-items table in `specs/001-project-foundation/research.md` with actual outcomes (test builder, retention numbers, secret store)
-- [ ] T133 [P] Update the Commands section of `CLAUDE.md` with the real, verified commands
-- [ ] T134 [P] Accessibility pass over `frontend/projects/ui/src/lib/` shell, language switcher, and state components against FR-057: keyboard reachability and activation, sensible focus order, visible focus indicator, accessible names, announcement of loading and error state changes, and WCAG 2.1 AA contrast in both themes and both directions
+- [X] T130 [P] Removability check: on a scratch branch delete `backend/src/Crm.Api/Diagnostics/`, `backend/src/Crm.Application/Diagnostics/`, and `frontend/projects/crm-web/src/app/features/diagnostics/`, confirm build and tests still pass, then document the procedure in `docs/conventions.md`
+- [X] T131 Measure SC-002: following only `docs/conventions.md`, add a throwaway endpoint plus screen on a scratch branch, count the shared files touched per side, confirm it is at most one registration point each, and record the count and the files in `docs/conventions.md`
+- [X] T132 [P] Update the open-items table in `specs/001-project-foundation/research.md` with actual outcomes (test builder, retention numbers, secret store)
+- [X] T133 [P] Update the Commands section of `CLAUDE.md` with the real, verified commands
+- [X] T134 [P] Accessibility pass over `frontend/projects/ui/src/lib/` shell, language switcher, and state components against FR-057: keyboard reachability and activation, sensible focus order, visible focus indicator, accessible names, announcement of loading and error state changes, and WCAG 2.1 AA contrast in both themes and both directions
 - [ ] T135 Execute `specs/001-project-foundation/quickstart.md` verbatim on a clean clone and fix any gap found (SC-001)
-- [ ] T136 [P] Scan the repository and log output for committed or logged secrets; confirm none exist (SC-007)
-- [ ] T137 Re-verify every row of the Constitution Check table in `specs/001-project-foundation/plan.md` against the delivered code and record the result
-- [ ] T138 Confirm each item of Constitution section 17 (Definition of Done) for this feature and tick `specs/001-project-foundation/checklists/requirements.md`
+- [X] T136 [P] Scan the repository and log output for committed or logged secrets; confirm none exist (SC-007)
+- [X] T137 Re-verify every row of the Constitution Check table in `specs/001-project-foundation/plan.md` against the delivered code and record the result
+- [X] T138 Confirm each item of Constitution section 17 (Definition of Done) for this feature and tick `specs/001-project-foundation/checklists/requirements.md`
 
 ---
 

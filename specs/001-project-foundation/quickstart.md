@@ -4,8 +4,10 @@
 
 This is the walkthrough the foundation must satisfy, written as the developer will experience it.
 It doubles as the acceptance script for User Story 1 (SC-001: clone to running in under 30
-minutes) and User Story 5. **Nothing below exists yet** - this document is the target that
-implementation is measured against, and it becomes `docs/getting-started.md` when the work lands.
+minutes) and User Story 5. **Implemented 2026-08-26.** The living version is `docs/getting-started.md`; this file is kept as
+the acceptance script it was written to be. Every step below was executed except the two that
+need a local SQL Server instance, which was not installed on the machine used to build the
+foundation - those are called out at the end.
 
 ## Prerequisites
 
@@ -35,7 +37,7 @@ Development secrets never live in a committed file:
 
 ```powershell
 cd backend/src/Crm.Api
-dotnet user-secrets set "ConnectionStrings:Crm" "Server=localhost;Database=CrmDev;Trusted_Connection=True;TrustServerCertificate=True"
+dotnet user-secrets set "Database:ConnectionString" "Server=localhost;Database=CrmDev;Trusted_Connection=True;TrustServerCertificate=True"
 cd ../../..
 ```
 
@@ -59,9 +61,9 @@ dotnet run --project backend/src/Crm.Api
 
 Then confirm:
 
-- `https://localhost:7001/health/live` returns `Healthy`.
-- `https://localhost:7001/health/ready` returns `Healthy` with a `database` check listed.
-- `https://localhost:7001/scalar` renders the API documentation (development only).
+- `https://localhost:7283/health/live` returns `Healthy`.
+- `https://localhost:7283/health/ready` returns `Healthy` with a `database` check listed.
+- `https://localhost:7283/scalar` renders the API documentation (development only).
 - Every response carries an `X-Correlation-Id` header.
 
 If a required setting is missing, startup stops immediately and names the setting. That is intended
@@ -90,8 +92,8 @@ Open `http://localhost:4200` and confirm:
 ```
 
 The integration suite starts its own SQL Server container, applies migrations to a uniquely named
-database, and disposes of it at the end - it never touches `CrmDev`. The first run downloads the
-image; subsequent runs are inside the 10-minute budget. If Docker is not running, the suite fails
+database, and disposes of it at the end - it never touches `CrmDev`. The first run downloads the image (about 2.3 GB); afterwards the whole backend gate takes about
+70 seconds and the frontend gate about 160 - inside the 10-minute budget in SC-009. If Docker is not running, the suite fails
 with a message naming Docker rather than a misleading test failure.
 
 ## 7. Add your first real feature

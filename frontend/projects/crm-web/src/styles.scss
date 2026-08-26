@@ -1,0 +1,7 @@
+// Global styles for the staff application.
+//
+// Theming lives in @crm/ui so that a second application (the future external
+// customer portal) inherits the same look by importing the same file.
+@use '../../ui/src/lib/theme/theme' as crm;
+
+@include crm.crm-theme();

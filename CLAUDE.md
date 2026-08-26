@@ -27,12 +27,16 @@ docs/  scripts/
 ## Commands
 
 ```powershell
-dotnet run --project backend/src/Crm.Api          # run the API
-npm --prefix frontend start                       # run the frontend
-./scripts/verify-backend.ps1                      # build + tests + format check
-./scripts/verify-frontend.ps1                     # lint + tests + format + i18n key parity
+dotnet run --project backend/src/Crm.Api          # API on https://localhost:7283
+npm --prefix frontend start                       # frontend on http://localhost:4200
+./scripts/verify-backend.ps1                      # build + 87 tests + format + publish (~70s)
+./scripts/verify-frontend.ps1                     # lint + format + i18n + css + 25 tests + build (~160s)
+npm --prefix frontend run i18n:check              # ar/en translation key parity
+npm --prefix frontend run css:check               # no physical direction properties
 dotnet ef migrations add <Name> --project backend/src/Crm.Infrastructure --startup-project backend/src/Crm.Api
 ```
+
+The integration suite needs Docker running: it provisions its own SQL Server container.
 
 ## Code Style
 

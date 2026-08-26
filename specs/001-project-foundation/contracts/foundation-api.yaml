@@ -116,6 +116,19 @@ paths:
         "403": { $ref: "#/components/responses/Forbidden" }
         "500": { $ref: "#/components/responses/UnexpectedError" }
 
+  /api/v1/diagnostics/boom:
+    get:
+      tags: [Diagnostics]
+      summary: Deliberate failure used to verify that nothing internal leaks
+      description: >
+        Throws on purpose. Exists so the integration suite can prove that an unhandled exception
+        returns a generic message plus the correlation identifier, with no stack trace, exception
+        type, SQL, or connection string in the body (FR-018). Removed with the rest of the slice.
+      security:
+        - staffBearer: []
+      responses:
+        "500": { $ref: "#/components/responses/UnexpectedError" }
+
 components:
   securitySchemes:
     staffBearer:

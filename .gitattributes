@@ -1,0 +1,28 @@
+* text=auto eol=lf
+
+*.sln       text eol=crlf
+*.csproj    text eol=crlf
+*.props     text eol=crlf
+*.targets   text eol=crlf
+*.ps1       text eol=crlf
+*.cmd       text eol=crlf
+*.bat       text eol=crlf
+*.config    text eol=crlf
+
+*.cs        text diff=csharp
+*.ts        text
+*.html      text
+*.scss      text
+*.json      text
+*.md        text
+*.yaml      text
+*.yml       text
+
+*.png       binary
+*.jpg       binary
+*.jpeg      binary
+*.gif       binary
+*.ico       binary
+*.woff      binary
+*.woff2     binary
+*.pfx       binary
