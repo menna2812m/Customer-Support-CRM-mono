@@ -1,0 +1,59 @@
+# Customer-Support-CRM-mono Development Guidelines
+
+Auto-generated from all feature plans. Last updated: 2026-08-26
+
+## Active Technologies
+
+- **Backend**: C# 14 / .NET 10 (SDK pinned to 10.0.400 via `global.json`), ASP.NET Core 10,
+  EF Core 10 (SQL Server provider), Asp.Versioning.Mvc, FluentValidation, Serilog (001-project-foundation)
+- **Frontend**: TypeScript / Angular 22 (CLI 22.1.6, Node 22.x), Angular Material + CDK,
+  @jsverse/transloco, RxJS, Signals (001-project-foundation)
+- **Database**: SQL Server - local instance for development, disposable Testcontainers instance for
+  integration tests (001-project-foundation)
+- **Testing**: xUnit v3 + Shouldly + NSubstitute, WebApplicationFactory + Testcontainers.MsSql,
+  ArchUnitNET, Vitest via the Angular unit-test builder (001-project-foundation)
+- **Hosting**: Windows Server + IIS in production; Kestrel + `ng serve` in development
+
+## Project Structure
+
+```text
+backend/src/{Crm.Api,Crm.Application,Crm.Domain,Crm.Infrastructure}
+backend/tests/{Crm.UnitTests,Crm.IntegrationTests,Crm.ArchitectureTests}
+frontend/projects/{crm-web,core,ui}     # one app + @crm/core + @crm/ui libraries
+specs/                                  # Spec Kit features
+docs/  scripts/
+```
+
+## Commands
+
+```powershell
+dotnet run --project backend/src/Crm.Api          # run the API
+npm --prefix frontend start                       # run the frontend
+./scripts/verify-backend.ps1                      # build + tests + format check
+./scripts/verify-frontend.ps1                     # lint + tests + format + i18n key parity
+dotnet ef migrations add <Name> --project backend/src/Crm.Infrastructure --startup-project backend/src/Crm.Api
+```
+
+## Code Style
+
+Constitution v1.0.0 (`.specify/memory/constitution.md`) is binding. Highlights:
+
+- No business logic in controllers; rules live in Domain/Application. Domain references nothing.
+- Endpoints under `/api/v1`, explicit DTOs only, one ProblemDetails error contract, one pagination
+  contract. Never return EF entities.
+- Deny by default: every endpoint declares `[RequirePermission(...)]` and its admitted caller
+  population (Staff / Portal). `[AllowAnonymous]` is explicit and rare.
+- Angular: standalone APIs, `HttpClient` only inside `*-api.service.ts`, no cross-feature imports,
+  reactive forms, all six UI states handled.
+- Arabic and English together, always. Logical CSS properties only - no `left`/`right`.
+- Structured logs with a correlation id; never log secrets or customer data.
+- Tests are required for business rules, authorization, and validation failures.
+
+## Recent Changes
+
+- 001-project-foundation: monorepo, four-layer backend, Angular workspace with `@crm/core` and
+  `@crm/ui`, EF Core migrations, API conventions, auth extension points, i18n/RTL, logging and
+  health, transport hardening, test and lint gates
+
+<!-- MANUAL ADDITIONS START -->
+<!-- MANUAL ADDITIONS END -->
