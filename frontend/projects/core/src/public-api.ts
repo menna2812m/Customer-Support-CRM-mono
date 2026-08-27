@@ -25,7 +25,19 @@ export {
   toAppError,
 } from './lib/http/interceptors';
 
-export { errorFallbackKey, errorMessageKey } from './lib/state/app-error';
+export { AuthService, safeReturnUrl } from './lib/auth/auth.service';
+export { AuthSession } from './lib/auth/auth-session.store';
+export { AuthApiService } from './lib/auth/auth-api.service';
+export { SessionRenewal } from './lib/auth/session-renewal.service';
+export type {
+  AuthUser,
+  OrganizationScope,
+  SessionResponse,
+  SignOutOptions,
+  SignOutResponse,
+} from './lib/auth/auth.models';
+
+export { errorCodeKey, errorFallbackKey, errorMessageKey } from './lib/state/app-error';
 export type { AppError, AppErrorKind, FieldError } from './lib/state/app-error';
 
 export {

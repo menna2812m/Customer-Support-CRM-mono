@@ -1,1 +1,9 @@
-<crm-app-shell [navigation]="navigation" />
+<crm-app-shell [navigation]="navigation()">
+  @if (user(); as signedIn) {
+    <crm-user-menu
+      crmShellActions
+      [displayName]="signedIn.displayName"
+      (signOut)="signOut($event)"
+    />
+  }
+</crm-app-shell>

@@ -1,65 +1,122 @@
-using System.Security.Claims;
-using System.Text;
-using Crm.Api.Common.Security;
-using Microsoft.IdentityModel.JsonWebTokens;
-using Microsoft.IdentityModel.Tokens;
+using Crm.Application.Abstractions;
+using Crm.Domain.Identity;
+using Crm.Infrastructure.Persistence;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Crm.IntegrationTests.Infrastructure;
 
 /// <summary>
-/// Issues locally signed tokens for the two populations so authorization can be tested without an
-/// identity provider. The application validates these exactly as it would real ones - same
-/// schemes, same claims, same pipeline.
+/// Issues credentials for tests using the application's own issuer and a real session row.
+///
+/// Feature 001 minted standalone tokens, which was correct while the CRM validated tokens from an
+/// identity provider. Feature 002 made the CRM the issuer and made revocation immediate, so a
+/// credential is only meaningful alongside a live session - the scheme checks on every request.
+/// Seeding a real user and session keeps the tests exercising that check rather than stepping
+/// around it.
 /// </summary>
 public static class TestTokens
 {
-    public const string SigningKey = "integration-test-signing-key-that-is-long-enough-for-hmac-sha256";
-    public const string StaffIssuer = "https://test.identity.local/staff";
-    public const string PortalIssuer = "https://test.crm.local/portal";
+    public const string Issuer = "https://crm.tests.local";
     public const string Audience = "crm-api";
+    public const string SigningKey = "integration-test-signing-key-that-is-long-enough-for-hmac-sha256";
 
-    /// <summary>Configuration that switches both schemes on with the local test keys.</summary>
-    public static Dictionary<string, string?> AuthConfiguration() => new()
+    /// <summary>Configuration that makes the application issue and validate the credentials below.</summary>
+    public static Dictionary<string, string?> TokenConfiguration() => new()
     {
-        ["Authentication:Staff:Enabled"] = "true",
-        ["Authentication:Staff:Issuer"] = StaffIssuer,
-        ["Authentication:Staff:Audience"] = Audience,
-        ["Authentication:Staff:SigningKey"] = SigningKey,
-        ["Authentication:Portal:Enabled"] = "true",
-        ["Authentication:Portal:Issuer"] = PortalIssuer,
-        ["Authentication:Portal:Audience"] = Audience,
-        ["Authentication:Portal:SigningKey"] = SigningKey,
+        ["Token:Issuer"] = Issuer,
+        ["Token:Audience"] = Audience,
+        ["Token:SigningKey"] = SigningKey,
+        ["Token:KeyId"] = "test",
+        ["Token:AccessCredentialMinutes"] = "15",
     };
 
-    public static string Staff(params string[] permissions) =>
-        Create(StaffIssuer, Guid.CreateVersion7(), permissions);
-
-    public static string Portal(params string[] permissions) =>
-        Create(PortalIssuer, Guid.CreateVersion7(), permissions);
-
-    private static string Create(string issuer, Guid userId, IEnumerable<string> permissions)
+    /// <summary>
+    /// Creates a staff user with the given permissions, starts a session, and returns a credential
+    /// for it. The permissions are attached directly rather than through a role, so a test about
+    /// authorization does not also depend on role seeding.
+    /// </summary>
+    public static async Task<IssuedTestCredential> IssueStaffAsync(
+        IServiceProvider services,
+        params string[] permissions)
     {
-        var claims = new List<Claim>
-        {
-            new(ClaimTypes.NameIdentifier, userId.ToString()),
-            new(CrmClaims.DepartmentId, Guid.CreateVersion7().ToString()),
-        };
+        ArgumentNullException.ThrowIfNull(services);
+        ArgumentNullException.ThrowIfNull(permissions);
 
-        claims.AddRange(permissions.Select(permission => new Claim(CrmClaims.Permission, permission)));
+        using var scope = services.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<CrmDbContext>();
+        var sessions = scope.ServiceProvider.GetRequiredService<ISessionStore>();
+        var issuer = scope.ServiceProvider.GetRequiredService<ITokenIssuer>();
 
-        // Deliberately NOT setting the population claim: the scheme stamps it, and a token that
-        // tries to set it must not be able to promote itself.
-        var descriptor = new SecurityTokenDescriptor
-        {
-            Issuer = issuer,
-            Audience = Audience,
-            Subject = new ClaimsIdentity(claims, "Test"),
-            Expires = DateTime.UtcNow.AddMinutes(10),
-            SigningCredentials = new SigningCredentials(
-                new SymmetricSecurityKey(Encoding.UTF8.GetBytes(SigningKey)),
-                SecurityAlgorithms.HmacSha256),
-        };
+        var user = User.Provision(
+            providerSubject: $"test|{Guid.CreateVersion7()}",
+            email: $"{Guid.CreateVersion7():n}@tests.local",
+            displayName: "Test Staff",
+            population: (int)CallerPopulation.Staff,
+            placement: OrganizationPlacement.None);
 
-        return new JsonWebTokenHandler().CreateToken(descriptor);
+        context.Users.Add(user);
+        await context.SaveChangesAsync();
+
+        var session = await sessions.StartAsync(user.Id, "integration-tests", "127.0.0.1");
+
+        var credential = issuer.Issue(new IssuedIdentity(
+            user.Id,
+            session.SessionId,
+            user.DisplayName,
+            user.Email,
+            CallerPopulation.Staff,
+            permissions.ToHashSet(StringComparer.Ordinal),
+            Scope: null));
+
+        return new IssuedTestCredential(credential.Value, user.Id, session.SessionId, session.RenewalCredential);
+    }
+
+    /// <summary>
+    /// A credential for the portal population. The portal feature is deferred, so this exists only
+    /// to prove that a staff-only endpoint refuses a portal caller (spec AR-004).
+    /// </summary>
+    public static async Task<IssuedTestCredential> IssuePortalAsync(
+        IServiceProvider services,
+        params string[] permissions)
+    {
+        ArgumentNullException.ThrowIfNull(services);
+
+        using var scope = services.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<CrmDbContext>();
+        var sessions = scope.ServiceProvider.GetRequiredService<ISessionStore>();
+        var issuer = scope.ServiceProvider.GetRequiredService<ITokenIssuer>();
+
+        var user = User.Provision(
+            providerSubject: $"portal|{Guid.CreateVersion7()}",
+            email: $"{Guid.CreateVersion7():n}@customers.local",
+            displayName: "Test Customer",
+            population: (int)CallerPopulation.Portal,
+            placement: OrganizationPlacement.None);
+
+        context.Users.Add(user);
+        await context.SaveChangesAsync();
+
+        var session = await sessions.StartAsync(user.Id, "integration-tests", "127.0.0.1");
+
+        var credential = issuer.Issue(new IssuedIdentity(
+            user.Id,
+            session.SessionId,
+            user.DisplayName,
+            user.Email,
+            CallerPopulation.Portal,
+            (permissions ?? []).ToHashSet(StringComparer.Ordinal),
+            Scope: null));
+
+        return new IssuedTestCredential(credential.Value, user.Id, session.SessionId, session.RenewalCredential);
     }
 }
+
+/// <param name="AccessCredential">Bearer value for the Authorization header.</param>
+/// <param name="UserId">The seeded user, for tests that need to change or deactivate it.</param>
+/// <param name="SessionId">The live session, for tests that revoke it.</param>
+/// <param name="RenewalCredential">The renewal value, for tests that rotate or replay it.</param>
+public sealed record IssuedTestCredential(
+    string AccessCredential,
+    Guid UserId,
+    Guid SessionId,
+    string RenewalCredential);

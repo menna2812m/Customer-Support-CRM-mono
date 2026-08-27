@@ -18,6 +18,19 @@ public static class ErrorCodes
     public const string Conflict = "conflict";
     public const string UnexpectedError = "unexpected_error";
 
+    /// <summary>Added by feature 002 (authentication). See contracts/session-contract.md.</summary>
+    public const string SignInFailed = "sign_in_failed";
+
+    public const string ProviderUnavailable = "provider_unavailable";
+
+    public const string NoAccess = "no_access";
+
+    public const string IdentityCollision = "identity_collision";
+
+    public const string SessionExpired = "session_expired";
+
+    public const string RateLimited = "rate_limited";
+
     /// <summary>Per-field rule identifiers used inside the <c>errors</c> array.</summary>
     public static class Field
     {

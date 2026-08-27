@@ -33,6 +33,9 @@ public static class LoggingSetup
         "apikey",
         "clientsecret",
         "credential",
+        "renewal",
+        "sessionid",
+        "refresh",
     ];
 
     public const string RedactedValue = "[redacted]";

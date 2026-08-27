@@ -118,10 +118,7 @@ public sealed class HardeningTests(SqlServerFixture database)
     public async Task An_over_length_collection_is_rejected_with_the_error_contract()
     {
         await using var factory = new CrmWebApplicationFactory(database.ConnectionString);
-        using var client = factory.CreateClient();
-        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
-            "Bearer",
-            TestTokens.Staff(Permissions.Diagnostics.Read));
+        using var client = await factory.SignInAsync(Permissions.Diagnostics.Read);
 
         var response = await client.PostAsJsonAsync(
             new Uri("/api/v1/diagnostics/echo", UriKind.Relative),
@@ -147,10 +144,7 @@ public sealed class HardeningTests(SqlServerFixture database)
     public async Task An_over_deep_payload_is_rejected_with_the_error_contract()
     {
         await using var factory = new CrmWebApplicationFactory(database.ConnectionString);
-        using var client = factory.CreateClient();
-        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
-            "Bearer",
-            TestTokens.Staff(Permissions.Diagnostics.Read));
+        using var client = await factory.SignInAsync(Permissions.Diagnostics.Read);
 
         // 40 levels of nesting, comfortably past the configured depth of 32.
         var payload = string.Concat(Enumerable.Repeat("{\"a\":", 40))

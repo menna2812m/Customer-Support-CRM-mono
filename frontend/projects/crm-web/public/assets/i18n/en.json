@@ -60,7 +60,13 @@
       "not_found": "This item is not available.",
       "conflict": "Someone else changed this. Reload and try again.",
       "unexpected_error": "Something went wrong. Please try again.",
-      "network_unavailable": "The server could not be reached."
+      "network_unavailable": "The server could not be reached.",
+      "sign_in_failed": "Sign-in could not be completed. Please try again.",
+      "provider_unavailable": "The sign-in service is temporarily unavailable.",
+      "no_access": "You do not have access to this application.",
+      "identity_collision": "This account needs an administrator to resolve a conflict before you can sign in.",
+      "session_expired": "Your session has ended. Please sign in again.",
+      "rate_limited": "Too many attempts. Please wait a moment and try again."
     },
     "field": {
       "required": "This value is required.",
@@ -89,5 +95,24 @@
     "next": "Next",
     "pageOf": "Page {{page}} of {{totalPages}} ({{totalCount}} items)",
     "rejected": "The request was rejected ({{code}})."
+  },
+  "auth": {
+    "signIn": {
+      "title": "Sign in",
+      "description": "You will be taken to your organisation sign-in page.",
+      "action": "Continue to sign in",
+      "unavailable": "Sign-in is temporarily unavailable. Please try again shortly."
+    },
+    "completing": "Completing sign in...",
+    "noAccess": {
+      "title": "You do not have access to this application",
+      "message": "Your sign-in worked, but no permissions have been granted to your account. Ask an administrator to give you access."
+    },
+    "signedInAs": "Signed in as",
+    "userMenu": "Account menu for {{name}}",
+    "signOut": "Sign out",
+    "signOutEverywhere": "Sign out everywhere",
+    "endDeviceAccess": "Also end access on this computer",
+    "sessionExpired": "Your session has ended. Please sign in again."
   }
 }

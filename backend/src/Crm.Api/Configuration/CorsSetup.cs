@@ -42,6 +42,12 @@ internal sealed class ConfigureCrmCorsPolicy(IOptions<CorsOptions> crmOptions)
                 .WithOrigins(allowedOrigins)
                 .AllowAnyHeader()
                 .AllowAnyMethod()
+
+                // The renewal cookie is what lets a reload restore a session, and a browser sends
+                // no cookie cross-origin without this. Safe here only because the origins are an
+                // explicit allowlist - startup rejects a wildcard, which this would otherwise make
+                // exploitable.
+                .AllowCredentials()
                 .WithExposedHeaders("X-Correlation-Id");
         });
     }

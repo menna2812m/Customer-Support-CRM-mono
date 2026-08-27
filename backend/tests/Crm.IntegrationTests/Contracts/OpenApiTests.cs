@@ -57,21 +57,47 @@ public sealed partial class OpenApiTests(SqlServerFixture database)
             .ShouldBe(HttpStatusCode.NotFound);
     }
 
-    /// <summary>Reads the application paths from the committed contract document.</summary>
+    /// <summary>
+    /// The application paths every committed feature contract publishes, minus the ones a contract
+    /// marks `x-status: planned`.
+    ///
+    /// Every feature's contract counts, so a new feature cannot quietly escape the guard. The
+    /// planned marker exists because a contract describes a whole feature while delivery is
+    /// incremental by user story: an endpoint scheduled for a later story is documented before it
+    /// runs, and removing its marker is part of implementing it.
+    /// </summary>
     private static List<string> PublishedApiPaths()
     {
-        var contract = File.ReadAllText(ContractPath());
+        var contracts = Directory.EnumerateFiles(
+            Path.Combine(RepositoryRoot(), "specs"),
+            "*.yaml",
+            SearchOption.AllDirectories);
 
-        return PathLine()
-            .Matches(contract)
-            .Select(match => match.Groups[1].Value)
+        return contracts
+            .SelectMany(contract => DeliveredPaths(File.ReadAllText(contract)))
             .Where(path => path.StartsWith("/api/", StringComparison.Ordinal))
             .Distinct(StringComparer.Ordinal)
             .OrderBy(path => path, StringComparer.Ordinal)
             .ToList();
     }
 
-    private static string ContractPath()
+    private static IEnumerable<string> DeliveredPaths(string contract)
+    {
+        var matches = PathLine().Matches(contract);
+
+        for (var index = 0; index < matches.Count; index++)
+        {
+            var start = matches[index].Index;
+            var end = index + 1 < matches.Count ? matches[index + 1].Index : contract.Length;
+
+            if (!contract.AsSpan(start, end - start).Contains("x-status: planned", StringComparison.Ordinal))
+            {
+                yield return matches[index].Groups[1].Value;
+            }
+        }
+    }
+
+    private static string RepositoryRoot()
     {
         var directory = new DirectoryInfo(AppContext.BaseDirectory);
 
@@ -83,12 +109,7 @@ public sealed partial class OpenApiTests(SqlServerFixture database)
 
         directory.ShouldNotBeNull("Could not locate the repository root from the test output directory.");
 
-        return Path.Combine(
-            directory.FullName,
-            "specs",
-            "001-project-foundation",
-            "contracts",
-            "foundation-api.yaml");
+        return directory.FullName;
     }
 
     [GeneratedRegex(@"^  (/[^\s:]+):", RegexOptions.Multiline)]

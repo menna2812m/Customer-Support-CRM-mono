@@ -11,6 +11,9 @@ export type { ShellNavItem } from './lib/shell/app-shell.component';
 
 export { LanguageSwitcherComponent } from './lib/shell/language-switcher.component';
 
+export { UserMenuComponent } from './lib/shell/user-menu.component';
+export type { SignOutChoice } from './lib/shell/user-menu.component';
+
 export { StateContainerComponent } from './lib/states/state-container.component';
 export { LoadingStateComponent } from './lib/states/loading-state.component';
 export { EmptyStateComponent } from './lib/states/empty-state.component';

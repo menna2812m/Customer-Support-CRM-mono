@@ -22,7 +22,7 @@ public sealed class ContractTests(SqlServerFixture database)
     [Fact]
     public async Task Validation_failures_name_every_offending_field_with_a_stable_code()
     {
-        using var client = CreateClient();
+        using var client = await CreateClientAsync();
 
         var response = await client.PostAsJsonAsync(
             new Uri(EchoPath, UriKind.Relative),
@@ -52,7 +52,7 @@ public sealed class ContractTests(SqlServerFixture database)
     [Fact]
     public async Task A_valid_payload_reaches_the_use_case()
     {
-        using var client = CreateClient();
+        using var client = await CreateClientAsync();
 
         var response = await client.PostAsJsonAsync(
             new Uri(EchoPath, UriKind.Relative),
@@ -71,7 +71,7 @@ public sealed class ContractTests(SqlServerFixture database)
     [InlineData("?page=6&pageSize=10", 6, 7)]
     public async Task Paging_follows_the_shared_contract(string query, int expectedPage, int expectedCount)
     {
-        using var client = CreateClient();
+        using var client = await CreateClientAsync();
 
         var response = await client.GetAsync(new Uri(ItemsPath + query, UriKind.Relative));
 
@@ -89,7 +89,7 @@ public sealed class ContractTests(SqlServerFixture database)
     [Fact]
     public async Task A_page_beyond_the_end_is_an_empty_success_not_an_error()
     {
-        using var client = CreateClient();
+        using var client = await CreateClientAsync();
 
         var response = await client.GetAsync(new Uri(ItemsPath + "?page=99", UriKind.Relative));
 
@@ -102,7 +102,7 @@ public sealed class ContractTests(SqlServerFixture database)
     [Fact]
     public async Task A_page_size_above_the_maximum_is_rejected_rather_than_clamped()
     {
-        using var client = CreateClient();
+        using var client = await CreateClientAsync();
 
         var response = await client.GetAsync(new Uri(ItemsPath + "?pageSize=500", UriKind.Relative));
 
@@ -114,7 +114,7 @@ public sealed class ContractTests(SqlServerFixture database)
     [Fact]
     public async Task Sorting_is_allow_listed()
     {
-        using var client = CreateClient();
+        using var client = await CreateClientAsync();
 
         var descending = await client.GetAsync(new Uri(ItemsPath + "?sort=-name", UriKind.Relative));
         var unsortable = await client.GetAsync(new Uri(ItemsPath + "?sort=secretColumn", UriKind.Relative));
@@ -133,7 +133,7 @@ public sealed class ContractTests(SqlServerFixture database)
     [Fact]
     public async Task An_unknown_query_parameter_is_refused_rather_than_ignored()
     {
-        using var client = CreateClient();
+        using var client = await CreateClientAsync();
 
         var response = await client.GetAsync(new Uri(ItemsPath + "?nameContian=x", UriKind.Relative));
 
@@ -151,7 +151,7 @@ public sealed class ContractTests(SqlServerFixture database)
     [Fact]
     public async Task An_unsupported_api_version_returns_the_shared_contract()
     {
-        using var client = CreateClient();
+        using var client = await CreateClientAsync();
 
         var response = await client.GetAsync(new Uri("/api/v9/diagnostics/items", UriKind.Relative));
 
@@ -162,7 +162,7 @@ public sealed class ContractTests(SqlServerFixture database)
     [Fact]
     public async Task An_unhandled_exception_returns_a_generic_500_with_no_internal_detail()
     {
-        using var client = CreateClient();
+        using var client = await CreateClientAsync();
 
         var response = await client.GetAsync(new Uri("/api/v1/diagnostics/boom", UriKind.Relative));
 
@@ -181,15 +181,10 @@ public sealed class ContractTests(SqlServerFixture database)
         payload.ShouldNotContain("at Crm.");
     }
 
-    private HttpClient CreateClient()
+    private async Task<HttpClient> CreateClientAsync()
     {
         var factory = new CrmWebApplicationFactory(database.ConnectionString);
-        var client = factory.CreateClient();
-        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
-            "Bearer",
-            TestTokens.Staff(Permissions.Diagnostics.Read));
-
-        return client;
+        return await factory.SignInAsync(Permissions.Diagnostics.Read);
     }
 
     private static async Task<string> ReadCodeAsync(HttpResponseMessage response)

@@ -28,7 +28,15 @@ export type AppErrorKind =
  * is mapped to a translated message, with a per-kind fallback when a code has no specific entry.
  */
 export function errorMessageKey(error: AppError): string {
-  return `errors.code.${error.code}`;
+  return errorCodeKey(error.code);
+}
+
+/**
+ * The same mapping for a bare code. Sign-in refusals arrive as a query parameter on a redirect
+ * rather than as a response body, and they must read identically to every other failure.
+ */
+export function errorCodeKey(code: string): string {
+  return `errors.code.${code}`;
 }
 
 export function errorFallbackKey(error: AppError): string {

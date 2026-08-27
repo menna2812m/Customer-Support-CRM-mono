@@ -1,4 +1,4 @@
-# Customer-Support-CRM-mono Development Guidelines
+﻿# Customer-Support-CRM-mono Development Guidelines
 
 Auto-generated from all feature plans. Last updated: 2026-08-26
 
@@ -11,8 +11,11 @@ Auto-generated from all feature plans. Last updated: 2026-08-26
 - **Database**: SQL Server - local instance for development, disposable Testcontainers instance for
   integration tests (001-project-foundation)
 - **Testing**: xUnit v3 + Shouldly + NSubstitute, WebApplicationFactory + Testcontainers.MsSql,
-  ArchUnitNET, Vitest via the Angular unit-test builder (001-project-foundation)
+  NetArchTest.Rules, Vitest via the Angular unit-test builder (001-project-foundation)
 - **Hosting**: Windows Server + IIS in production; Kestrel + `ng serve` in development
+- **Authentication** (002-auth-login): server-side OIDC handshake, CRM-issued access credentials,
+  server-side sessions with rotating renewal credentials, role-to-permission store, framework rate
+  limiting
 
 ## Project Structure
 
@@ -29,8 +32,8 @@ docs/  scripts/
 ```powershell
 dotnet run --project backend/src/Crm.Api          # API on https://localhost:7283
 npm --prefix frontend start                       # frontend on http://localhost:4200
-./scripts/verify-backend.ps1                      # build + 87 tests + format + publish (~70s)
-./scripts/verify-frontend.ps1                     # lint + format + i18n + css + 25 tests + build (~160s)
+./scripts/verify-backend.ps1                      # build + 145 tests + format + publish (~35s)
+./scripts/verify-frontend.ps1                     # lint + format + i18n + css + 66 tests + build (~170s)
 npm --prefix frontend run i18n:check              # ar/en translation key parity
 npm --prefix frontend run css:check               # no physical direction properties
 dotnet ef migrations add <Name> --project backend/src/Crm.Infrastructure --startup-project backend/src/Crm.Api
@@ -54,6 +57,7 @@ Constitution v1.0.0 (`.specify/memory/constitution.md`) is binding. Highlights:
 - Tests are required for business rules, authorization, and validation failures.
 
 ## Recent Changes
+- 002-auth-login: Added C# 14 on .NET 10 (SDK 10.0.400); TypeScript on Angular 22 - unchanged from + Microsoft.AspNetCore.Authentication.OpenIdConnect (sign-in handshake
 
 - 001-project-foundation: monorepo, four-layer backend, Angular workspace with `@crm/core` and
   `@crm/ui`, EF Core migrations, API conventions, auth extension points, i18n/RTL, logging and

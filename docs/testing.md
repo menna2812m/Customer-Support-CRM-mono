@@ -54,8 +54,59 @@ Every feature needs all four mandated kinds (Constitution XIII):
 4. **Frontend** - a component test and a data-access test, including at least one error state. See
    `diagnostics.page.spec.ts` and `diagnostics-api.service.spec.ts`.
 
-Use `provideCrmTesting()` in frontend tests. It wires the real error-normalization interceptor and
-the real translation files, so tests assert against what users actually get rather than a stub.
+Use `provideCrmTesting()` in frontend tests. It wires the real credential and error-normalization
+interceptors, a router, and the real translation files, so tests assert against what users actually
+get rather than a stub. Put a session in place with `TestBed.inject(AuthSession).set(token, user)`
+when a test needs an authenticated caller.
+
+## Signing in inside a backend test
+
+Authorization is this application's subject matter, so most integration tests need a caller. There
+are two ways in, and the difference matters.
+
+**`SignInHarness`** runs the real handshake against an in-process identity provider. Use it whenever
+the test is about authentication itself - provisioning, refusals, cookies, rotation, expiry:
+
+```csharp
+await using var harness = SignInHarness.Create(
+    database.ConnectionString,
+    new Dictionary<string, string?> { ["Identity:DefaultRole"] = "Agent" });
+
+var account = harness.Provider.AddAccount();
+(await harness.SignInAsync(account)).Succeeded.ShouldBeTrue();
+
+using var client = harness.CreateAuthenticatedClient(await harness.IssueAccessCredentialAsync());
+```
+
+The harness performs the browser's part explicitly - following redirects, carrying cookies - which
+is what makes the cookie rules observable. It also exposes:
+
+- `Clock` - an `AdjustableTimeProvider`. Session limits are measured in hours, so an expiry test
+  moves the clock rather than lowering the limit to something nobody deploys.
+- `RequestSessionAsync(renewalCookie, withApplicationHeader, origin)` - for replaying a spent
+  credential or reproducing a cross-site call.
+- `WithServicesAsync(...)`, `GetSessionsForUserAsync(...)`, `GetEventsForUserAsync(...)` - to arrange
+  and inspect what no request can reach.
+- The `X-Test-Source` header (see `TestClientAddressFilter`) - the in-memory server has no socket,
+  so this is how a test becomes two different callers for a throttling assertion.
+
+**`CrmWebApplicationFactory.SignInAsync(permissions)`** skips the handshake and seeds a user, a real
+session, and a credential carrying exactly the permissions named. Use it when the test is about
+something else and simply needs a caller who can reach the endpoint.
+
+### How the fake provider stands in for a real one
+
+`FakeOidcProvider` implements the parts of OpenID Connect the application actually uses: a discovery
+document, a JWKS endpoint, an authorization endpoint that issues codes against a PKCE challenge, and
+a token endpoint that signs identity tokens with a test key. `SignInHarness` points the application's
+provider HTTP client at it, so the code under test is the real `OpenIdConnectClient` performing a
+real exchange - discovery, code-for-token, signature and nonce validation - against a provider that
+happens to live in the same process.
+
+What it does not stand in for is the *provider-specific* part: claim names differ between products,
+which is why they are configuration (`Authentication:Staff:ClaimNames`). That is the residual risk
+of building against generic OIDC, and `specs/002-auth-login/quickstart.md` covers it by running the
+same flow against a real provider container.
 
 ## Conventions
 
@@ -84,12 +135,26 @@ exit naming the offending file.
 
 ## Timings
 
-Measured on the development machine used to build the foundation (image already cached):
+Measured on the development machine used to build the project (SQL Server image already cached).
+
+After feature 001 (foundation):
 
 | Gate | Duration |
 |---|---|
 | Backend: restore, build, format, 87 tests, publish | 68 seconds |
 | Frontend: clean install, lint, format, i18n + css checks, 25 tests, production build | 162 seconds |
 
-Together about 3.8 minutes - well inside the ten-minute budget in SC-009. The first backend run on a new machine adds
-the SQL Server image download, which is excluded from that budget by the criterion itself.
+After feature 002 (authentication), measured 2026-08-27:
+
+| Gate | Duration |
+|---|---|
+| Backend: restore, build, format, 145 tests, publish | 33 seconds |
+| Frontend: clean install, lint, format, i18n + css checks, 66 tests, production build | 169 seconds |
+
+Together about 3.4 minutes - inside the ten-minute budget in SC-009 of feature 001, with room to
+spare. The backend number is lower than feature 001's despite two-thirds more tests because that
+measurement included a cold NuGet restore; the integration suite itself takes about 19 seconds,
+container startup included. The frontend grew by seven seconds for 41 more tests.
+
+The first run on a new machine adds the SQL Server image download, which is excluded from the
+budget by the criterion itself.

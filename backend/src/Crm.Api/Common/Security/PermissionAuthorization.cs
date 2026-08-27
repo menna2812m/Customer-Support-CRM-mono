@@ -56,6 +56,7 @@ public sealed class PermissionAuthorizationHandler(ICurrentUser currentUser, ILo
             return Task.CompletedTask;
         }
 
+
         if (currentUser.IsAuthenticated && currentUser.Permissions.Contains(requirement.Permission))
         {
             context.Succeed(requirement);

@@ -1,18 +1,34 @@
 using System.Linq.Expressions;
 using System.Reflection;
 using Crm.Domain.Common;
+using Crm.Domain.Identity;
 using Microsoft.EntityFrameworkCore;
 
 namespace Crm.Infrastructure.Persistence;
 
 /// <summary>
 /// The single database context for the modular monolith.
-/// This feature introduces no business entity: the conventions below exist so the first real
-/// entity inherits them without a decision being made twice
-/// (specs/001-project-foundation/data-model.md).
+///
+/// The conventions below were established by feature 001 before any entity existed, so that the
+/// first real ones - the identity tables added by feature 002 - inherited them without a decision
+/// being made twice.
 /// </summary>
 public class CrmDbContext(DbContextOptions<CrmDbContext> options) : DbContext(options)
 {
+    public DbSet<User> Users => Set<User>();
+
+    public DbSet<Role> Roles => Set<Role>();
+
+    public DbSet<RolePermission> RolePermissions => Set<RolePermission>();
+
+    public DbSet<RoleAssignment> RoleAssignments => Set<RoleAssignment>();
+
+    public DbSet<Session> Sessions => Set<Session>();
+
+    public DbSet<RenewalCredential> RenewalCredentials => Set<RenewalCredential>();
+
+    public DbSet<AuthenticationEvent> AuthenticationEvents => Set<AuthenticationEvent>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         ArgumentNullException.ThrowIfNull(modelBuilder);

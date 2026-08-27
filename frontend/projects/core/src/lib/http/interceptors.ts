@@ -1,6 +1,8 @@
-import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
+import { HttpErrorResponse, HttpInterceptorFn, HttpRequest } from '@angular/common/http';
 import { inject } from '@angular/core';
-import { catchError, throwError } from 'rxjs';
+import { catchError, from, switchMap, throwError } from 'rxjs';
+import { AuthSession } from '../auth/auth-session.store';
+import { SessionRenewal } from '../auth/session-renewal.service';
 import { APP_CONFIG } from '../config/app-config';
 import { AppError, AppErrorKind, FieldError } from '../state/app-error';
 
@@ -42,10 +44,81 @@ export const correlationInterceptor: HttpInterceptorFn = (request, next) => {
 };
 
 /**
- * Attachment point for caller credentials. Deliberately inert in this feature: the authentication
- * feature replaces the body here, and no other file changes (spec FR-023, FR-030).
+ * Attaches the access credential the session holds, and the header that proves this request came
+ * from the application rather than from a cross-site form.
+ *
+ * The credential lives in memory only (see {@link AuthSession}). Requests that already carry an
+ * Authorization header - the session and sign-out calls, authenticated by the renewal cookie - are
+ * left alone, as are calls to anything other than this application's API.
+ *
+ * When the credential has expired, the interceptor renews once - shared with every other request
+ * that met the same expiry - and retries exactly once. A renewal that fails means the session
+ * ended on the server; `AuthService` has already cleared it and routed to sign-in by then, so the
+ * original refusal is surfaced unchanged rather than swallowed.
+ *
+ * The authentication endpoints are skipped entirely: they are authenticated by the renewal cookie
+ * rather than by a credential, and renewing on their behalf would recurse.
  */
-export const authTokenInterceptor: HttpInterceptorFn = (request, next) => next(request);
+export const authTokenInterceptor: HttpInterceptorFn = (request, next) => {
+  const session = inject(AuthSession);
+  const renewal = inject(SessionRenewal);
+
+  if (isAuthEndpoint(request.url) || request.headers.has('Authorization')) {
+    return next(request);
+  }
+
+  const token = session.accessToken();
+
+  if (!token) {
+    return next(request);
+  }
+
+  return next(withCredential(request, token)).pipe(
+    catchError((error: unknown) => {
+      if (!isUnauthenticated(error)) {
+        return throwError(() => error);
+      }
+
+      return from(renewal.renew()).pipe(
+        switchMap((renewed) => {
+          const refreshed = session.accessToken();
+
+          // One retry, and only with a credential that is actually newer: retrying without one
+          // would simply reproduce the same refusal.
+          return renewed && refreshed
+            ? next(withCredential(request, refreshed))
+            : throwError(() => error);
+        }),
+      );
+    }),
+  );
+};
+
+function withCredential(request: HttpRequest<unknown>, token: string): HttpRequest<unknown> {
+  return request.clone({
+    setHeaders: { Authorization: `Bearer ${token}`, 'X-Requested-With': 'CrmWeb' },
+  });
+}
+
+/** The endpoints the renewal cookie authenticates. Never renewed on behalf of. */
+function isAuthEndpoint(url: string): boolean {
+  return /\/api\/v\d+\/auth\//i.test(url);
+}
+
+/**
+ * Recognises a refusal before and after normalization. The error interceptor sits downstream of
+ * this one, so in the running application an {@link AppError} arrives here - but a test that
+ * exercises this interceptor on its own sees the raw response, and both must read the same.
+ */
+function isUnauthenticated(error: unknown): boolean {
+  if (error instanceof HttpErrorResponse) {
+    return error.status === 401;
+  }
+
+  return (
+    typeof error === 'object' && error !== null && (error as AppError).kind === 'unauthenticated'
+  );
+}
 
 /**
  * Converts every failure - transport, HTTP, or a body that does not match the error contract -

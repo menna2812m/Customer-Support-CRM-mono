@@ -99,7 +99,46 @@ component contains a backend address. The development origin `http://localhost:4
 CORS allowlist in `appsettings.Development.json`; an origin that is not on the list receives no
 CORS headers and is blocked by the browser.
 
-## 6. Run the verification suites
+## 6. Sign in
+
+Authentication is off by default (`Authentication:Staff:Enabled` is `false`), so the application
+runs and every protected endpoint answers 401. That is the correct state for someone who only
+wants to build a screen. To sign in for real you need an identity provider.
+
+Any conforming OpenID Connect provider works. A local Keycloak container is the quickest:
+
+```powershell
+docker run -p 8080:8080 -e KC_BOOTSTRAP_ADMIN_USERNAME=admin -e KC_BOOTSTRAP_ADMIN_PASSWORD=admin `
+  quay.io/keycloak/keycloak:latest start-dev
+```
+
+Create a realm called `crm`, a confidential client called `crm-api` with the redirect URI
+`https://localhost:7283/api/v1/auth/callback`, and one user with an email address. Then:
+
+```powershell
+cd backend/src/Crm.Api
+dotnet user-secrets set "Authentication:Staff:Enabled" "true"
+dotnet user-secrets set "Authentication:Staff:ClientSecret" "<the client secret>"
+dotnet user-secrets set "Token:SigningKey" "<at least 32 random characters>"
+dotnet user-secrets set "Identity:BootstrapAdministrator" "<your email address>"
+cd ../../..
+```
+
+`Authority` and `ClientId` are already in `appsettings.Development.json` pointing at the container
+above; the three values here are secrets or personal, so they belong in user-secrets.
+
+`Identity:BootstrapAdministrator` is what stops a fresh database from being a locked door: the first
+person to sign in matching that subject or email is granted the `Administrator` role, and the grant
+is written to the authentication event trail. It grants nothing to somebody who already holds a
+role, so it cannot restore access that was deliberately removed. Clear it once real administrators
+exist. `Identity:DefaultRole` is set to `Agent` in development, so anybody else who signs in can do
+day-to-day work; in production it defaults to nothing, and new staff arrive with no access until
+somebody grants it.
+
+`specs/002-auth-login/quickstart.md` walks the same setup in more detail, with a table of the
+mistakes that are easy to make.
+
+## 7. Run the verification suites
 
 ```powershell
 ./scripts/verify-backend.ps1      # restore, build, tests, format check
@@ -111,7 +150,7 @@ database, and disposes of it at the end - it never touches `CrmDev`. The first r
 image (about 2.3 GB); later runs take about 20 seconds. If Docker is not running, the suite fails
 with a message naming Docker rather than a misleading test failure.
 
-## 7. Add your first feature
+## 8. Add your first feature
 
 1. Create the branch and specification with `/speckit.specify`.
 2. Backend: entity and rules in `Crm.Domain`, use case, DTOs and validator in `Crm.Application`,

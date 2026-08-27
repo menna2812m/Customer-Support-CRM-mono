@@ -19,7 +19,7 @@ public sealed class AuthorizationTests(SqlServerFixture database)
     [Fact]
     public async Task Anonymous_callers_are_rejected_as_unauthenticated()
     {
-        using var client = CreateClient();
+        using var client = await CreateAnonymousClientAsync();
 
         var response = await client.GetAsync(new Uri(ItemsPath, UriKind.Relative));
 
@@ -30,7 +30,7 @@ public sealed class AuthorizationTests(SqlServerFixture database)
     [Fact]
     public async Task Authenticated_callers_without_the_permission_are_forbidden()
     {
-        using var client = CreateClient(TestTokens.Staff("customers.view"));
+        using var client = await CreateClientAsync("customers.view");
 
         var response = await client.GetAsync(new Uri(ItemsPath, UriKind.Relative));
 
@@ -41,7 +41,7 @@ public sealed class AuthorizationTests(SqlServerFixture database)
     [Fact]
     public async Task Callers_holding_the_declared_permission_are_allowed()
     {
-        using var client = CreateClient(TestTokens.Staff(Permissions.Diagnostics.Read));
+        using var client = await CreateClientAsync(Permissions.Diagnostics.Read);
 
         var response = await client.GetAsync(new Uri(ItemsPath, UriKind.Relative));
 
@@ -52,7 +52,7 @@ public sealed class AuthorizationTests(SqlServerFixture database)
     public async Task A_portal_caller_cannot_reach_a_staff_only_endpoint_with_the_same_permission()
     {
         // Spec AR-004: the permission name is identical; only the population differs.
-        using var client = CreateClient(TestTokens.Portal(Permissions.Diagnostics.Read));
+        using var client = await CreatePortalClientAsync(Permissions.Diagnostics.Read);
 
         var response = await client.GetAsync(new Uri(ItemsPath, UriKind.Relative));
 
@@ -63,8 +63,8 @@ public sealed class AuthorizationTests(SqlServerFixture database)
     public async Task A_forbidden_resource_is_indistinguishable_from_one_that_does_not_exist()
     {
         // Spec FR-026: a caller must not be able to probe for existence through the error body.
-        using var forbiddenClient = CreateClient(TestTokens.Staff("customers.view"));
-        using var missingClient = CreateClient(TestTokens.Staff(Permissions.Diagnostics.Read));
+        using var forbiddenClient = await CreateClientAsync("customers.view");
+        using var missingClient = await CreateClientAsync(Permissions.Diagnostics.Read);
 
         var forbidden = await forbiddenClient.GetAsync(new Uri(ItemsPath, UriKind.Relative));
         var missing = await missingClient.GetAsync(
@@ -80,15 +80,26 @@ public sealed class AuthorizationTests(SqlServerFixture database)
         forbiddenBody.ShouldNotContain("permission");
     }
 
-    private HttpClient CreateClient(string? token = null)
+    private async Task<HttpClient> CreateAnonymousClientAsync()
     {
         var factory = new CrmWebApplicationFactory(database.ConnectionString);
+        return await Task.FromResult(factory.CreateClient());
+    }
+
+    private async Task<HttpClient> CreateClientAsync(params string[] permissions)
+    {
+        var factory = new CrmWebApplicationFactory(database.ConnectionString);
+        return await factory.SignInAsync(permissions);
+    }
+
+    private async Task<HttpClient> CreatePortalClientAsync(params string[] permissions)
+    {
+        var factory = new CrmWebApplicationFactory(database.ConnectionString);
+        var credential = await TestTokens.IssuePortalAsync(factory.Services, permissions);
         var client = factory.CreateClient();
 
-        if (token is not null)
-        {
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-        }
+        client.DefaultRequestHeaders.Authorization =
+            new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", credential.AccessCredential);
 
         return client;
     }

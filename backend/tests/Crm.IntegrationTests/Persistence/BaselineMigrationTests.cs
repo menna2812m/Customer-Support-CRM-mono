@@ -35,7 +35,7 @@ public sealed class BaselineMigrationTests(SqlServerFixture database)
     }
 
     [Fact]
-    public async Task Schema_contains_no_business_tables()
+    public async Task The_schema_contains_only_the_tables_the_delivered_features_declare()
     {
         await using var context = database.CreateContext();
 
@@ -44,8 +44,23 @@ public sealed class BaselineMigrationTests(SqlServerFixture database)
                 $"SELECT TABLE_NAME AS Value FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE'")
             .ToListAsync();
 
-        // Only EF's migration history may exist. A business table appearing here means this
-        // feature has drifted outside its scope.
-        tables.ShouldAllBe(name => name == "__EFMigrationsHistory");
+        // Feature 001 asserted that nothing but the migration history existed - the scope guard for
+        // a foundation that deliberately persisted nothing. Feature 002 adds the identity tables, so
+        // the guard now names them. It still catches drift: a customer or ticket table appearing
+        // here means a feature has strayed outside its specification.
+        // Ordinal order: the underscore-prefixed migration history sorts after the letters.
+        string[] expected =
+        [
+            "AuthenticationEvent",
+            "RenewalCredential",
+            "Role",
+            "RoleAssignment",
+            "RolePermission",
+            "Session",
+            "User",
+            "__EFMigrationsHistory",
+        ];
+
+        tables.Order(StringComparer.Ordinal).ShouldBe(expected);
     }
 }

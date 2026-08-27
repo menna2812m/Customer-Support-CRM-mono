@@ -1,10 +1,12 @@
 import {
   ApplicationConfig,
+  inject,
+  provideAppInitializer,
   provideBrowserGlobalErrorListeners,
   provideZonelessChangeDetection,
 } from '@angular/core';
 import { provideRouter, withComponentInputBinding } from '@angular/router';
-import { provideCrmCore } from '@crm/core';
+import { AuthService, provideCrmCore } from '@crm/core';
 import { routes } from './app.routes';
 
 /**
@@ -17,5 +19,12 @@ export const appConfig: ApplicationConfig = {
     provideZonelessChangeDetection(),
     provideRouter(routes, withComponentInputBinding()),
     provideCrmCore(),
+
+    // Rebuild the session before the first route resolves, so a reload lands the user back where
+    // they were instead of bouncing them through the provider. Ordered after provideCrmCore
+    // because it needs the runtime configuration the initializer there loads.
+    provideAppInitializer(async () => {
+      await inject(AuthService).restore();
+    }),
   ],
 };

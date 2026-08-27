@@ -54,6 +54,43 @@ service, `app.routes.ts` for a route. If a change needs more, that is a signal t
 - Frontend guards and `*ngIf` on permissions shape the experience only. The server is the
   authority, always.
 
+### Adding a permission to a new endpoint
+
+1. Declare the constant in `Permissions` (`Crm.Application/Authorization/Permissions.cs`), named
+   `<area>.<action>`, lowercase. `Permissions.All` discovers it by reflection, so nothing else needs
+   editing to make it a real permission.
+2. Put `[RequirePermission(...)]` and `[RequirePopulation(...)]` on the controller - both, every
+   time. A controller with neither is caught by the fallback policy, which requires authentication
+   but says nothing about *who*, and that is not a decision to leave implicit.
+3. Grant it to whichever seeded roles should hold it, in `IdentityConfigurations`, and add a
+   migration. Startup reads the stored grants back and refuses to start if any names a permission
+   the catalog does not declare - so a rename that misses the seed is reported at deployment rather
+   than discovered as a support ticket.
+4. Write the authorization test **both ways**: a caller who holds the permission reaches it, and a
+   caller who does not is refused. An untested authorization rule is an assumption, and its failure
+   mode is silent.
+
+A permission change reaches a signed-in user on their next renewal - within
+`Token:AccessCredentialMinutes`, 15 by default. Permissions are recomputed at every renewal, which
+is what bounds staleness; nobody has to sign out for a role change to take effect.
+
+### Why a frontend permission check is never a security boundary
+
+`AuthService.hasPermission` and the navigation filtering in `app.ts` decide what to *show*. They
+decide nothing about what a caller can *do*, and treating them as though they did is the most
+common way an application ends up with a hole in it.
+
+The reason is mechanical. The permission list the frontend reads arrives inside the access
+credential, and that credential lives in the browser. Its claims are signed, so a user cannot forge
+one the API will accept - but they do not need to. They can edit the running page, call the API
+directly with the credential they legitimately hold, or simply type the address of a route whose
+link was hidden. Every one of those bypasses the check without touching the credential at all.
+
+So the rule is: hide a link because a dead end is bad experience, never because the screen behind
+it is sensitive. The endpoint that screen calls must refuse the request on its own, and there must
+be a test that says so. `app.spec.ts` asserts exactly this - that hiding the diagnostics link
+leaves the route in place, because the API is what stops the caller.
+
 ## Error codes and the error contract
 
 Every failure response is RFC 9457 problem details plus `code`, `correlationId`, and - for

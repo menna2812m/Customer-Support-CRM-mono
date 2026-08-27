@@ -33,6 +33,7 @@ builder.Services.AddCrmCors();
 builder.Services.AddCrmHealthChecks();
 builder.Services.AddCrmOpenApi();
 builder.Services.AddCrmValidation();
+builder.Services.AddCrmRateLimiting();
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
@@ -52,6 +53,12 @@ builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddScoped<ICorrelationContext, CorrelationContext>();
 builder.Services.AddScoped<ICurrentUser, CurrentUser>();
 
+// Authentication composition - the single shared registration point this feature touches.
+builder.Services.AddScoped<Crm.Application.Identity.StaffSignIn>();
+builder.Services.AddScoped<Crm.Application.Identity.DeactivateUser>();
+builder.Services.AddScoped<Crm.Api.Auth.AuthCookies>();
+builder.Services.AddScoped<Crm.Infrastructure.Identity.ICorrelationAccessor, Crm.Api.Auth.HttpCorrelationAccessor>();
+
 // Reference slice registration - the single shared registration point a feature touches (SC-002).
 builder.Services.AddScoped<Crm.Application.Diagnostics.DiagnosticItemQuery>();
 
@@ -65,6 +72,18 @@ builder.Services.AddScoped<IAuthorizationHandler, PopulationAuthorizationHandler
 builder.Services.AddSingleton<IAuthorizationMiddlewareResultHandler, AuthorizationFailureLogger>();
 builder.Services.AddAuthorizationBuilder()
     .SetFallbackPolicy(new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build());
+
+// Identity composition lives in Crm.Infrastructure alongside persistence, for the same reason: the
+// API layer references neither the provider client nor the token library.
+//
+// The delegates below read configuration when the options are first resolved, not while services
+// are being registered. That distinction cost an afternoon in feature 001: an eager read misses
+// anything layered in afterwards, which is exactly how a deployment override or a test host
+// supplies settings.
+builder.Services.AddCrmIdentity(
+    provider => builder.Configuration.GetSection("Authentication:Staff").Bind(provider),
+    token => builder.Configuration.GetSection(TokenOptions.SectionName).Bind(token),
+    session => builder.Configuration.GetSection(CrmSessionOptions.SectionName).Bind(session));
 
 // Persistence is composed inside Crm.Infrastructure so that no API type references EF Core or a
 // database driver - an architecture test enforces this (Constitution I).
@@ -111,6 +130,10 @@ app.UseStatusCodePages(async statusCodeContext =>
 
 app.UseCors(CorsOptions.PolicyName);
 
+// After CORS so a preflight is never throttled, and before authentication so an anonymous flood
+// is refused before it costs a database round trip (spec FR-036).
+app.UseRateLimiter();
+
 // An unknown version segment is answered explicitly rather than falling through to a bare 404.
 app.UseCrmApiVersionGuard("v1");
 
@@ -133,6 +156,10 @@ app.MapFallback("/{**path}", async context => await ErrorContractSetup.WriteProb
     .AllowAnonymous();
 
 await MigrateIfConfiguredAsync(app);
+
+// Spec FR-024: a stored grant naming a permission the catalog no longer declares is reported here
+// rather than silently granting nothing.
+await app.Services.ValidateSeededPermissionsAsync();
 
 await app.RunAsync();
 

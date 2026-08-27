@@ -1,13 +1,26 @@
-import { CanActivateFn } from '@angular/router';
+import { inject } from '@angular/core';
+import { CanActivateFn, Router } from '@angular/router';
+import { AuthService } from '@crm/core';
 
 /**
- * Route protection extension point (spec FR-033).
+ * Route protection (spec FR-033).
  *
- * Deliberately inert in this feature: it permits every navigation. The authentication feature
- * replaces the body of this function - checking the session and redirecting to sign-in - and no
- * route definition changes, because every protected route already references it.
+ * Sends an unauthenticated visitor to sign-in carrying the address they asked for, so that after
+ * the provider round trip they land where they meant to go rather than on a generic home page.
  *
  * Frontend guards shape the experience only. Authorization is always enforced by the backend
- * (Constitution IV); a guard that returns true never grants access to data.
+ * (Constitution IV); a guard that returns true never grants access to data, and one that returns
+ * false hides nothing the API would otherwise have handed over.
  */
-export const authGuard: CanActivateFn = () => true;
+export const authGuard: CanActivateFn = (_route, state) => {
+  const auth = inject(AuthService);
+  const router = inject(Router);
+
+  if (auth.isAuthenticated()) {
+    return true;
+  }
+
+  // A UrlTree rather than a navigate() call: the router replaces this navigation instead of
+  // adding one, so Back does not bounce the user off the page they just reached.
+  return router.createUrlTree(['/sign-in'], { queryParams: { returnUrl: state.url } });
+};

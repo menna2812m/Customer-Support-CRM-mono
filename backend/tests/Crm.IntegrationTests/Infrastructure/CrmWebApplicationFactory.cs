@@ -1,3 +1,4 @@
+using System.Net.Http.Headers;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
@@ -36,8 +37,9 @@ public sealed class CrmWebApplicationFactory(
                 ["Observability:LogFilePath"] = Path.Combine(Path.GetTempPath(), "crm-tests-.log"),
             };
 
-            // Both schemes on, with local signing keys, so authorization is exercised for real.
-            foreach (var (key, value) in TestTokens.AuthConfiguration())
+            // The application issues and validates its own credentials, so the tests configure the
+            // issuer rather than a provider.
+            foreach (var (key, value) in TestTokens.TokenConfiguration())
             {
                 settings[key] = value;
             }
@@ -52,5 +54,34 @@ public sealed class CrmWebApplicationFactory(
 
             configuration.AddInMemoryCollection(settings);
         });
+    }
+
+    /// <summary>
+    /// Seeds a staff user with the given permissions, starts a real session, and returns a client
+    /// carrying its credential. Tests get an authenticated caller without repeating the handshake,
+    /// while still exercising the per-request session check.
+    /// </summary>
+    public async Task<HttpClient> SignInAsync(params string[] permissions)
+    {
+        var credential = await TestTokens.IssueStaffAsync(Services, permissions);
+        var client = CreateClient();
+
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", credential.AccessCredential);
+
+        return client;
+    }
+
+    /// <summary>As <see cref="SignInAsync"/>, but also returns the seeded identifiers.</summary>
+    public async Task<(HttpClient Client, IssuedTestCredential Credential)> SignInWithDetailsAsync(
+        params string[] permissions)
+    {
+        var credential = await TestTokens.IssueStaffAsync(Services, permissions);
+        var client = CreateClient();
+
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", credential.AccessCredential);
+
+        return (client, credential);
     }
 }

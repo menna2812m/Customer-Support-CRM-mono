@@ -1,9 +1,15 @@
+using System.Net.Http;
 using Crm.Application.Abstractions;
 using Crm.Infrastructure.Auditing;
+using Crm.Infrastructure.Identity;
 using Crm.Infrastructure.Persistence;
 using Crm.Infrastructure.Persistence.Interceptors;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Protocols;
+using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 
 namespace Crm.Infrastructure;
 
@@ -46,6 +52,57 @@ public static class DependencyInjection
 
         return services;
     }
+
+    /// <summary>
+    /// Identity composition (feature 002). Registered here so that no API type references the
+    /// provider client, the token library, or the persistence types - the rule the architecture
+    /// tests enforce.
+    /// </summary>
+    public static IServiceCollection AddCrmIdentity(
+        this IServiceCollection services,
+        Action<ProviderSettings> configureProvider,
+        Action<TokenIssuerSettings> configureToken,
+        Action<SessionSettings> configureSession)
+    {
+        ArgumentNullException.ThrowIfNull(services);
+        ArgumentNullException.ThrowIfNull(configureProvider);
+        ArgumentNullException.ThrowIfNull(configureToken);
+        ArgumentNullException.ThrowIfNull(configureSession);
+
+        services.Configure(configureProvider);
+        services.Configure(configureToken);
+        services.Configure(configureSession);
+
+        services.AddScoped<ITokenIssuer, TokenIssuer>();
+        services.AddScoped<IIdentityStore, IdentityStore>();
+        services.AddScoped<IAuthenticationEventLog, AuthenticationEventLog>();
+        services.AddScoped<ISessionStore, SessionStore>();
+
+        // The discovery document is cached and refreshed by the manager rather than fetched per
+        // sign-in; a provider that is briefly slow must not make every sign-in slow.
+        services.TryAddSingleton<IConfigurationManager<OpenIdConnectConfiguration>>(provider =>
+        {
+            var settings = provider.GetRequiredService<IOptions<ProviderSettings>>().Value;
+            var authority = settings.Authority?.TrimEnd('/') ?? string.Empty;
+
+            return new ConfigurationManager<OpenIdConnectConfiguration>(
+                $"{authority}/.well-known/openid-configuration",
+                new OpenIdConnectConfigurationRetriever(),
+                new HttpDocumentRetriever(provider.GetRequiredService<IHttpClientFactory>().CreateClient(ProviderHttpClient))
+                {
+                    RequireHttps = !authority.StartsWith("http://localhost", StringComparison.OrdinalIgnoreCase),
+                });
+        });
+
+        services
+            .AddHttpClient<IIdentityProviderClient, OpenIdConnectClient>(ProviderHttpClient)
+            .ConfigureHttpClient(client => client.Timeout = TimeSpan.FromSeconds(8));
+
+        return services;
+    }
+
+    /// <summary>Named client so the provider timeout is bounded and observable (spec SC-011).</summary>
+    public const string ProviderHttpClient = "crm-identity-provider";
 
     /// <summary>
     /// Applies pending migrations. Exposed here so the API can trigger it without referencing

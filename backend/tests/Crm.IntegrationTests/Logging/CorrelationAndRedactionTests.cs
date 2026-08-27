@@ -49,10 +49,7 @@ public sealed class CorrelationAndRedactionTests(SqlServerFixture database)
     public async Task The_same_identifier_ties_the_response_to_its_log_entries()
     {
         await using var factory = new CrmWebApplicationFactory(database.ConnectionString);
-        using var client = factory.CreateClient();
-        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
-            "Bearer",
-            TestTokens.Staff(Permissions.Diagnostics.Read));
+        using var client = await factory.SignInAsync(Permissions.Diagnostics.Read);
         client.DefaultRequestHeaders.Add("X-Correlation-Id", "trace-to-follow");
 
         var response = await client.GetAsync(new Uri("/api/v1/diagnostics/boom", UriKind.Relative));

@@ -16,4 +16,7 @@ public static class CrmClaims
     public const string DepartmentId = "crm_department";
     public const string BranchId = "crm_branch";
     public const string TeamId = "crm_team";
+
+    /// <summary>Session this credential belongs to, so revocation can be checked per request.</summary>
+    public const string SessionId = "crm_session";
 }
