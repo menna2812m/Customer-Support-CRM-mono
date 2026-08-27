@@ -1,0 +1,273 @@
+openapi: 3.1.0
+info:
+  title: Customer Support CRM - Authentication API
+  version: "1.0"
+  description: >
+    Endpoints delivered by feature 002-auth-login. Staff only: the portal population remains
+    registered and disabled, exactly as feature 001 left it.
+
+    Two of these endpoints are browser redirects rather than JSON calls, because the OIDC handshake
+    happens server-side. The SPA never speaks to the identity provider directly.
+servers:
+  - url: https://localhost:7283
+    description: Local development
+
+tags:
+  - name: Authentication
+    description: Sign-in handshake, session lifecycle, sign-out
+
+paths:
+  /api/v1/auth/sign-in:
+    get:
+      tags: [Authentication]
+      summary: Begin sign-in (browser redirect)
+      description: >
+        Stores flow state in a short-lived cookie and redirects the browser to the identity
+        provider. Rate limited per source. Anonymous by necessity (AR-001).
+      security: []
+      parameters:
+        - name: returnUrl
+          in: query
+          required: false
+          description: >
+            Application path to return to after sign-in. Must be a relative path within the
+            application; an absolute or foreign URL is rejected, so this cannot become an open
+            redirect.
+          schema: { type: string, maxLength: 500, examples: ["/tickets/42"] }
+        - name: lang
+          in: query
+          required: false
+          description: Passed to the provider so its sign-in page matches the CRM language (LR-003).
+          schema: { type: string, enum: [ar, en] }
+      responses:
+        "302":
+          description: Redirect to the identity provider
+          headers:
+            Location: { schema: { type: string } }
+        "400": { $ref: "#/components/responses/ValidationFailed" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+        "503": { $ref: "#/components/responses/ProviderUnavailable" }
+
+  /api/v1/auth/callback:
+    get:
+      tags: [Authentication]
+      summary: Identity provider redirect target (browser redirect)
+      description: >
+        Exchanges the authorization code, validates the identity token, resolves or provisions the
+        user, creates a session, and sets the renewal cookie. Redirects back to the application
+        **carrying no credential in the URL** (FR-014).
+
+        On refusal it redirects to the application's no-access or sign-in-failed screen with a
+        machine-readable reason the client translates - never a provider error string.
+      security: []
+      parameters:
+        - { name: code, in: query, required: false, schema: { type: string } }
+        - { name: state, in: query, required: false, schema: { type: string } }
+        - { name: error, in: query, required: false, schema: { type: string } }
+      responses:
+        "302":
+          description: Redirect back to the application, with the renewal cookie set on success
+          headers:
+            Set-Cookie:
+              description: Renewal credential; HttpOnly, Secure, SameSite=Lax, path-scoped
+              schema: { type: string }
+        "429": { $ref: "#/components/responses/RateLimited" }
+        "503": { $ref: "#/components/responses/ProviderUnavailable" }
+
+  /api/v1/auth/session:
+    post:
+      tags: [Authentication]
+      summary: Exchange the renewal cookie for an access credential
+      description: >
+        The single path by which the application obtains an access credential - used both
+        immediately after sign-in and on every renewal, so there is one code path rather than two.
+
+        Rotates the renewal credential: the presented one is spent and a replacement is set. A
+        credential presented twice revokes the whole session (FR-012).
+
+        Anonymous by necessity - the access credential has expired by definition. Protected by the
+        cookie being script-inaccessible and same-site, a required custom header, an origin check,
+        and rate limiting.
+      security: []
+      parameters:
+        - $ref: "#/components/parameters/RequestedWith"
+      responses:
+        "200":
+          description: A new access credential and the caller's current identity
+          headers:
+            Set-Cookie:
+              description: Replacement renewal credential
+              schema: { type: string }
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SessionResponse" }
+        "401":
+          description: No renewal cookie, expired, revoked, or already spent
+          content:
+            application/problem+json:
+              schema: { $ref: "#/components/schemas/ProblemDetails" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+
+  /api/v1/auth/sign-out:
+    post:
+      tags: [Authentication]
+      summary: End this session, and optionally every session
+      description: >
+        Revokes the current session immediately and clears the renewal cookie. Returns the
+        provider's end-session address when the caller asked to also end access at the provider, so
+        the application can navigate there after its own cleanup (FR-014).
+      security:
+        - staffBearer: []
+      parameters:
+        - $ref: "#/components/parameters/RequestedWith"
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/SignOutRequest" }
+      responses:
+        "200":
+          description: Session revoked
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SignOutResponse" }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /api/v1/auth/me:
+    get:
+      tags: [Authentication]
+      summary: The caller's own identity, permissions, and placement
+      description: >
+        Returns only the caller's own record (AR-003). The application uses it to render the shell
+        and to decide which navigation to show - never as a security boundary.
+      security:
+        - staffBearer: []
+      responses:
+        "200":
+          description: The current user
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CurrentUserResponse" }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+
+components:
+  securitySchemes:
+    staffBearer:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: CRM-issued access credential. Held in memory by the application, never stored.
+
+  parameters:
+    RequestedWith:
+      name: X-Requested-With
+      in: header
+      required: true
+      description: >
+        Required on cookie-authenticated endpoints. A cross-site form post cannot set a custom
+        header, so requiring one closes the CSRF surface the renewal cookie opens.
+      schema: { type: string, enum: ["CrmWeb"] }
+
+  schemas:
+    SessionResponse:
+      type: object
+      required: [accessToken, expiresInSeconds, user]
+      properties:
+        accessToken:
+          type: string
+          description: Short-lived credential. Held in memory only - never written to storage.
+        expiresInSeconds: { type: integer, examples: [900] }
+        user: { $ref: "#/components/schemas/CurrentUserResponse" }
+
+    CurrentUserResponse:
+      type: object
+      required: [id, displayName, email, population, permissions]
+      properties:
+        id: { type: string, format: uuid }
+        displayName: { type: string }
+        email: { type: string, format: email }
+        population: { type: string, enum: [Staff, Portal] }
+        permissions:
+          type: array
+          description: Effective permissions, the union of the caller's roles.
+          items: { type: string, examples: ["tickets.view"] }
+        scope:
+          type: object
+          description: Organizational placement. Absent means "sees nothing extra", never "sees everything".
+          properties:
+            departmentId: { type: string, format: uuid }
+            branchId: { type: string, format: uuid }
+            teamId: { type: string, format: uuid }
+
+    SignOutRequest:
+      type: object
+      properties:
+        allSessions:
+          type: boolean
+          default: false
+          description: End every session for this user, not only the current one.
+        endProviderSession:
+          type: boolean
+          default: false
+          description: >
+            Also end the session at the identity provider - presented to the user as ending access
+            on this computer.
+
+    SignOutResponse:
+      type: object
+      required: [signedOut]
+      properties:
+        signedOut: { type: boolean }
+        providerSignOutUrl:
+          type: string
+          format: uri
+          description: Present only when endProviderSession was requested and the provider publishes one.
+
+    ProblemDetails:
+      type: object
+      description: The shared error contract from feature 001, unchanged.
+      required: [type, title, status, code, correlationId]
+      properties:
+        type: { type: string, format: uri }
+        title: { type: string }
+        status: { type: integer }
+        instance: { type: string }
+        code:
+          type: string
+          description: >
+            Codes added by this feature - sign_in_failed, provider_unavailable, no_access,
+            identity_collision, session_expired, rate_limited.
+        correlationId: { type: string }
+
+  responses:
+    ValidationFailed:
+      description: Request failed validation
+      content:
+        application/problem+json:
+          schema: { $ref: "#/components/schemas/ProblemDetails" }
+    Unauthenticated:
+      description: Missing, invalid, or expired credentials
+      content:
+        application/problem+json:
+          schema: { $ref: "#/components/schemas/ProblemDetails" }
+    Forbidden:
+      description: Authenticated but not permitted, or from a population this endpoint does not admit
+      content:
+        application/problem+json:
+          schema: { $ref: "#/components/schemas/ProblemDetails" }
+    RateLimited:
+      description: Too many requests from this source
+      headers:
+        Retry-After:
+          description: Seconds until the caller may retry.
+          schema: { type: integer }
+      content:
+        application/problem+json:
+          schema: { $ref: "#/components/schemas/ProblemDetails" }
+    ProviderUnavailable:
+      description: The identity provider could not be reached or returned an error
+      content:
+        application/problem+json:
+          schema: { $ref: "#/components/schemas/ProblemDetails" }
