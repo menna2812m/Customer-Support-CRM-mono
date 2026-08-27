@@ -1,0 +1,66 @@
+# Build output
+[Bb]in/
+[Oo]bj/
+[Dd]ebug/
+[Rr]elease/
+dist/
+build/
+publish/
+*.dll
+*.exe
+*.pdb
+
+# .NET / Visual Studio
+.vs/
+*.user
+*.suo
+*.userprefs
+*.cache
+project.lock.json
+artifacts/
+TestResults/
+coverage/
+*.coverage
+*.trx
+
+# NuGet
+packages/
+*.nupkg
+*.snupkg
+
+# Node / Angular
+node_modules/
+.angular/
+npm-debug.log*
+yarn-error.log*
+.eslintcache
+
+# Logs
+logs/
+*.log
+
+# Secrets and local environment
+.env
+.env.*
+!.env.example
+appsettings.*.local.json
+secrets.json
+*.pfx
+*.key
+
+# Editors
+.idea/
+*.swp
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.shared.json
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Temporary
+*.tmp
+*.bak
+backend/artifacts/

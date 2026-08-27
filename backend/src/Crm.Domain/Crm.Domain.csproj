@@ -1,0 +1,5 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Constitution I: the Domain layer references nothing. Keep this file empty. -->
+
+</Project>

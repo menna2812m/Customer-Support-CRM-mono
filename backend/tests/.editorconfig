@@ -1,0 +1,14 @@
+# Test projects follow test conventions, not library-API conventions.
+# Everything else - nullability, warnings-as-errors, style - still applies.
+
+[*.cs]
+# Underscore-separated test names read as sentences and are the xUnit convention.
+dotnet_diagnostic.CA1707.severity = none
+
+# Test classes and fixtures are instantiated by the runner, not by callers.
+dotnet_diagnostic.CA1515.severity = none
+dotnet_diagnostic.CA1034.severity = none
+
+# Threading a cancellation token through every assertion adds noise without value here; the suite
+# is bounded by the run itself.
+dotnet_diagnostic.xUnit1051.severity = none
