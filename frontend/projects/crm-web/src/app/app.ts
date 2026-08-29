@@ -24,6 +24,11 @@ export class App {
   private readonly allNavigation: readonly PermittedNavItem[] = [
     { path: '/home', labelKey: 'nav.home' },
     { path: '/diagnostics', labelKey: 'nav.diagnostics', permission: 'diagnostics.read' },
+    {
+      path: '/organization/departments',
+      labelKey: 'nav.organization',
+      permission: 'organization.view',
+    },
   ];
 
   /**

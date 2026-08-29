@@ -33,6 +33,19 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./features/diagnostics/diagnostics.page').then((m) => m.DiagnosticsPage),
   },
+  {
+    path: 'organization/departments',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/organization/departments.page').then((m) => m.DepartmentsPage),
+  },
+  {
+    path: 'organization/branches',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/organization/branches.page').then((m) => m.BranchesPage),
+  },
+  { path: 'organization', pathMatch: 'full', redirectTo: 'organization/departments' },
   { path: '', pathMatch: 'full', redirectTo: 'home' },
   { path: '**', redirectTo: 'home' },
 ];

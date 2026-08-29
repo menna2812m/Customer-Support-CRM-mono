@@ -108,13 +108,13 @@ active-only listing.
 
 ### Frontend for this story
 
-- [ ] T033 [P] [US1] Add `organization-api.service.ts` in `frontend/projects/crm-web/src/app/features/organization/` as the only place `HttpClient` appears in this feature
-- [ ] T034 [US1] Add `frontend/projects/crm-web/src/app/features/organization/departments.page.ts` and its template, following the `diagnostics` reference slice, with all six UI states: loading, empty, success, validation error, authorization failure, server failure
-- [ ] T035 [US1] Add `frontend/projects/crm-web/src/app/features/organization/department-form.component.ts` with both names on one form so a unit cannot be half-translated (LR-003), and the code field present on create and absent on edit
-- [ ] T036 [US1] Show a department's teams within `frontend/projects/crm-web/src/app/features/organization/department-detail.page.ts`, so creating a team never begins with an empty department dropdown - the containment rule made visible
-- [ ] T037 [US1] In `frontend/projects/crm-web/src/app/features/organization/departments.page.ts` sort by the name matching the active language rather than always by English (LR-002), and verify the hierarchy indents from the correct side under RTL using logical properties only
-- [ ] T038 [P] [US1] Frontend specs `frontend/projects/crm-web/src/app/features/organization/departments.page.spec.ts`, `department-form.component.spec.ts`, and `organization-api.service.spec.ts`
-- [ ] T039 [US1] Add the Organization entry to the shell navigation, visible only to a session holding `organization.view` - shaping the experience, never the boundary
+- [X] T033 [P] [US1] Add `organization-api.service.ts` in `frontend/projects/crm-web/src/app/features/organization/` as the only place `HttpClient` appears in this feature
+- [X] T034 [US1] Add `frontend/projects/crm-web/src/app/features/organization/departments.page.ts` and its template, following the `diagnostics` reference slice, with all six UI states: loading, empty, success, validation error, authorization failure, server failure
+- [X] T035 [US1] Add `frontend/projects/crm-web/src/app/features/organization/department-form.component.ts` with both names on one form so a unit cannot be half-translated (LR-003), and the code field present on create and absent on edit
+- [X] T036 [US1] Show a department's teams within `frontend/projects/crm-web/src/app/features/organization/department-detail.page.ts`, so creating a team never begins with an empty department dropdown - the containment rule made visible
+- [X] T037 [US1] In `frontend/projects/crm-web/src/app/features/organization/departments.page.ts` sort by the name matching the active language rather than always by English (LR-002), and verify the hierarchy indents from the correct side under RTL using logical properties only
+- [X] T038 [P] [US1] Frontend specs `frontend/projects/crm-web/src/app/features/organization/departments.page.spec.ts`, `department-form.component.spec.ts`, and `organization-api.service.spec.ts`
+- [X] T039 [US1] Add the Organization entry to the shell navigation, visible only to a session holding `organization.view` - shaping the experience, never the boundary
 
 **Checkpoint**: Departments and teams are fully manageable. This is the MVP and is demonstrable to a
 stakeholder, even though nobody can yet be placed in what it creates.
@@ -136,8 +136,8 @@ of its code beyond the foundational store.
 - [X] T042 [US2] Add `BranchesController` in `backend/src/Crm.Api/Organization/BranchesController.cs`, permissioned as Phase 3 and matching the contract
 - [X] T043 [US2] Record audit entries through `IAuditRecorder` for every branch mutation in `backend/src/Crm.Application/Organization/Branches/` (AR-005)
 - [X] T044 [P] [US2] Integration tests in `backend/tests/Crm.IntegrationTests/Organization/BranchEndpointsTests.cs` covering the endpoints, the authorization rules, and the delete refusal
-- [ ] T045 [US2] Add `frontend/projects/crm-web/src/app/features/organization/branches.page.ts` and `frontend/projects/crm-web/src/app/features/organization/branch-form.component.ts`, six UI states, both names on one form
-- [ ] T046 [P] [US2] Frontend specs `frontend/projects/crm-web/src/app/features/organization/branches.page.spec.ts` and `frontend/projects/crm-web/src/app/features/organization/branch-form.component.spec.ts`
+- [X] T045 [US2] Add `frontend/projects/crm-web/src/app/features/organization/branches.page.ts` and `frontend/projects/crm-web/src/app/features/organization/branch-form.component.ts`, six UI states, both names on one form
+- [X] T046 [P] [US2] Frontend specs `frontend/projects/crm-web/src/app/features/organization/branches.page.spec.ts` and `frontend/projects/crm-web/src/app/features/organization/branch-form.component.spec.ts`
 
 **Checkpoint**: All three kinds of unit are manageable. The structure feature 004 needs is complete.
 
@@ -164,8 +164,8 @@ This is the feature's one real invariant and the thing it is most likely to get 
 - [X] T051 [US3] Add the move endpoint to `TeamsController`, returning `membersReassigned` as the contract specifies
 - [X] T052 [P] [US3] Integration test in `backend/tests/Crm.IntegrationTests/Organization/TeamMoveTests.cs` that places users on a team, moves it, and then scans for violations of INV-2 - a user whose department disagrees with their team's department. The scan must return zero rows (SC-003)
 - [X] T053 [P] [US3] Integration test in `backend/tests/Crm.IntegrationTests/Organization/TeamMoveTests.cs` proving atomicity: a move that fails partway leaves both the team and every member unchanged
-- [ ] T054 [US3] Add `frontend/projects/crm-web/src/app/features/organization/move-team.dialog.ts` and its template, an explicit action rather than an editable field, showing how many people will be affected before confirming
-- [ ] T055 [P] [US3] Frontend spec `frontend/projects/crm-web/src/app/features/organization/move-team.dialog.spec.ts` for the move dialog, including the refusal messages
+- [X] T054 [US3] Add `frontend/projects/crm-web/src/app/features/organization/move-team.dialog.ts` and its template, an explicit action rather than an editable field, showing how many people will be affected before confirming
+- [X] T055 [P] [US3] Frontend spec `frontend/projects/crm-web/src/app/features/organization/move-team.dialog.spec.ts` for the move dialog, including the refusal messages
 
 **Checkpoint**: The organization can be reorganized without corrupting anyone's placement.
 
@@ -193,7 +193,7 @@ shipped, so a failure in it cannot be confused with a failure in the new feature
 - [X] T061 Remove the three claim-name keys from `backend/src/Crm.Api/appsettings.Development.json` and any other settings file that carries them
 - [X] T062 Update the affected feature 002 tests in `backend/tests/Crm.UnitTests/Identity/` and `backend/tests/Crm.IntegrationTests/Auth/` so they assert the new behaviour rather than the old: sign-in no longer writes placement, and a provider that asserts it is ignored (spec edge case, SC-005)
 - [X] T063 Confirm the CRM's **own** placement claims are untouched - `TokenIssuer` still writes `crm_department`, `crm_branch`, and `crm_team` from the session identity, and `ICurrentUser.Scope` is unchanged in shape and meaning
-- [ ] T064 [P] Confirm the contract drift test in `backend/tests/Crm.IntegrationTests/Contracts` passes, meaning every implemented endpoint is published in `contracts/organization-api.yaml` and nothing published is unimplemented
+- [X] T064 [P] Confirm the contract drift test in `backend/tests/Crm.IntegrationTests/Contracts` passes, meaning every implemented endpoint is published in `contracts/organization-api.yaml` and nothing published is unimplemented
 - [ ] T065 [P] Update `docs/getting-started.md` with how to build a structure locally, following `quickstart.md`
 - [ ] T066 [P] Add the feature's compliance record at `specs/003-organization/compliance.md`, matching the shape of feature 002's
 - [ ] T067 Run `./scripts/verify-backend.ps1` and `./scripts/verify-frontend.ps1` and confirm both pass; stop `ng serve` before the frontend script, because its `npm ci` corrupts `node_modules` under file locks
