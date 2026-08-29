@@ -7,6 +7,7 @@
       when v2 is introduced - that is the point at which per-version documents start to matter.
     -->
     <NoWarn>$(NoWarn);AV0029;AV0030</NoWarn>
+    <UserSecretsId>6b1f3f41-944b-475c-9ef2-16585fa843fd</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
