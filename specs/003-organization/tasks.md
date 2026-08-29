@@ -57,17 +57,17 @@ list screens, and it closes the foreign-key exception feature 002 recorded again
 **Purpose**: Schema, entities, and the store. **Every user story depends on this phase**; nothing
 below can start until the migration applies cleanly.
 
-- [ ] T005 Create the abstract `OrganizationUnit` base in `backend/src/Crm.Domain/Organization/OrganizationUnit.cs`: `NameAr`, `NameEn`, `Code` with no setter after construction (INV-3), `IsActive`, `Activate()`, `Deactivate()`, `Rename(nameAr, nameEn)`, implementing `IAuditableEntity` and `ISoftDeletable`
-- [ ] T006 [P] Create `Branch` in `backend/src/Crm.Domain/Organization/Branch.cs` with a `Create` factory; it belongs to nothing and contains nothing (FR-003)
-- [ ] T007 [P] Create `Department` in `backend/src/Crm.Domain/Organization/Department.cs` with a `Create` factory and a `Teams` collection
-- [ ] T008 Create `Team` in `backend/src/Crm.Domain/Organization/Team.cs` with a required `DepartmentId` (INV-1) and a `MoveTo(Department)` method that refuses an inactive destination (FR-016)
-- [ ] T009 [P] Write unit tests in `backend/tests/Crm.UnitTests/Organization/OrganizationUnitTests.cs` for the entity rules: names are trimmed on write, a code cannot be changed after construction, and `MoveTo` refuses an inactive department
-- [ ] T010 [P] Add entity configurations in `backend/src/Crm.Infrastructure/Persistence/Configurations/` for all three, each with **filtered** unique indexes (`WHERE [IsDeleted] = 0`) per data-model.md: code per kind, names per kind for branch and department, names per `(DepartmentId, Name*)` for team
-- [ ] T011 Add `Branches`, `Departments`, and `Teams` `DbSet`s to `backend/src/Crm.Infrastructure/Persistence/CrmDbContext.cs`
-- [ ] T012 Configure the three foreign keys from `User.DepartmentId`, `User.BranchId`, and `User.TeamId` with `ON DELETE NO ACTION` in the existing user configuration, closing feature 002's recorded Constitution VIII exception
-- [ ] T013 Create the migration with `dotnet ef migrations add Organization --project backend/src/Crm.Infrastructure --startup-project backend/src/Crm.Api`
-- [ ] T014 Review the generated migration by hand and confirm four things: three separate tables rather than a TPH hierarchy from the shared base class, the unique indexes carry their `WHERE [IsDeleted] = 0` filter, the three foreign keys are present, and no data migration was generated (every placement column is null)
-- [ ] T015 Add a seed migration granting `organization.view` and `organization.manage` to the seeded `Administrator` role, following the pattern in `20260826210055_IdentitySeed.cs`; the `Agent` role receives neither
+- [X] T005 Create the abstract `OrganizationUnit` base in `backend/src/Crm.Domain/Organization/OrganizationUnit.cs`: `NameAr`, `NameEn`, `Code` with no setter after construction (INV-3), `IsActive`, `Activate()`, `Deactivate()`, `Rename(nameAr, nameEn)`, implementing `IAuditableEntity` and `ISoftDeletable`
+- [X] T006 [P] Create `Branch` in `backend/src/Crm.Domain/Organization/Branch.cs` with a `Create` factory; it belongs to nothing and contains nothing (FR-003)
+- [X] T007 [P] Create `Department` in `backend/src/Crm.Domain/Organization/Department.cs` with a `Create` factory and a `Teams` collection
+- [X] T008 Create `Team` in `backend/src/Crm.Domain/Organization/Team.cs` with a required `DepartmentId` (INV-1) and a `MoveTo(Department)` method that refuses an inactive destination (FR-016)
+- [X] T009 [P] Write unit tests in `backend/tests/Crm.UnitTests/Organization/OrganizationUnitTests.cs` for the entity rules: names are trimmed on write, a code cannot be changed after construction, and `MoveTo` refuses an inactive department
+- [X] T010 [P] Add entity configurations in `backend/src/Crm.Infrastructure/Persistence/Configurations/` for all three, each with **filtered** unique indexes (`WHERE [IsDeleted] = 0`) per data-model.md: code per kind, names per kind for branch and department, names per `(DepartmentId, Name*)` for team
+- [X] T011 Add `Branches`, `Departments`, and `Teams` `DbSet`s to `backend/src/Crm.Infrastructure/Persistence/CrmDbContext.cs`
+- [X] T012 Configure the three foreign keys from `User.DepartmentId`, `User.BranchId`, and `User.TeamId` with `ON DELETE NO ACTION` in the existing user configuration, closing feature 002's recorded Constitution VIII exception
+- [X] T013 Create the migration with `dotnet ef migrations add Organization --project backend/src/Crm.Infrastructure --startup-project backend/src/Crm.Api`
+- [X] T014 Review the generated migration by hand and confirm four things: three separate tables rather than a TPH hierarchy from the shared base class, the unique indexes carry their `WHERE [IsDeleted] = 0` filter, the three foreign keys are present, and no data migration was generated (every placement column is null)
+- [X] T015 Add a seed migration granting `organization.view` and `organization.manage` to the seeded `Administrator` role, following the pattern in `20260826210055_IdentitySeed.cs`; the `Agent` role receives neither
 - [ ] T016 [P] Define `IOrganizationStore` in `backend/src/Crm.Application/Abstractions/IOrganizationStore.cs` covering the reads, the writes, and the dependent counts the delete rules need
 - [ ] T017 Implement it in `backend/src/Crm.Infrastructure/Organization/OrganizationStore.cs`, relying on the global soft-delete query filter so no call site writes `WHERE IsDeleted = 0` by hand
 - [ ] T018 [P] Add an integration test in `backend/tests/Crm.IntegrationTests/Organization/SchemaTests.cs` proving uniqueness survives soft deletion: create a unit, delete it, recreate one with the same code, and confirm it is accepted (this is the behaviour FR-006 depends on)
@@ -175,17 +175,24 @@ This is the feature's one real invariant and the thing it is most likely to get 
 
 **Purpose**: Retire the provider's placement claims, and close the feature out.
 
+> **Re-ordered during implementation (T056-T063 completed early, in Phase 2).** The plan sequenced
+> the retirement last on the grounds that it was the only work touching feature 002. That was
+> wrong: adding the placement foreign keys in T012 makes a provider-asserted identifier a
+> **constraint violation**, so sign-in fails outright rather than merely ignoring placement. Three
+> feature 002 tests went red the moment the migration landed. The retirement is not a separable
+> cleanup - it is forced by the foreign keys, and had to happen in the same phase.
+
 Retirement is sequenced last deliberately: it is the only work here that edits code feature 002
 shipped, so a failure in it cannot be confused with a failure in the new feature.
 
-- [ ] T056 Remove the department, branch, and team members from `ProviderIdentity` in `backend/src/Crm.Application/Abstractions/IIdentityProviderClient.cs`
-- [ ] T057 Remove `ReadGuidClaim` and the three placement claim reads from `backend/src/Crm.Infrastructure/Identity/OpenIdConnectClient.cs`, leaving subject, name, and email untouched (FR-019)
-- [ ] T058 Remove `Department`, `Branch`, and `Team` from `ProviderClaimNames` in `backend/src/Crm.Api/Configuration/CrmOptions.cs`
-- [ ] T059 Remove the placement branch of `RefreshFromProvider` in `backend/src/Crm.Domain/Identity/User.cs`, and update its comment, which currently promises to preserve a value for "the organization feature" that has now arrived
-- [ ] T060 Remove `ReadPlacement` and its call site from `backend/src/Crm.Application/Identity/StaffSignIn.cs`
-- [ ] T061 Remove the three claim-name keys from `backend/src/Crm.Api/appsettings.Development.json` and any other settings file that carries them
-- [ ] T062 Update the affected feature 002 tests in `backend/tests/Crm.UnitTests/Identity/` and `backend/tests/Crm.IntegrationTests/Auth/` so they assert the new behaviour rather than the old: sign-in no longer writes placement, and a provider that asserts it is ignored (spec edge case, SC-005)
-- [ ] T063 Confirm the CRM's **own** placement claims are untouched - `TokenIssuer` still writes `crm_department`, `crm_branch`, and `crm_team` from the session identity, and `ICurrentUser.Scope` is unchanged in shape and meaning
+- [X] T056 Remove the department, branch, and team members from `ProviderIdentity` in `backend/src/Crm.Application/Abstractions/IIdentityProviderClient.cs`
+- [X] T057 Remove `ReadGuidClaim` and the three placement claim reads from `backend/src/Crm.Infrastructure/Identity/OpenIdConnectClient.cs`, leaving subject, name, and email untouched (FR-019)
+- [X] T058 Remove `Department`, `Branch`, and `Team` from `ProviderClaimNames` in `backend/src/Crm.Api/Configuration/CrmOptions.cs`
+- [X] T059 Remove the placement branch of `RefreshFromProvider` in `backend/src/Crm.Domain/Identity/User.cs`, and update its comment, which currently promises to preserve a value for "the organization feature" that has now arrived
+- [X] T060 Remove `ReadPlacement` and its call site from `backend/src/Crm.Application/Identity/StaffSignIn.cs`
+- [X] T061 Remove the three claim-name keys from `backend/src/Crm.Api/appsettings.Development.json` and any other settings file that carries them
+- [X] T062 Update the affected feature 002 tests in `backend/tests/Crm.UnitTests/Identity/` and `backend/tests/Crm.IntegrationTests/Auth/` so they assert the new behaviour rather than the old: sign-in no longer writes placement, and a provider that asserts it is ignored (spec edge case, SC-005)
+- [X] T063 Confirm the CRM's **own** placement claims are untouched - `TokenIssuer` still writes `crm_department`, `crm_branch`, and `crm_team` from the session identity, and `ICurrentUser.Scope` is unchanged in shape and meaning
 - [ ] T064 [P] Confirm the contract drift test in `backend/tests/Crm.IntegrationTests/Contracts` passes, meaning every implemented endpoint is published in `contracts/organization-api.yaml` and nothing published is unimplemented
 - [ ] T065 [P] Update `docs/getting-started.md` with how to build a structure locally, following `quickstart.md`
 - [ ] T066 [P] Add the feature's compliance record at `specs/003-organization/compliance.md`, matching the shape of feature 002's

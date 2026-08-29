@@ -41,16 +41,14 @@ public interface IIdentityProviderClient
 public sealed record AuthorizationRequest(Uri AuthorizationUri, string CodeVerifier, string Nonce);
 
 /// <summary>
-/// What the provider asserted about a person, after validation. Placement claims are optional -
-/// a provider that carries no organizational data is normal (spec FR-026).
+/// What the provider asserted about a person, after validation.
 /// </summary>
-public sealed record ProviderIdentity(
-    string Subject,
-    string Email,
-    string DisplayName,
-    Guid? DepartmentId,
-    Guid? BranchId,
-    Guid? TeamId);
+/// <remarks>
+/// Organizational placement is deliberately absent (spec FR-018). Feature 003 made placement a
+/// foreign key to real records, so a provider-asserted identifier is no longer merely unhelpful -
+/// it is a constraint violation. The CRM owns placement outright; the provider owns who someone is.
+/// </remarks>
+public sealed record ProviderIdentity(string Subject, string Email, string DisplayName);
 
 /// <summary>
 /// The provider could not be reached, or refused the exchange. Distinct from a user error, because

@@ -68,21 +68,18 @@ public sealed class User : Entity, IAuditableEntity, ISoftDeletable, IHasOrganiz
     public Guid? DeletedBy { get; set; }
 
     /// <summary>
-    /// Refreshes what the provider owns. Placement is only overwritten when the provider actually
-    /// asserted it, so a provider that carries no organizational data does not erase a value the
-    /// organization feature will later populate (spec FR-026).
+    /// Refreshes what the provider owns: the email address and the display name, and nothing else.
     /// </summary>
-    public void RefreshFromProvider(string email, string displayName, OrganizationPlacement placement)
+    /// <remarks>
+    /// Placement is conspicuously absent. Feature 002 let a provider-asserted value overwrite it;
+    /// feature 003 made placement a foreign key to real records and gave the CRM sole ownership of
+    /// it (spec FR-018), so sign-in no longer touches it at all. An administrator sets placement,
+    /// and it survives every subsequent sign-in.
+    /// </remarks>
+    public void RefreshFromProvider(string email, string displayName)
     {
         Email = NormalizeEmail(email);
         DisplayName = string.IsNullOrWhiteSpace(displayName) ? Email : displayName;
-
-        if (placement.HasAny)
-        {
-            DepartmentId = placement.DepartmentId;
-            BranchId = placement.BranchId;
-            TeamId = placement.TeamId;
-        }
     }
 
     public void RecordSignIn(DateTimeOffset at) => LastSignedInAt = at;

@@ -45,18 +45,26 @@ public sealed class BaselineMigrationTests(SqlServerFixture database)
             .ToListAsync();
 
         // Feature 001 asserted that nothing but the migration history existed - the scope guard for
-        // a foundation that deliberately persisted nothing. Feature 002 adds the identity tables, so
-        // the guard now names them. It still catches drift: a customer or ticket table appearing
-        // here means a feature has strayed outside its specification.
+        // a foundation that deliberately persisted nothing. Feature 002 adds the identity tables and
+        // feature 003 the organizational ones, so the guard now names those too. It still catches
+        // drift: a customer or ticket table appearing here means a feature has strayed outside its
+        // specification.
+        //
+        // Three separate organization tables rather than one is itself the assertion. The three
+        // entities share an abstract base, and a single table here would mean EF had mapped them as
+        // a hierarchy - discovered late and costing a migration to undo.
         // Ordinal order: the underscore-prefixed migration history sorts after the letters.
         string[] expected =
         [
             "AuthenticationEvent",
+            "Branch",
+            "Department",
             "RenewalCredential",
             "Role",
             "RoleAssignment",
             "RolePermission",
             "Session",
+            "Team",
             "User",
             "__EFMigrationsHistory",
         ];

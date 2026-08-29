@@ -2,6 +2,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using Crm.Domain.Common;
 using Crm.Domain.Identity;
+using Crm.Domain.Organization;
 using Microsoft.EntityFrameworkCore;
 
 namespace Crm.Infrastructure.Persistence;
@@ -28,6 +29,12 @@ public class CrmDbContext(DbContextOptions<CrmDbContext> options) : DbContext(op
     public DbSet<RenewalCredential> RenewalCredentials => Set<RenewalCredential>();
 
     public DbSet<AuthenticationEvent> AuthenticationEvents => Set<AuthenticationEvent>();
+
+    public DbSet<Branch> Branches => Set<Branch>();
+
+    public DbSet<Department> Departments => Set<Department>();
+
+    public DbSet<Team> Teams => Set<Team>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
