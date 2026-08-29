@@ -21,6 +21,14 @@ export type SupportedLanguage = 'ar' | 'en';
 
 export const APP_CONFIG = new InjectionToken<AppConfig>('CRM_APP_CONFIG');
 
+/**
+ * Resolves once `assets/config.json` has been applied. Angular starts every application
+ * initializer together and awaits them as a group, so registration order does not sequence them:
+ * anything that reads {@link APP_CONFIG} during start-up must await this first, or it reads the
+ * fallback and addresses the wrong origin.
+ */
+export const CONFIG_READY = new InjectionToken<() => Promise<void>>('CRM_CONFIG_READY');
+
 const CONFIG_URL = 'assets/config.json';
 
 const FALLBACK_CONFIG: AppConfig = {
@@ -59,12 +67,21 @@ function normalize(config: AppConfig): AppConfig {
 }
 
 export function provideAppConfig() {
-  let loaded: AppConfig = FALLBACK_CONFIG;
+  // One object for the lifetime of the injector, populated in place. The injector caches whatever
+  // the factory returns the first time the token is resolved, so swapping a variable afterwards
+  // would leave every early reader holding the fallback for good.
+  const config: AppConfig = { ...FALLBACK_CONFIG };
+  let ready: Promise<void> = Promise.resolve();
 
   return [
-    provideAppInitializer(async () => {
-      loaded = await loadAppConfig();
+    provideAppInitializer(() => {
+      ready = loadAppConfig().then((loaded) => {
+        Object.assign(config, loaded);
+      });
+
+      return ready;
     }),
-    { provide: APP_CONFIG, useFactory: () => loaded },
+    { provide: APP_CONFIG, useFactory: () => config },
+    { provide: CONFIG_READY, useFactory: () => () => ready },
   ];
 }
