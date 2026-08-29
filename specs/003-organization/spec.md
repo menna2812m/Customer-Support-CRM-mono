@@ -33,6 +33,18 @@ buys a settled organizational model before any screen depends on one.
 - Q: Is the organization tree itself scoped by organizational placement? → A: No. Structure is
   global reference data. Scoping the tree by the tree would be circular, and an administrator
   maintaining it needs to see all of it.
+- Q: Can a unit's code be changed after it is created? → A: No. The code is set once and is
+  immutable; the bilingual names are the mutable human label. A code that can change is an
+  identifier that only looks stable.
+- Q: Can an administrator restore a deleted unit? → A: No. Deletion is recorded rather than
+  destructive so the audit history survives, but no restore interface is built. Deactivation already
+  covers retiring a unit that has history worth keeping.
+- Q: How are two administrators editing the same unit at once resolved? → A: Last write wins. No
+  concurrency token; the audit trail makes an overwrite discoverable afterwards. The structure is
+  small and rarely edited, so the collision is improbable and its damage mild.
+- Q: Must names be unique as well as codes? → A: Department and branch names must be unique among
+  their kind; team names only within their own department. A team name is only ever read under its
+  department, so "Tier 1" may exist under several.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -119,6 +131,8 @@ every member's recorded department follows the team.
   a half-translated organization is the seam Constitution VII exists to prevent.
 - Two administrators create units with the same code at the same moment. Uniqueness is enforced at
   the store, not only by a prior check, so the second attempt is refused rather than admitted.
+- Two administrators rename the same unit at the same moment. The later write wins and no conflict
+  is reported; both changes appear in the audit trail, so the overwrite is discoverable afterwards.
 - A department is deactivated while it still has active teams. Deactivation cascades to nothing;
   the teams remain, but a person cannot be placed in a team whose department is inactive.
 - A person is already placed in a unit that is later deactivated. Their placement is untouched.
@@ -126,6 +140,9 @@ every member's recorded department follows the team.
 - Codes differing only by surrounding whitespace or letter case are the same code.
 - A team is moved to the department it is already in. The move is accepted and changes nothing
   rather than being treated as an error.
+- Two departments each have a team named "Tier 1". This is permitted, and remains permitted when
+  one of those teams is moved - unless the destination department already has a team of that name,
+  which refuses the move.
 - The identity provider is still configured to assert department, branch, or team claims after this
   feature retires them. The claims are ignored, not honoured.
 
@@ -146,8 +163,14 @@ every member's recorded department follows the team.
 **Naming and identity**
 
 - **FR-005**: Every unit MUST carry both an Arabic and an English name, and both MUST be present.
+  Department and branch names MUST be unique among units of their kind; team names MUST be unique
+  within their own department. Names are compared ignoring letter case and surrounding whitespace,
+  and each language is checked independently.
 - **FR-006**: Every unit MUST carry a code that is unique among units of its kind, compared
-  ignoring letter case and surrounding whitespace.
+  ignoring letter case and surrounding whitespace. The code MUST be set when the unit is created and
+  MUST NOT change afterwards, so that anything referring to a unit by code keeps referring to the
+  same unit. A unit created with the wrong code is deleted and recreated, which FR-011 permits while
+  it has no dependents.
 - **FR-007**: The system MUST display the name matching the reader's active language, falling back
   to the other name only if the expected one is somehow absent.
 
@@ -159,7 +182,8 @@ every member's recorded department follows the team.
   a consumer choosing a placement never has to filter inactive ones out for itself.
 - **FR-010**: Deactivating a unit MUST NOT change the placement of anyone already placed in it.
 - **FR-011**: An administrator MUST be able to delete a unit that has no dependents. Deletion MUST
-  be recoverable rather than destructive.
+  be recorded rather than destructive: the unit disappears from every list, while the record and its
+  audit history survive. Restoring a deleted unit is not an interface this feature provides.
 - **FR-012**: Deletion MUST be refused when the unit still has dependents, and the refusal MUST name
   what depends on it: teams for a department, placed people for any unit.
 - **FR-013**: Lists MUST be paginated using the established pagination contract and MUST be
@@ -169,7 +193,8 @@ every member's recorded department follows the team.
 
 - **FR-014**: A team MUST be movable from one department to another.
 - **FR-015**: When a team moves, the recorded department of every person on that team MUST be
-  updated to the new department in the same operation.
+  updated to the new department in the same operation. The move and those updates MUST succeed or
+  fail as a whole; a partially applied move would leave exactly the inconsistency FR-017 forbids.
 - **FR-016**: A team MUST NOT be moved into an inactive department.
 - **FR-017**: A person's recorded department MUST agree with the department of their recorded team
   whenever both are present. A person may have a department without a team.
