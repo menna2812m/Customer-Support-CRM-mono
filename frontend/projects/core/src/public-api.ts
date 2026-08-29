@@ -6,7 +6,7 @@
  * Only what is exported here is importable by features (Constitution VI).
  */
 
-export { APP_CONFIG, loadAppConfig, provideAppConfig } from './lib/config/app-config';
+export { APP_CONFIG, CONFIG_READY, loadAppConfig, provideAppConfig } from './lib/config/app-config';
 export type { AppConfig, SupportedLanguage } from './lib/config/app-config';
 
 export { provideCrmCore } from './lib/provide-crm-core';

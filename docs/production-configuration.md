@@ -4,12 +4,12 @@ Deployment and configuration for Windows Server + IIS, the hosting model chosen 
 
 ## Hosting model
 
-| Component | Artifact | Served by |
-|---|---|---|
-| Backend | `dotnet publish` output (includes `web.config` for the ASP.NET Core Module) | An IIS site or application, running in-process |
-| Frontend | `ng build` output under `dist/crm-web/browser` (includes `web.config` with the SPA rewrite) | A separate IIS site, or a virtual directory alongside the API |
+| Component | Artifact                                                                                    | Served by                                                     |
+| --------- | ------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| Backend   | `dotnet publish` output (includes `web.config` for the ASP.NET Core Module)                 | An IIS site or application, running in-process                |
+| Frontend  | `ng build` output under `dist/crm-web/browser` (includes `web.config` with the SPA rewrite) | A separate IIS site, or a virtual directory alongside the API |
 
-### The SPA and the API must share a registrable domain
+### The SPA and the API must share a registrable domain and a scheme
 
 This is a deployment constraint, not a preference, and getting it wrong produces a failure that
 looks like nothing at all: users sign in, land back on the application, and are immediately signed
@@ -17,27 +17,32 @@ out again.
 
 A session survives a page reload because the browser holds a renewal cookie. That cookie is
 `SameSite=Lax`, which means the browser sends it only on requests the browser considers same-site.
-"Same-site" is decided by the **registrable domain** - `example.com` in `crm.example.com` - not by
-the host, the port, or the scheme.
+"Same-site" is decided by the **registrable domain** - `example.com` in `crm.example.com` - and by
+the **scheme**. The host and the port are irrelevant: `https://crm.example.com` and
+`https://api.example.com:8443` are same-site. The scheme is not. Browsers have enforced
+_schemeful_ same-site since Chrome 89, so `http://crm.example.com` and `https://crm.example.com`
+are cross-site even though the host is identical.
 
 So these work:
 
-| SPA | API | Why |
-|---|---|---|
-| `https://crm.example.com` | `https://crm.example.com/api` | Same host |
-| `https://crm.example.com` | `https://api.example.com` | Same registrable domain |
+| SPA                       | API                            | Why                                                         |
+| ------------------------- | ------------------------------ | ----------------------------------------------------------- |
+| `https://crm.example.com` | `https://crm.example.com/api`  | Same host                                                   |
+| `https://crm.example.com` | `https://api.example.com`      | Same registrable domain                                     |
+| `https://crm.example.com` | `https://api.example.com:8443` | Same registrable domain and scheme; the port does not count |
 
 And these do not:
 
-| SPA | API | What happens |
-|---|---|---|
-| `https://crm.example.com` | `https://crm-api.azurewebsites.net` | The cookie is cross-site; the browser withholds it, and every renewal is answered `session_expired` |
-| `https://crm.example.com` | `https://crm.example.co.uk` | Different registrable domain, same problem |
+| SPA                       | API                                 | What happens                                                                                          |
+| ------------------------- | ----------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `https://crm.example.com` | `https://crm-api.azurewebsites.net` | The cookie is cross-site; the browser withholds it, and every renewal is answered `session_expired`   |
+| `https://crm.example.com` | `https://crm.example.co.uk`         | Different registrable domain, same problem                                                            |
+| `https://crm.example.com` | `http://crm.example.com`            | Same host, different scheme - schemeful same-site makes this cross-site, and the symptom is identical |
 
 Loosening the cookie to `SameSite=None` would restore the behaviour and remove the CSRF protection
 that the `SameSite=Lax` setting is there to provide, so it is not offered as an option. Put the two
-behind one domain instead - an IIS application under the SPA's site, or a sibling host on the same
-domain.
+behind one domain and one scheme instead - an IIS application under the SPA's site, or a sibling
+host on the same domain, both served over HTTPS.
 
 Two related settings follow from this:
 
@@ -72,38 +77,38 @@ invalid setting (spec FR-007). It also refuses a wildcard CORS origin, and refus
 
 ## Required settings
 
-| Setting | Secret | Notes |
-|---|---|---|
-| `Database:ConnectionString` | **yes** | SQL Server connection for the application account |
-| `Database:CommandTimeoutSeconds` | no | Default 30 |
-| `Database:MaxRetryCount` | no | Default 3 |
-| `Database:AutoMigrateOnStartup` | no | Must be `false`; startup refuses otherwise |
-| `Cors:AllowedOrigins` | no | Explicit list; a wildcard stops startup. Must contain the SPA origin |
-| `Authentication:Staff:Enabled` | no | `true` in any environment where people sign in |
-| `Authentication:Staff:Authority` | no | Provider base address; standard OIDC discovery is appended |
-| `Authentication:Staff:ClientId` | no | The confidential client registered for this deployment |
-| `Authentication:Staff:ClientSecret` | **yes** | Through the secrets source. Startup refuses an enabled scheme without one |
-| `Authentication:Staff:ApplicationBaseUrl` | no | The SPA's origin - where the callback returns the browser |
-| `Authentication:Staff:ClaimNames:*` | no | `Subject`, `Name`, `Email`, `Department`, `Branch`, `Team`. Defaults are the standard OIDC names |
-| `Token:Issuer` / `Token:Audience` | no | What the CRM stamps on its own credentials and validates |
-| `Token:SigningKey` | **yes** | HMAC key for CRM-issued credentials. At least 32 bytes |
-| `Token:KeyId` | no | Names the key in the credential header so it can be rotated |
-| `Token:AccessCredentialMinutes` | no | Default 15. Also the upper bound on how stale a permission change can be |
-| `Session:InactivityHours` | no | Default 8 - a working day of idleness ends the session |
-| `Session:AbsoluteHours` | no | Default 12 - the hard ceiling, however active the user |
-| `Session:CookieName` | no | Default `crm_renewal` |
-| `Identity:BootstrapAdministrator` | no | See below. Provider subject or email |
-| `Identity:DefaultRole` | no | Role granted to a staff member with no assignment. `null` means new staff arrive with no access |
-| `RateLimiting:Enabled` | no | Must be `true` outside Development; startup refuses otherwise |
-| `RateLimiting:Policies:auth-sign-in:*` | no | `PermitLimit` and `WindowSeconds` for sign-in and callback |
-| `RateLimiting:Policies:auth-session:*` | no | `PermitLimit` and `WindowSeconds` for renewal |
-| `Authentication:Portal:Issuer` | no | Issuer of CRM-owned portal tokens |
-| `Authentication:Portal:Audience` | no | Expected audience for portal tokens |
-| `Authentication:Portal:SigningKey` | **yes** | Key for CRM-issued portal tokens |
-| `Authentication:Portal:Enabled` | no | `true` once the portal ships |
-| `Observability:LogFilePath` | no | Path outside the site folder, on a drive with room |
-| `Observability:RetainedFileCount` | no | Default 30 daily files |
-| `Observability:CorrelationHeader` | no | Default `X-Correlation-Id` |
+| Setting                                   | Secret  | Notes                                                                                            |
+| ----------------------------------------- | ------- | ------------------------------------------------------------------------------------------------ |
+| `Database:ConnectionString`               | **yes** | SQL Server connection for the application account                                                |
+| `Database:CommandTimeoutSeconds`          | no      | Default 30                                                                                       |
+| `Database:MaxRetryCount`                  | no      | Default 3                                                                                        |
+| `Database:AutoMigrateOnStartup`           | no      | Must be `false`; startup refuses otherwise                                                       |
+| `Cors:AllowedOrigins`                     | no      | Explicit list; a wildcard stops startup. Must contain the SPA origin                             |
+| `Authentication:Staff:Enabled`            | no      | `true` in any environment where people sign in                                                   |
+| `Authentication:Staff:Authority`          | no      | Provider base address; standard OIDC discovery is appended                                       |
+| `Authentication:Staff:ClientId`           | no      | The confidential client registered for this deployment                                           |
+| `Authentication:Staff:ClientSecret`       | **yes** | Through the secrets source. Startup refuses an enabled scheme without one                        |
+| `Authentication:Staff:ApplicationBaseUrl` | no      | The SPA's origin - where the callback returns the browser                                        |
+| `Authentication:Staff:ClaimNames:*`       | no      | `Subject`, `Name`, `Email`, `Department`, `Branch`, `Team`. Defaults are the standard OIDC names |
+| `Token:Issuer` / `Token:Audience`         | no      | What the CRM stamps on its own credentials and validates                                         |
+| `Token:SigningKey`                        | **yes** | HMAC key for CRM-issued credentials. At least 32 bytes                                           |
+| `Token:KeyId`                             | no      | Names the key in the credential header so it can be rotated                                      |
+| `Token:AccessCredentialMinutes`           | no      | Default 15. Also the upper bound on how stale a permission change can be                         |
+| `Session:InactivityHours`                 | no      | Default 8 - a working day of idleness ends the session                                           |
+| `Session:AbsoluteHours`                   | no      | Default 12 - the hard ceiling, however active the user                                           |
+| `Session:CookieName`                      | no      | Default `crm_renewal`                                                                            |
+| `Identity:BootstrapAdministrator`         | no      | See below. Provider subject or email                                                             |
+| `Identity:DefaultRole`                    | no      | Role granted to a staff member with no assignment. `null` means new staff arrive with no access  |
+| `RateLimiting:Enabled`                    | no      | Must be `true` outside Development; startup refuses otherwise                                    |
+| `RateLimiting:Policies:auth-sign-in:*`    | no      | `PermitLimit` and `WindowSeconds` for sign-in and callback                                       |
+| `RateLimiting:Policies:auth-session:*`    | no      | `PermitLimit` and `WindowSeconds` for renewal                                                    |
+| `Authentication:Portal:Issuer`            | no      | Issuer of CRM-owned portal tokens                                                                |
+| `Authentication:Portal:Audience`          | no      | Expected audience for portal tokens                                                              |
+| `Authentication:Portal:SigningKey`        | **yes** | Key for CRM-issued portal tokens                                                                 |
+| `Authentication:Portal:Enabled`           | no      | `true` once the portal ships                                                                     |
+| `Observability:LogFilePath`               | no      | Path outside the site folder, on a drive with room                                               |
+| `Observability:RetainedFileCount`         | no      | Default 30 daily files                                                                           |
+| `Observability:CorrelationHeader`         | no      | Default `X-Correlation-Id`                                                                       |
 
 ## Setting up the identity provider
 
