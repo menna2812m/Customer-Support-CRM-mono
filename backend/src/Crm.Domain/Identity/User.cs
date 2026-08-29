@@ -93,6 +93,21 @@ public sealed class User : Entity, IAuditableEntity, ISoftDeletable, IHasOrganiz
     /// </remarks>
     public void PlaceInDepartment(Guid departmentId) => DepartmentId = departmentId;
 
+    /// <summary>
+    /// Places this person on a team, in the department that team belongs to.
+    /// </summary>
+    /// <remarks>
+    /// The department is a parameter rather than something looked up, because the domain cannot
+    /// reach the team. Passing both together is what makes INV-2 - a user's department agrees with
+    /// their team's - impossible to break by setting one and forgetting the other. Feature 004 will
+    /// use this from its placement screen.
+    /// </remarks>
+    public void PlaceOnTeam(Guid teamId, Guid departmentId)
+    {
+        TeamId = teamId;
+        DepartmentId = departmentId;
+    }
+
     public void RecordSignIn(DateTimeOffset at) => LastSignedInAt = at;
 
     public void Deactivate() => IsActive = false;

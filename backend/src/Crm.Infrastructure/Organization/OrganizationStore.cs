@@ -214,8 +214,28 @@ public sealed class OrganizationStore(CrmDbContext context) : IOrganizationStore
         return new PagedResult<TeamRecord>(page, query.Paging.Page, query.Paging.PageSize, total);
     }
 
+    /// <summary>
+    /// Filters the entity before projecting, rather than filtering the projection. EF cannot
+    /// translate a predicate over a constructed record - it has no idea that the record's Id came
+    /// from the team's - so the identifier has to be matched while it is still a column.
+    /// </summary>
     public Task<TeamRecord?> FindTeamAsync(Guid id, CancellationToken cancellationToken = default) =>
-        TeamRecords().FirstOrDefaultAsync(team => team.Id == id, cancellationToken);
+        context.Teams
+            .Where(team => team.Id == id)
+            .Join(
+                context.Departments,
+                team => team.DepartmentId,
+                department => department.Id,
+                (team, department) => new TeamRecord(
+                    team.Id,
+                    team.NameAr,
+                    team.NameEn,
+                    team.Code,
+                    team.IsActive,
+                    department.Id,
+                    department.NameAr,
+                    department.NameEn))
+            .FirstOrDefaultAsync(cancellationToken);
 
     public Task<bool> TeamNameExistsInDepartmentAsync(
         Guid departmentId,
@@ -277,53 +297,63 @@ public sealed class OrganizationStore(CrmDbContext context) : IOrganizationStore
     /// Everything happens in one transaction: a partially applied move would leave members in a
     /// department their team has left, which is exactly the inconsistency INV-2 forbids.
     /// </summary>
-    public async Task<TeamMoveResult?> MoveTeamAsync(
+    public Task<TeamMoveResult?> MoveTeamAsync(
         Guid teamId,
         Guid destinationDepartmentId,
         CancellationToken cancellationToken = default)
     {
-        var team = await context.Teams.FirstOrDefaultAsync(
-            entry => entry.Id == teamId,
-            cancellationToken);
+        // The connection is configured with EnableRetryOnFailure, whose execution strategy refuses
+        // a user-initiated transaction outright - so an explicit transaction has to be opened inside
+        // the strategy rather than around it. Everything the move reads is loaded inside the
+        // delegate too, because a retry re-runs the whole thing and must not reuse state fetched
+        // before the attempt that failed.
+        var strategy = context.Database.CreateExecutionStrategy();
 
-        var destination = await context.Departments.FirstOrDefaultAsync(
-            entry => entry.Id == destinationDepartmentId,
-            cancellationToken);
-
-        if (team is null || destination is null)
+        return strategy.ExecuteAsync(async () =>
         {
-            return null;
-        }
+            var team = await context.Teams.FirstOrDefaultAsync(
+                entry => entry.Id == teamId,
+                cancellationToken);
 
-        await using var transaction = await context.Database.BeginTransactionAsync(cancellationToken);
+            var destination = await context.Departments.FirstOrDefaultAsync(
+                entry => entry.Id == destinationDepartmentId,
+                cancellationToken);
 
-        // Throws when the destination is inactive (spec FR-016). The transaction is disposed
-        // without committing, so nothing is half-applied.
-        team.MoveTo(destination);
+            if (team is null || destination is null)
+            {
+                return null;
+            }
 
-        var members = await context.Users
-            .Where(user => user.TeamId == teamId)
-            .ToListAsync(cancellationToken);
+            await using var transaction = await context.Database.BeginTransactionAsync(cancellationToken);
 
-        foreach (var member in members)
-        {
-            member.PlaceInDepartment(destination.Id);
-        }
+            // Throws when the destination is inactive (spec FR-016). The transaction is disposed
+            // without committing, so nothing is half-applied.
+            team.MoveTo(destination);
 
-        await context.SaveChangesAsync(cancellationToken);
-        await transaction.CommitAsync(cancellationToken);
+            var members = await context.Users
+                .Where(user => user.TeamId == teamId)
+                .ToListAsync(cancellationToken);
 
-        var record = new TeamRecord(
-            team.Id,
-            team.NameAr,
-            team.NameEn,
-            team.Code,
-            team.IsActive,
-            destination.Id,
-            destination.NameAr,
-            destination.NameEn);
+            foreach (var member in members)
+            {
+                member.PlaceInDepartment(destination.Id);
+            }
 
-        return new TeamMoveResult(record, members.Count);
+            await context.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+
+            var record = new TeamRecord(
+                team.Id,
+                team.NameAr,
+                team.NameEn,
+                team.Code,
+                team.IsActive,
+                destination.Id,
+                destination.NameAr,
+                destination.NameEn);
+
+            return new TeamMoveResult(record, members.Count);
+        });
     }
 
     private static OrganizationUnitRecord ToRecord(OrganizationUnit unit) =>
@@ -386,21 +416,6 @@ public sealed class OrganizationStore(CrmDbContext context) : IOrganizationStore
 
         return ordered.ThenBy(unit => unit.Id);
     }
-
-    private IQueryable<TeamRecord> TeamRecords() =>
-        context.Teams.Join(
-            context.Departments,
-            team => team.DepartmentId,
-            department => department.Id,
-            (team, department) => new TeamRecord(
-                team.Id,
-                team.NameAr,
-                team.NameEn,
-                team.Code,
-                team.IsActive,
-                department.Id,
-                department.NameAr,
-                department.NameEn));
 
     private Task<int> CountPlacedPeopleAsync<TUnit>(Guid id, CancellationToken cancellationToken)
         where TUnit : OrganizationUnit

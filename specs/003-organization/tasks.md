@@ -70,8 +70,8 @@ below can start until the migration applies cleanly.
 - [X] T015 Add a seed migration granting `organization.view` and `organization.manage` to the seeded `Administrator` role, following the pattern in `20260826210055_IdentitySeed.cs`; the `Agent` role receives neither
 - [X] T016 [P] Define `IOrganizationStore` in `backend/src/Crm.Application/Abstractions/IOrganizationStore.cs` covering the reads, the writes, and the dependent counts the delete rules need
 - [X] T017 Implement it in `backend/src/Crm.Infrastructure/Organization/OrganizationStore.cs`, relying on the global soft-delete query filter so no call site writes `WHERE IsDeleted = 0` by hand
-- [ ] T018 [P] Add an integration test in `backend/tests/Crm.IntegrationTests/Organization/SchemaTests.cs` proving uniqueness survives soft deletion: create a unit, delete it, recreate one with the same code, and confirm it is accepted (this is the behaviour FR-006 depends on)
-- [ ] T019 [P] Add an integration test in `backend/tests/Crm.IntegrationTests/Organization/SchemaTests.cs` asserting a duplicate code is refused by the database rather than only by a prior read, by inserting concurrently
+- [X] T018 [P] Add an integration test in `backend/tests/Crm.IntegrationTests/Organization/SchemaTests.cs` proving uniqueness survives soft deletion: create a unit, delete it, recreate one with the same code, and confirm it is accepted (this is the behaviour FR-006 depends on)
+- [X] T019 [P] Add an integration test in `backend/tests/Crm.IntegrationTests/Organization/SchemaTests.cs` asserting a duplicate code is refused by the database rather than only by a prior read, by inserting concurrently
 
 **Checkpoint**: A migrated database with three tables, three foreign keys, filtered unique indexes,
 and an Administrator who holds both permissions. Nothing is reachable over HTTP yet.
@@ -89,9 +89,9 @@ active-only listing.
 
 ### Tests for this story
 
-- [ ] T020 [P] [US1] Unit tests in `backend/tests/Crm.UnitTests/Organization/DepartmentRulesTests.cs`: duplicate code refused ignoring case and surrounding whitespace, duplicate department name refused, both names required
-- [ ] T021 [P] [US1] Unit tests in `backend/tests/Crm.UnitTests/Organization/TeamRulesTests.cs`: a team name may repeat across departments but not within one, and a team cannot exist without a department
-- [ ] T022 [P] [US1] Unit tests in `backend/tests/Crm.UnitTests/Organization/DeletionRulesTests.cs`: deleting a department with live teams is refused and the refusal names them; deleting one with people placed in it is refused and the refusal counts them; deleting one with neither succeeds
+- [X] T020 [P] [US1] Unit tests in `backend/tests/Crm.UnitTests/Organization/DepartmentRulesTests.cs`: duplicate code refused ignoring case and surrounding whitespace, duplicate department name refused, both names required
+- [X] T021 [P] [US1] Unit tests in `backend/tests/Crm.UnitTests/Organization/TeamRulesTests.cs`: a team name may repeat across departments but not within one, and a team cannot exist without a department
+- [X] T022 [P] [US1] Unit tests in `backend/tests/Crm.UnitTests/Organization/DeletionRulesTests.cs`: deleting a department with live teams is refused and the refusal names them; deleting one with people placed in it is refused and the refusal counts them; deleting one with neither succeeds
 
 ### Implementation for this story
 
@@ -102,9 +102,9 @@ active-only listing.
 - [X] T027 [US1] Add `TeamsController` in `backend/src/Crm.Api/Organization/TeamsController.cs` for the department-scoped create and list plus the team-addressed get, rename, activation, and delete
 - [X] T028 [US1] Map the four conflict cases to the shared `ProblemDetails` contract with their `errorCode`s, so the client can translate a refusal rather than display a sentence from the server
 - [X] T029 [US1] Record an audit entry through `IAuditRecorder` for every mutation - create, rename, activation change, delete - capturing actor, unit, and what changed (AR-005)
-- [ ] T030 [P] [US1] Integration tests in `backend/tests/Crm.IntegrationTests/Organization/DepartmentEndpointsTests.cs` covering each endpoint, including the paged list shape and the `activeOnly` filter
-- [ ] T031 [P] [US1] Integration tests for authorization: a caller without `organization.view` is refused a read, a caller with view but not `manage` is refused every write, and a portal-population caller is refused everything (AR-003)
-- [ ] T032 [P] [US1] Integration tests in `backend/tests/Crm.IntegrationTests/Organization/ValidationTests.cs` for validation failures: a blank Arabic name, a page size over the maximum, and a rename attempting to change the code
+- [X] T030 [P] [US1] Integration tests in `backend/tests/Crm.IntegrationTests/Organization/DepartmentEndpointsTests.cs` covering each endpoint, including the paged list shape and the `activeOnly` filter
+- [X] T031 [P] [US1] Integration tests for authorization: a caller without `organization.view` is refused a read, a caller with view but not `manage` is refused every write, and a portal-population caller is refused everything (AR-003)
+- [X] T032 [P] [US1] Integration tests in `backend/tests/Crm.IntegrationTests/Organization/ValidationTests.cs` for validation failures: a blank Arabic name, a page size over the maximum, and a rename attempting to change the code
 
 ### Frontend for this story
 
@@ -131,11 +131,11 @@ three states and only active branches appear in the active-only listing.
 Branches have no containment rule, so this phase is a smaller repeat of Phase 3 and depends on none
 of its code beyond the foundational store.
 
-- [ ] T040 [P] [US2] Unit tests in `backend/tests/Crm.UnitTests/Organization/BranchRulesTests.cs`: duplicate code and duplicate name refused; delete refused while people are placed in the branch, and the refusal counts them
+- [X] T040 [P] [US2] Unit tests in `backend/tests/Crm.UnitTests/Organization/BranchRulesTests.cs`: duplicate code and duplicate name refused; delete refused while people are placed in the branch, and the refusal counts them
 - [X] T041 [P] [US2] Add the branch use cases in `backend/src/Crm.Application/Organization/Branches/`: create, rename, set activation, delete, get, and list
 - [X] T042 [US2] Add `BranchesController` in `backend/src/Crm.Api/Organization/BranchesController.cs`, permissioned as Phase 3 and matching the contract
 - [X] T043 [US2] Record audit entries through `IAuditRecorder` for every branch mutation in `backend/src/Crm.Application/Organization/Branches/` (AR-005)
-- [ ] T044 [P] [US2] Integration tests in `backend/tests/Crm.IntegrationTests/Organization/BranchEndpointsTests.cs` covering the endpoints, the authorization rules, and the delete refusal
+- [X] T044 [P] [US2] Integration tests in `backend/tests/Crm.IntegrationTests/Organization/BranchEndpointsTests.cs` covering the endpoints, the authorization rules, and the delete refusal
 - [ ] T045 [US2] Add `frontend/projects/crm-web/src/app/features/organization/branches.page.ts` and `frontend/projects/crm-web/src/app/features/organization/branch-form.component.ts`, six UI states, both names on one form
 - [ ] T046 [P] [US2] Frontend specs `frontend/projects/crm-web/src/app/features/organization/branches.page.spec.ts` and `frontend/projects/crm-web/src/app/features/organization/branch-form.component.spec.ts`
 
@@ -154,16 +154,16 @@ This is the feature's one real invariant and the thing it is most likely to get 
 
 ### Tests for this story
 
-- [ ] T047 [P] [US3] Unit tests in `backend/tests/Crm.UnitTests/Organization/TeamMoveTests.cs`: members are reassigned, a move into an inactive department is refused (FR-016), a move into a department already holding a team of that name is refused, and a move to the current department succeeds while changing nothing
-- [ ] T048 [P] [US3] A unit test in `backend/tests/Crm.UnitTests/Organization/TeamMoveTests.cs` asserting the audit entry carries both departments and the affected count (AR-006)
+- [X] T047 [P] [US3] Unit tests in `backend/tests/Crm.UnitTests/Organization/TeamMoveTests.cs`: members are reassigned, a move into an inactive department is refused (FR-016), a move into a department already holding a team of that name is refused, and a move to the current department succeeds while changing nothing
+- [X] T048 [P] [US3] A unit test in `backend/tests/Crm.UnitTests/Organization/TeamMoveTests.cs` asserting the audit entry carries both departments and the affected count (AR-006)
 
 ### Implementation for this story
 
 - [X] T049 [US3] Add the move use case in `backend/src/Crm.Application/Organization/Teams/MoveTeam.cs`: update the team, load and reassign its members through the domain, and record one audit entry - all inside one explicit transaction so the move succeeds or fails as a whole (FR-015)
 - [X] T050 [US3] Do **not** use `ExecuteUpdateAsync` for the member reassignment; it bypasses `AuditingSaveChangesInterceptor`, so `UpdatedAt` and `UpdatedBy` would stop being written by the one operation that most needs a trail (research decision 2, and the plan's Complexity Tracking)
 - [X] T051 [US3] Add the move endpoint to `TeamsController`, returning `membersReassigned` as the contract specifies
-- [ ] T052 [P] [US3] Integration test in `backend/tests/Crm.IntegrationTests/Organization/TeamMoveTests.cs` that places users on a team, moves it, and then scans for violations of INV-2 - a user whose department disagrees with their team's department. The scan must return zero rows (SC-003)
-- [ ] T053 [P] [US3] Integration test in `backend/tests/Crm.IntegrationTests/Organization/TeamMoveTests.cs` proving atomicity: a move that fails partway leaves both the team and every member unchanged
+- [X] T052 [P] [US3] Integration test in `backend/tests/Crm.IntegrationTests/Organization/TeamMoveTests.cs` that places users on a team, moves it, and then scans for violations of INV-2 - a user whose department disagrees with their team's department. The scan must return zero rows (SC-003)
+- [X] T053 [P] [US3] Integration test in `backend/tests/Crm.IntegrationTests/Organization/TeamMoveTests.cs` proving atomicity: a move that fails partway leaves both the team and every member unchanged
 - [ ] T054 [US3] Add `frontend/projects/crm-web/src/app/features/organization/move-team.dialog.ts` and its template, an explicit action rather than an editable field, showing how many people will be affected before confirming
 - [ ] T055 [P] [US3] Frontend spec `frontend/projects/crm-web/src/app/features/organization/move-team.dialog.spec.ts` for the move dialog, including the refusal messages
 
