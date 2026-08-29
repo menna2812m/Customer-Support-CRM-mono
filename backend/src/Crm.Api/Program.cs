@@ -57,10 +57,12 @@ builder.Services.AddScoped<ICurrentUser, CurrentUser>();
 builder.Services.AddScoped<Crm.Application.Identity.StaffSignIn>();
 builder.Services.AddScoped<Crm.Application.Identity.DeactivateUser>();
 builder.Services.AddScoped<Crm.Api.Auth.AuthCookies>();
-builder.Services.AddScoped<Crm.Infrastructure.Identity.ICorrelationAccessor, Crm.Api.Auth.HttpCorrelationAccessor>();
+builder.Services.AddScoped<Crm.Application.Abstractions.ICorrelationAccessor, Crm.Api.Auth.HttpCorrelationAccessor>();
 
 // Reference slice registration - the single shared registration point a feature touches (SC-002).
 builder.Services.AddScoped<Crm.Application.Diagnostics.DiagnosticItemQuery>();
+builder.Services.AddScoped<Crm.Application.Organization.OrganizationUnitService>();
+builder.Services.AddScoped<Crm.Application.Organization.TeamService>();
 
 // Authentication and authorization seams. Deny by default: anything without an explicit
 // [AllowAnonymous] requires an authenticated caller (Constitution IV, spec FR-025).

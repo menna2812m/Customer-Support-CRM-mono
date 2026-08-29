@@ -82,6 +82,17 @@ public sealed class User : Entity, IAuditableEntity, ISoftDeletable, IHasOrganiz
         DisplayName = string.IsNullOrWhiteSpace(displayName) ? Email : displayName;
     }
 
+    /// <summary>
+    /// Records that this person's department changed because their team moved (spec FR-015).
+    /// </summary>
+    /// <remarks>
+    /// This exists so the invariant has one owner. A user's department must agree with their team's
+    /// department whenever both are present (INV-2), and a team move is the only thing in this
+    /// feature that can break that agreement. Feature 004 will place people directly and must
+    /// maintain the same invariant.
+    /// </remarks>
+    public void PlaceInDepartment(Guid departmentId) => DepartmentId = departmentId;
+
     public void RecordSignIn(DateTimeOffset at) => LastSignedInAt = at;
 
     public void Deactivate() => IsActive = false;

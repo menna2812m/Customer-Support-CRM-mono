@@ -155,13 +155,3 @@ public sealed class AuthenticationEventLog(
     }
 }
 
-/// <summary>
-/// Request context the event log needs. Implemented in the API layer, where the correlation
-/// identifier and the caller's address live, so Infrastructure needs no HTTP dependency.
-/// </summary>
-public interface ICorrelationAccessor
-{
-    string CorrelationId { get; }
-
-    string? IpAddress { get; }
-}

@@ -2,6 +2,7 @@ using System.Net.Http;
 using Crm.Application.Abstractions;
 using Crm.Infrastructure.Auditing;
 using Crm.Infrastructure.Identity;
+using Crm.Infrastructure.Organization;
 using Crm.Infrastructure.Persistence;
 using Crm.Infrastructure.Persistence.Interceptors;
 using Microsoft.EntityFrameworkCore;
@@ -75,6 +76,7 @@ public static class DependencyInjection
 
         services.AddScoped<ITokenIssuer, TokenIssuer>();
         services.AddScoped<IIdentityStore, IdentityStore>();
+        services.AddScoped<IOrganizationStore, OrganizationStore>();
         services.AddScoped<IAuthenticationEventLog, AuthenticationEventLog>();
         services.AddScoped<ISessionStore, SessionStore>();
 

@@ -68,8 +68,8 @@ below can start until the migration applies cleanly.
 - [X] T013 Create the migration with `dotnet ef migrations add Organization --project backend/src/Crm.Infrastructure --startup-project backend/src/Crm.Api`
 - [X] T014 Review the generated migration by hand and confirm four things: three separate tables rather than a TPH hierarchy from the shared base class, the unique indexes carry their `WHERE [IsDeleted] = 0` filter, the three foreign keys are present, and no data migration was generated (every placement column is null)
 - [X] T015 Add a seed migration granting `organization.view` and `organization.manage` to the seeded `Administrator` role, following the pattern in `20260826210055_IdentitySeed.cs`; the `Agent` role receives neither
-- [ ] T016 [P] Define `IOrganizationStore` in `backend/src/Crm.Application/Abstractions/IOrganizationStore.cs` covering the reads, the writes, and the dependent counts the delete rules need
-- [ ] T017 Implement it in `backend/src/Crm.Infrastructure/Organization/OrganizationStore.cs`, relying on the global soft-delete query filter so no call site writes `WHERE IsDeleted = 0` by hand
+- [X] T016 [P] Define `IOrganizationStore` in `backend/src/Crm.Application/Abstractions/IOrganizationStore.cs` covering the reads, the writes, and the dependent counts the delete rules need
+- [X] T017 Implement it in `backend/src/Crm.Infrastructure/Organization/OrganizationStore.cs`, relying on the global soft-delete query filter so no call site writes `WHERE IsDeleted = 0` by hand
 - [ ] T018 [P] Add an integration test in `backend/tests/Crm.IntegrationTests/Organization/SchemaTests.cs` proving uniqueness survives soft deletion: create a unit, delete it, recreate one with the same code, and confirm it is accepted (this is the behaviour FR-006 depends on)
 - [ ] T019 [P] Add an integration test in `backend/tests/Crm.IntegrationTests/Organization/SchemaTests.cs` asserting a duplicate code is refused by the database rather than only by a prior read, by inserting concurrently
 
@@ -95,13 +95,13 @@ active-only listing.
 
 ### Implementation for this story
 
-- [ ] T023 [P] [US1] Add the department use cases in `backend/src/Crm.Application/Organization/Departments/`: create, rename, set activation, delete, get, and list
-- [ ] T024 [P] [US1] Add the team use cases in `backend/src/Crm.Application/Organization/Teams/`: create within a department, rename, set activation, delete, get, and list by department
-- [ ] T025 [P] [US1] Add FluentValidation validators in `backend/src/Crm.Application/Organization/Validators/` for the create and rename requests: both names required, lengths per data-model.md, code required and within length on create and absent on rename
-- [ ] T026 [US1] Add `DepartmentsController` in `backend/src/Crm.Api/Organization/DepartmentsController.cs` with `[RequirePermission(Permissions.Organization.View)]` on reads and `Manage` on writes, Staff population only, matching `contracts/organization-api.yaml` exactly
-- [ ] T027 [US1] Add `TeamsController` in `backend/src/Crm.Api/Organization/TeamsController.cs` for the department-scoped create and list plus the team-addressed get, rename, activation, and delete
-- [ ] T028 [US1] Map the four conflict cases to the shared `ProblemDetails` contract with their `errorCode`s, so the client can translate a refusal rather than display a sentence from the server
-- [ ] T029 [US1] Record an audit entry through `IAuditRecorder` for every mutation - create, rename, activation change, delete - capturing actor, unit, and what changed (AR-005)
+- [X] T023 [P] [US1] Add the department use cases in `backend/src/Crm.Application/Organization/Departments/`: create, rename, set activation, delete, get, and list
+- [X] T024 [P] [US1] Add the team use cases in `backend/src/Crm.Application/Organization/Teams/`: create within a department, rename, set activation, delete, get, and list by department
+- [X] T025 [P] [US1] Add FluentValidation validators in `backend/src/Crm.Application/Organization/Validators/` for the create and rename requests: both names required, lengths per data-model.md, code required and within length on create and absent on rename
+- [X] T026 [US1] Add `DepartmentsController` in `backend/src/Crm.Api/Organization/DepartmentsController.cs` with `[RequirePermission(Permissions.Organization.View)]` on reads and `Manage` on writes, Staff population only, matching `contracts/organization-api.yaml` exactly
+- [X] T027 [US1] Add `TeamsController` in `backend/src/Crm.Api/Organization/TeamsController.cs` for the department-scoped create and list plus the team-addressed get, rename, activation, and delete
+- [X] T028 [US1] Map the four conflict cases to the shared `ProblemDetails` contract with their `errorCode`s, so the client can translate a refusal rather than display a sentence from the server
+- [X] T029 [US1] Record an audit entry through `IAuditRecorder` for every mutation - create, rename, activation change, delete - capturing actor, unit, and what changed (AR-005)
 - [ ] T030 [P] [US1] Integration tests in `backend/tests/Crm.IntegrationTests/Organization/DepartmentEndpointsTests.cs` covering each endpoint, including the paged list shape and the `activeOnly` filter
 - [ ] T031 [P] [US1] Integration tests for authorization: a caller without `organization.view` is refused a read, a caller with view but not `manage` is refused every write, and a portal-population caller is refused everything (AR-003)
 - [ ] T032 [P] [US1] Integration tests in `backend/tests/Crm.IntegrationTests/Organization/ValidationTests.cs` for validation failures: a blank Arabic name, a page size over the maximum, and a rename attempting to change the code
@@ -132,9 +132,9 @@ Branches have no containment rule, so this phase is a smaller repeat of Phase 3 
 of its code beyond the foundational store.
 
 - [ ] T040 [P] [US2] Unit tests in `backend/tests/Crm.UnitTests/Organization/BranchRulesTests.cs`: duplicate code and duplicate name refused; delete refused while people are placed in the branch, and the refusal counts them
-- [ ] T041 [P] [US2] Add the branch use cases in `backend/src/Crm.Application/Organization/Branches/`: create, rename, set activation, delete, get, and list
-- [ ] T042 [US2] Add `BranchesController` in `backend/src/Crm.Api/Organization/BranchesController.cs`, permissioned as Phase 3 and matching the contract
-- [ ] T043 [US2] Record audit entries through `IAuditRecorder` for every branch mutation in `backend/src/Crm.Application/Organization/Branches/` (AR-005)
+- [X] T041 [P] [US2] Add the branch use cases in `backend/src/Crm.Application/Organization/Branches/`: create, rename, set activation, delete, get, and list
+- [X] T042 [US2] Add `BranchesController` in `backend/src/Crm.Api/Organization/BranchesController.cs`, permissioned as Phase 3 and matching the contract
+- [X] T043 [US2] Record audit entries through `IAuditRecorder` for every branch mutation in `backend/src/Crm.Application/Organization/Branches/` (AR-005)
 - [ ] T044 [P] [US2] Integration tests in `backend/tests/Crm.IntegrationTests/Organization/BranchEndpointsTests.cs` covering the endpoints, the authorization rules, and the delete refusal
 - [ ] T045 [US2] Add `frontend/projects/crm-web/src/app/features/organization/branches.page.ts` and `frontend/projects/crm-web/src/app/features/organization/branch-form.component.ts`, six UI states, both names on one form
 - [ ] T046 [P] [US2] Frontend specs `frontend/projects/crm-web/src/app/features/organization/branches.page.spec.ts` and `frontend/projects/crm-web/src/app/features/organization/branch-form.component.spec.ts`
@@ -159,9 +159,9 @@ This is the feature's one real invariant and the thing it is most likely to get 
 
 ### Implementation for this story
 
-- [ ] T049 [US3] Add the move use case in `backend/src/Crm.Application/Organization/Teams/MoveTeam.cs`: update the team, load and reassign its members through the domain, and record one audit entry - all inside one explicit transaction so the move succeeds or fails as a whole (FR-015)
-- [ ] T050 [US3] Do **not** use `ExecuteUpdateAsync` for the member reassignment; it bypasses `AuditingSaveChangesInterceptor`, so `UpdatedAt` and `UpdatedBy` would stop being written by the one operation that most needs a trail (research decision 2, and the plan's Complexity Tracking)
-- [ ] T051 [US3] Add the move endpoint to `TeamsController`, returning `membersReassigned` as the contract specifies
+- [X] T049 [US3] Add the move use case in `backend/src/Crm.Application/Organization/Teams/MoveTeam.cs`: update the team, load and reassign its members through the domain, and record one audit entry - all inside one explicit transaction so the move succeeds or fails as a whole (FR-015)
+- [X] T050 [US3] Do **not** use `ExecuteUpdateAsync` for the member reassignment; it bypasses `AuditingSaveChangesInterceptor`, so `UpdatedAt` and `UpdatedBy` would stop being written by the one operation that most needs a trail (research decision 2, and the plan's Complexity Tracking)
+- [X] T051 [US3] Add the move endpoint to `TeamsController`, returning `membersReassigned` as the contract specifies
 - [ ] T052 [P] [US3] Integration test in `backend/tests/Crm.IntegrationTests/Organization/TeamMoveTests.cs` that places users on a team, moves it, and then scans for violations of INV-2 - a user whose department disagrees with their team's department. The scan must return zero rows (SC-003)
 - [ ] T053 [P] [US3] Integration test in `backend/tests/Crm.IntegrationTests/Organization/TeamMoveTests.cs` proving atomicity: a move that fails partway leaves both the team and every member unchanged
 - [ ] T054 [US3] Add `frontend/projects/crm-web/src/app/features/organization/move-team.dialog.ts` and its template, an explicit action rather than an editable field, showing how many people will be affected before confirming
