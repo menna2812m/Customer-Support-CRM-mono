@@ -43,10 +43,10 @@ list screens, and it closes the foreign-key exception feature 002 recorded again
 
 **Purpose**: The constants, permissions, and strings the rest of the feature refers to.
 
-- [ ] T001 [P] Add the `Organization` group with `View` (`organization.view`) and `Manage` (`organization.manage`) to `backend/src/Crm.Application/Authorization/Permissions.cs`; the existing reflection scan discovers them, so no registration is needed
-- [ ] T002 [P] Add `organization.code_conflict`, `organization.name_conflict`, `organization.has_dependents`, and `organization.department_inactive` to `backend/src/Crm.Application/Common/ErrorCodes.cs`
-- [ ] T003 [P] Add `organization.*` keys and the four new `errors.code.*` entries to `frontend/projects/crm-web/public/assets/i18n/en.json` and `ar.json`, keeping key parity green under `npm run i18n:check`
-- [ ] T004 [P] Add a unit test in `backend/tests/Crm.UnitTests/Authorization/PermissionCatalogTests.cs` asserting both new permissions are discovered by `Permissions.All`
+- [X] T001 [P] Add the `Organization` group with `View` (`organization.view`) and `Manage` (`organization.manage`) to `backend/src/Crm.Application/Authorization/Permissions.cs`; the existing reflection scan discovers them, so no registration is needed
+- [X] T002 [P] Add `organization_code_conflict`, `organization_name_conflict`, `organization_has_dependents`, and `organization_department_inactive` to `backend/src/Crm.Application/Common/ErrorCodes.cs`
+- [X] T003 [P] Add `organization.*` keys and the four new `errors.code.*` entries to `frontend/projects/crm-web/public/assets/i18n/en.json` and `ar.json`, keeping key parity green under `npm run i18n:check`
+- [X] T004 [P] Add a unit test in `backend/tests/Crm.UnitTests/Authorization/PermissionCatalogTests.cs` asserting both new permissions are discovered by `Permissions.All`
 
 **Checkpoint**: The catalog knows the two permissions and the application still builds.
 

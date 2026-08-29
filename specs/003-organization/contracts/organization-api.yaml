@@ -520,8 +520,8 @@ components:
           type: string
           description: >
             Stable code the client translates. This feature adds:
-            `organization.code_conflict`, `organization.name_conflict`,
-            `organization.has_dependents`, `organization.department_inactive`.
+            `organization_code_conflict`, `organization_name_conflict`,
+            `organization_has_dependents`, `organization_department_inactive`.
         correlationId: { type: string }
 
   responses:

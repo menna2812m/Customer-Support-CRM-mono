@@ -34,6 +34,17 @@ public static class Permissions
         public const string Manage = "users.manage";
     }
 
+    /// <summary>
+    /// Organizational structure (feature 003). Reading is separated from managing because most
+    /// staff need to see the structure their work is placed in, while maintaining it is
+    /// administrative.
+    /// </summary>
+    public static class Organization
+    {
+        public const string View = "organization.view";
+        public const string Manage = "organization.manage";
+    }
+
     public static class Reports
     {
         public const string View = "reports.view";

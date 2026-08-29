@@ -31,6 +31,21 @@ public static class ErrorCodes
 
     public const string RateLimited = "rate_limited";
 
+    /// <summary>Added by feature 003 (organization). See contracts/organization-api.yaml.</summary>
+    public const string OrganizationCodeConflict = "organization_code_conflict";
+
+    /// <summary>A department or branch name, or a team name within its department, is taken.</summary>
+    public const string OrganizationNameConflict = "organization_name_conflict";
+
+    /// <summary>
+    /// A unit cannot be deleted while teams belong to it or people are placed in it. The detail
+    /// names what depends on it, because a refusal that does not say why cannot be acted on.
+    /// </summary>
+    public const string OrganizationHasDependents = "organization_has_dependents";
+
+    /// <summary>A team cannot be moved into a department that is not active.</summary>
+    public const string OrganizationDepartmentInactive = "organization_department_inactive";
+
     /// <summary>Per-field rule identifiers used inside the <c>errors</c> array.</summary>
     public static class Field
     {
