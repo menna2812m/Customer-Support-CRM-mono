@@ -1,8 +1,10 @@
 ﻿# Customer-Support-CRM-mono Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-08-26
+Auto-generated from all feature plans. Last updated: 2026-08-30
 
 ## Active Technologies
+- **Organization** (003-organization): no new dependency in either stack. Three tables -
+  `Department`, `Branch`, `Team` - plus the placement foreign keys feature 002 deferred
 
 - **Backend**: C# 14 / .NET 10 (SDK pinned to 10.0.400 via `global.json`), ASP.NET Core 10,
   EF Core 10 (SQL Server provider), Asp.Versioning.Mvc, FluentValidation, Serilog (001-project-foundation)
@@ -57,6 +59,8 @@ Constitution v1.0.0 (`.specify/memory/constitution.md`) is binding. Highlights:
 - Tests are required for business rules, authorization, and validation failures.
 
 ## Recent Changes
+- 003-organization: departments, branches, and teams as manageable entities; the product's first
+  collection endpoints; provider-asserted placement retired in favour of CRM-owned placement
 - 002-auth-login: Added C# 14 on .NET 10 (SDK 10.0.400); TypeScript on Angular 22 - unchanged from + Microsoft.AspNetCore.Authentication.OpenIdConnect (sign-in handshake
 
 - 001-project-foundation: monorepo, four-layer backend, Angular workspace with `@crm/core` and
