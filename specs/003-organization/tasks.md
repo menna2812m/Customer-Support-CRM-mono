@@ -194,8 +194,8 @@ shipped, so a failure in it cannot be confused with a failure in the new feature
 - [X] T062 Update the affected feature 002 tests in `backend/tests/Crm.UnitTests/Identity/` and `backend/tests/Crm.IntegrationTests/Auth/` so they assert the new behaviour rather than the old: sign-in no longer writes placement, and a provider that asserts it is ignored (spec edge case, SC-005)
 - [X] T063 Confirm the CRM's **own** placement claims are untouched - `TokenIssuer` still writes `crm_department`, `crm_branch`, and `crm_team` from the session identity, and `ICurrentUser.Scope` is unchanged in shape and meaning
 - [X] T064 [P] Confirm the contract drift test in `backend/tests/Crm.IntegrationTests/Contracts` passes, meaning every implemented endpoint is published in `contracts/organization-api.yaml` and nothing published is unimplemented
-- [ ] T065 [P] Update `docs/getting-started.md` with how to build a structure locally, following `quickstart.md`
-- [ ] T066 [P] Add the feature's compliance record at `specs/003-organization/compliance.md`, matching the shape of feature 002's
+- [X] T065 [P] Update `docs/getting-started.md` with how to build a structure locally, following `quickstart.md`
+- [X] T066 [P] Add the feature's compliance record at `specs/003-organization/compliance.md`, matching the shape of feature 002's
 - [ ] T067 Run `./scripts/verify-backend.ps1` and `./scripts/verify-frontend.ps1` and confirm both pass; stop `ng serve` before the frontend script, because its `npm ci` corrupts `node_modules` under file locks
 - [ ] T068 Walk `quickstart.md` by hand, including the Keycloak claim-mapper check that proves the retirement, and the SQL invariant scan
 
