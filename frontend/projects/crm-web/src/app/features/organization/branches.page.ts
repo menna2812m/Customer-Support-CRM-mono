@@ -1,11 +1,17 @@
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { AppError, RequestSignal, applyServerErrors, serverErrorCodes } from '@crm/core';
-import { StateContainerComponent } from '@crm/ui';
+import {
+  BadgeComponent,
+  CodeComponent,
+  PageHeaderComponent,
+  PanelComponent,
+  StateContainerComponent,
+  NoticeComponent,
+} from '@crm/ui';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { OrganizationApiService, OrganizationUnit, PagedResult } from './organization-api.service';
 import { UnitNamePipe } from './unit-name.pipe';
@@ -17,40 +23,21 @@ import { UnitNamePipe } from './unit-name.pipe';
 @Component({
   selector: 'crm-branches-page',
   imports: [
+    BadgeComponent,
+    CodeComponent,
     MatButtonModule,
-    MatCardModule,
     MatFormFieldModule,
     MatInputModule,
+    PageHeaderComponent,
+    PanelComponent,
     ReactiveFormsModule,
     StateContainerComponent,
     TranslocoPipe,
     UnitNamePipe,
+    NoticeComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './branches.page.html',
-  styles: `
-    .crm-org__section {
-      margin-block-end: var(--crm-space-lg);
-    }
-
-    .crm-org__form {
-      display: flex;
-      flex-wrap: wrap;
-      gap: var(--crm-space-md);
-      align-items: start;
-    }
-
-    .crm-org__row {
-      display: flex;
-      align-items: center;
-      gap: var(--crm-space-sm);
-      padding-block: var(--crm-space-xs);
-    }
-
-    .crm-org__inactive {
-      opacity: 0.6;
-    }
-  `,
 })
 export class BranchesPage implements OnInit {
   private readonly api = inject(OrganizationApiService);

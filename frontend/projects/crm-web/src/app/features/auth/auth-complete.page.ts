@@ -26,7 +26,8 @@ const NO_ACCESS_CODES = new Set(['no_access', 'identity_collision']);
   `,
   styles: `
     .crm-auth-complete__label {
-      margin-block: var(--crm-space-lg) 0;
+      margin-block-start: var(--crm-space-8);
+      color: var(--crm-ink-secondary);
       text-align: center;
     }
   `,

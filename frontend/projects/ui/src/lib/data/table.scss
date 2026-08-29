@@ -1,0 +1,90 @@
+// The table style, applied to a real <table>.
+//
+// The organization screens previously rendered rows of records as flex <div>s. That looked
+// approximately right and was structurally wrong: a screen reader received an undifferentiated pile
+// with no column names, no row boundaries, and no way to navigate cell by cell. Records go in a
+// table because they are a table.
+//
+// Applied as a class rather than a component so a feature keeps full control of its columns and
+// cells. A table's markup is its content; wrapping it in a component API would mean re-inventing
+// colspan, sorting, and cell templates for no gain.
+
+.crm-table-scroll {
+  // A table is the one thing in a dense interface that legitimately needs to scroll sideways on a
+  // narrow screen. Scrolling the table beats stacking every row into a card, which triples the
+  // height and loses the column alignment that makes a table readable.
+  inline-size: 100%;
+  overflow-x: auto;
+
+  // Keeps the horizontal scrollbar from covering the last row on overlay-scrollbar platforms.
+  padding-block-end: var(--crm-space-1);
+}
+
+.crm-table {
+  inline-size: 100%;
+  border-collapse: collapse;
+  font-size: var(--crm-text-sm);
+
+  th,
+  td {
+    // Logical, so the first column hugs the correct edge in both directions.
+    text-align: start;
+    padding-inline: var(--crm-space-4);
+    padding-block: var(--crm-space-3);
+    vertical-align: middle;
+  }
+
+  thead th {
+    position: sticky;
+    inset-block-start: 0;
+    z-index: 1;
+
+    background: var(--crm-surface-sunken);
+    border-block-end: var(--crm-border-width) solid var(--crm-border-strong);
+
+    font-size: var(--crm-text-xs);
+    font-weight: var(--crm-weight-semibold);
+    letter-spacing: var(--crm-tracking-wide);
+    color: var(--crm-ink-secondary);
+    white-space: nowrap;
+  }
+
+  tbody tr {
+    border-block-end: var(--crm-border-width) solid var(--crm-border);
+  }
+
+  // No zebra striping. Rules already separate the rows, and stripes plus rules is two solutions to
+  // one problem.
+  tbody tr:hover {
+    background: var(--crm-accent-soft);
+  }
+
+  tbody tr:last-child {
+    border-block-end: none;
+  }
+
+  // A row whose record is retired. Marked by a muted first cell rather than by fading the whole
+  // row: a faded row is hard to read, which is not the same as obviously inactive.
+  tbody tr.crm-table__row--muted td:first-child {
+    color: var(--crm-ink-muted);
+  }
+}
+
+// Numbers and identifiers align on their digits down a column.
+.crm-table__cell--numeric {
+  font-variant-numeric: tabular-nums;
+  text-align: end;
+}
+
+// The actions column: shrink to content, and keep the buttons on one line.
+.crm-table__cell--actions {
+  inline-size: 1%;
+  white-space: nowrap;
+}
+
+.crm-table__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--crm-space-1);
+  justify-content: flex-end;
+}

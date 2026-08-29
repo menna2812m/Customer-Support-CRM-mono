@@ -1,151 +1,247 @@
-<h1>{{ 'organization.departments.title' | transloco }}</h1>
+<crm-page-header
+  titleKey="organization.departments.title"
+  descriptionKey="organization.departments.description"
+/>
 
 @if (formError(); as error) {
-  <p role="alert">{{ 'errors.code.' + error.code | transloco }}</p>
+  <crm-notice [messageKey]="'errors.code.' + error.code" />
 }
 
-<section class="crm-org__section">
-  <h2>{{ 'organization.departments.create' | transloco }}</h2>
+<div class="crm-stack">
+  <crm-panel titleKey="organization.departments.create">
+    <form class="crm-form-row" [formGroup]="form" (ngSubmit)="create()">
+      <mat-form-field>
+        <mat-label>{{ 'organization.fields.nameAr' | transloco }}</mat-label>
+        <input matInput formControlName="nameAr" dir="rtl" />
+        @if (form.controls.nameAr.touched && form.controls.nameAr.hasError('required')) {
+          <mat-error>{{ 'errors.field.required' | transloco }}</mat-error>
+        }
+        @for (code of serverCodes('nameAr'); track code) {
+          <mat-error>{{ 'errors.field.' + code | transloco }}</mat-error>
+        }
+      </mat-form-field>
 
-  <form class="crm-org__form" [formGroup]="form" (ngSubmit)="create()">
-    <mat-form-field>
-      <mat-label>{{ 'organization.fields.nameAr' | transloco }}</mat-label>
-      <input matInput formControlName="nameAr" dir="rtl" />
-      @if (form.controls.nameAr.touched && form.controls.nameAr.hasError('required')) {
-        <mat-error>{{ 'errors.field.required' | transloco }}</mat-error>
-      }
-      @for (code of serverCodes('nameAr'); track code) {
-        <mat-error>{{ 'errors.field.' + code | transloco }}</mat-error>
-      }
-    </mat-form-field>
+      <mat-form-field>
+        <mat-label>{{ 'organization.fields.nameEn' | transloco }}</mat-label>
+        <input matInput formControlName="nameEn" dir="ltr" />
+        @if (form.controls.nameEn.touched && form.controls.nameEn.hasError('required')) {
+          <mat-error>{{ 'errors.field.required' | transloco }}</mat-error>
+        }
+        @for (code of serverCodes('nameEn'); track code) {
+          <mat-error>{{ 'errors.field.' + code | transloco }}</mat-error>
+        }
+      </mat-form-field>
 
-    <mat-form-field>
-      <mat-label>{{ 'organization.fields.nameEn' | transloco }}</mat-label>
-      <input matInput formControlName="nameEn" dir="ltr" />
-      @if (form.controls.nameEn.touched && form.controls.nameEn.hasError('required')) {
-        <mat-error>{{ 'errors.field.required' | transloco }}</mat-error>
-      }
-      @for (code of serverCodes('nameEn'); track code) {
-        <mat-error>{{ 'errors.field.' + code | transloco }}</mat-error>
-      }
-    </mat-form-field>
+      <mat-form-field>
+        <mat-label>{{ 'organization.fields.code' | transloco }}</mat-label>
+        <input matInput formControlName="code" dir="ltr" />
+        <mat-hint>{{ 'organization.codeHint' | transloco }}</mat-hint>
+        @if (form.controls.code.touched && form.controls.code.hasError('required')) {
+          <mat-error>{{ 'errors.field.required' | transloco }}</mat-error>
+        }
+        @for (code of serverCodes('code'); track code) {
+          <mat-error>{{ 'errors.field.' + code | transloco }}</mat-error>
+        }
+      </mat-form-field>
 
-    <mat-form-field>
-      <mat-label>{{ 'organization.fields.code' | transloco }}</mat-label>
-      <input matInput formControlName="code" dir="ltr" />
-      <mat-hint>{{ 'organization.codeHint' | transloco }}</mat-hint>
-      @if (form.controls.code.touched && form.controls.code.hasError('required')) {
-        <mat-error>{{ 'errors.field.required' | transloco }}</mat-error>
-      }
-      @for (code of serverCodes('code'); track code) {
-        <mat-error>{{ 'errors.field.' + code | transloco }}</mat-error>
-      }
-    </mat-form-field>
+      <button matButton="filled" type="submit">
+        {{ 'organization.departments.create' | transloco }}
+      </button>
+    </form>
+  </crm-panel>
 
-    <button matButton="filled" type="submit">
-      {{ 'organization.actions.save' | transloco }}
-    </button>
-  </form>
-</section>
+  <crm-panel [flush]="true">
+    <crm-state-container [state]="departments.value()" (retry)="load()">
+      <div class="crm-table-scroll">
+        <table class="crm-table">
+          <caption class="crm-visually-hidden">
+            {{
+              'organization.departments.title' | transloco
+            }}
+          </caption>
 
-<section class="crm-org__section">
-  <crm-state-container [state]="departments.value()" (retry)="load()">
-    <mat-card appearance="outlined">
-      <mat-card-content>
-        @for (department of departments.data()?.items ?? []; track department.id) {
-          <div class="crm-org__row" [class.crm-org__inactive]="!department.isActive">
-            <button matButton type="button" (click)="openTeams(department)">
-              {{ department | unitName }}
-            </button>
+          <thead>
+            <tr>
+              <th scope="col">{{ 'organization.fields.name' | transloco }}</th>
+              <th scope="col">{{ 'organization.fields.code' | transloco }}</th>
+              <th scope="col">{{ 'organization.fields.status' | transloco }}</th>
+              <th scope="col">
+                <span class="crm-visually-hidden">{{
+                  'organization.fields.actions' | transloco
+                }}</span>
+              </th>
+            </tr>
+          </thead>
 
-            <span>{{ department.code }}</span>
-
-            <span>
-              {{
-                (department.isActive
-                  ? 'organization.status.active'
-                  : 'organization.status.inactive'
-                ) | transloco
-              }}
-            </span>
-
-            <button matButton type="button" (click)="toggleActivation(department)">
-              {{
-                (department.isActive
-                  ? 'organization.actions.deactivate'
-                  : 'organization.actions.activate'
-                ) | transloco
-              }}
-            </button>
-
-            <button matButton type="button" (click)="remove(department)">
-              {{ 'organization.actions.delete' | transloco }}
-            </button>
-          </div>
-
-          @if (openDepartment()?.id === department.id) {
-            <div class="crm-org__teams">
-              <h3>{{ 'organization.departments.teams' | transloco }}</h3>
-
-              <crm-state-container [state]="teams.value()" (retry)="loadTeams(department.id)">
-                @for (team of teams.data()?.items ?? []; track team.id) {
-                  <div class="crm-org__row" [class.crm-org__inactive]="!team.isActive">
-                    <span>{{ team | unitName }}</span>
-                    <span>{{ team.code }}</span>
-
-                    <button matButton type="button" (click)="toggleTeamActivation(team)">
+          <tbody>
+            @for (department of departments.data()?.items ?? []; track department.id) {
+              <tr [class.crm-table__row--muted]="!department.isActive">
+                <td>
+                  <!--
+                    The name opens the department's teams. It is a button rather than a link because
+                    it expands a region on this page rather than navigating, and aria-expanded says
+                    so to anyone not looking at the screen.
+                  -->
+                  <button
+                    class="crm-org__disclosure"
+                    type="button"
+                    [attr.aria-expanded]="openDepartment()?.id === department.id"
+                    (click)="openTeams(department)"
+                  >
+                    {{ department | unitName }}
+                  </button>
+                </td>
+                <td>
+                  <crm-code>{{ department.code }}</crm-code>
+                </td>
+                <td>
+                  <crm-badge [tone]="department.isActive ? 'success' : 'neutral'">
+                    {{
+                      (department.isActive
+                        ? 'organization.status.active'
+                        : 'organization.status.inactive'
+                      ) | transloco
+                    }}
+                  </crm-badge>
+                </td>
+                <td class="crm-table__cell--actions">
+                  <div class="crm-table__actions">
+                    <button matButton type="button" (click)="toggleActivation(department)">
                       {{
-                        (team.isActive
+                        (department.isActive
                           ? 'organization.actions.deactivate'
                           : 'organization.actions.activate'
                         ) | transloco
                       }}
                     </button>
 
-                    <button matButton type="button" (click)="move(team)">
-                      {{ 'organization.actions.move' | transloco }}
-                    </button>
-
-                    <button matButton type="button" (click)="removeTeam(team)">
+                    <button matButton type="button" (click)="remove(department)">
                       {{ 'organization.actions.delete' | transloco }}
                     </button>
                   </div>
-                }
-              </crm-state-container>
+                </td>
+              </tr>
 
-              <form class="crm-org__form" [formGroup]="teamForm" (ngSubmit)="createTeam()">
-                <mat-form-field>
-                  <mat-label>{{ 'organization.fields.nameAr' | transloco }}</mat-label>
-                  <input matInput formControlName="nameAr" dir="rtl" />
-                  @for (code of teamServerCodes('nameAr'); track code) {
-                    <mat-error>{{ 'errors.field.' + code | transloco }}</mat-error>
-                  }
-                </mat-form-field>
+              @if (openDepartment()?.id === department.id) {
+                <tr class="crm-org__teams-row">
+                  <td colspan="4">
+                    <div class="crm-org__teams">
+                      <h3 class="crm-org__teams-title">
+                        {{ 'organization.departments.teams' | transloco }}
+                      </h3>
 
-                <mat-form-field>
-                  <mat-label>{{ 'organization.fields.nameEn' | transloco }}</mat-label>
-                  <input matInput formControlName="nameEn" dir="ltr" />
-                  @for (code of teamServerCodes('nameEn'); track code) {
-                    <mat-error>{{ 'errors.field.' + code | transloco }}</mat-error>
-                  }
-                </mat-form-field>
+                      <crm-state-container
+                        [state]="teams.value()"
+                        (retry)="loadTeams(department.id)"
+                      >
+                        <table class="crm-table">
+                          <caption class="crm-visually-hidden">
+                            {{
+                              'organization.teams.title' | transloco
+                            }}
+                          </caption>
 
-                <mat-form-field>
-                  <mat-label>{{ 'organization.fields.code' | transloco }}</mat-label>
-                  <input matInput formControlName="code" dir="ltr" />
-                  @for (code of teamServerCodes('code'); track code) {
-                    <mat-error>{{ 'errors.field.' + code | transloco }}</mat-error>
-                  }
-                </mat-form-field>
+                          <thead>
+                            <tr>
+                              <th scope="col">{{ 'organization.fields.name' | transloco }}</th>
+                              <th scope="col">{{ 'organization.fields.code' | transloco }}</th>
+                              <th scope="col">{{ 'organization.fields.status' | transloco }}</th>
+                              <th scope="col">
+                                <span class="crm-visually-hidden">{{
+                                  'organization.fields.actions' | transloco
+                                }}</span>
+                              </th>
+                            </tr>
+                          </thead>
 
-                <button matButton="filled" type="submit">
-                  {{ 'organization.teams.create' | transloco }}
-                </button>
-              </form>
-            </div>
-          }
-        }
-      </mat-card-content>
-    </mat-card>
-  </crm-state-container>
-</section>
+                          <tbody>
+                            @for (team of teams.data()?.items ?? []; track team.id) {
+                              <tr [class.crm-table__row--muted]="!team.isActive">
+                                <td>{{ team | unitName }}</td>
+                                <td>
+                                  <crm-code>{{ team.code }}</crm-code>
+                                </td>
+                                <td>
+                                  <crm-badge [tone]="team.isActive ? 'success' : 'neutral'">
+                                    {{
+                                      (team.isActive
+                                        ? 'organization.status.active'
+                                        : 'organization.status.inactive'
+                                      ) | transloco
+                                    }}
+                                  </crm-badge>
+                                </td>
+                                <td class="crm-table__cell--actions">
+                                  <div class="crm-table__actions">
+                                    <button
+                                      matButton
+                                      type="button"
+                                      (click)="toggleTeamActivation(team)"
+                                    >
+                                      {{
+                                        (team.isActive
+                                          ? 'organization.actions.deactivate'
+                                          : 'organization.actions.activate'
+                                        ) | transloco
+                                      }}
+                                    </button>
+
+                                    <button matButton type="button" (click)="move(team)">
+                                      {{ 'organization.actions.move' | transloco }}
+                                    </button>
+
+                                    <button matButton type="button" (click)="removeTeam(team)">
+                                      {{ 'organization.actions.delete' | transloco }}
+                                    </button>
+                                  </div>
+                                </td>
+                              </tr>
+                            }
+                          </tbody>
+                        </table>
+                      </crm-state-container>
+
+                      <form
+                        class="crm-form-row crm-org__team-form"
+                        [formGroup]="teamForm"
+                        (ngSubmit)="createTeam()"
+                      >
+                        <mat-form-field>
+                          <mat-label>{{ 'organization.fields.nameAr' | transloco }}</mat-label>
+                          <input matInput formControlName="nameAr" dir="rtl" />
+                          @for (code of teamServerCodes('nameAr'); track code) {
+                            <mat-error>{{ 'errors.field.' + code | transloco }}</mat-error>
+                          }
+                        </mat-form-field>
+
+                        <mat-form-field>
+                          <mat-label>{{ 'organization.fields.nameEn' | transloco }}</mat-label>
+                          <input matInput formControlName="nameEn" dir="ltr" />
+                          @for (code of teamServerCodes('nameEn'); track code) {
+                            <mat-error>{{ 'errors.field.' + code | transloco }}</mat-error>
+                          }
+                        </mat-form-field>
+
+                        <mat-form-field>
+                          <mat-label>{{ 'organization.fields.code' | transloco }}</mat-label>
+                          <input matInput formControlName="code" dir="ltr" />
+                          @for (code of teamServerCodes('code'); track code) {
+                            <mat-error>{{ 'errors.field.' + code | transloco }}</mat-error>
+                          }
+                        </mat-form-field>
+
+                        <button matButton="filled" type="submit">
+                          {{ 'organization.teams.create' | transloco }}
+                        </button>
+                      </form>
+                    </div>
+                  </td>
+                </tr>
+              }
+            }
+          </tbody>
+        </table>
+      </div>
+    </crm-state-container>
+  </crm-panel>
+</div>

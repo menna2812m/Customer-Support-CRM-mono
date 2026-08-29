@@ -1,6 +1,5 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
-import { MatToolbarModule } from '@angular/material/toolbar';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { LanguageSwitcherComponent } from './language-switcher.component';
 
@@ -21,14 +20,7 @@ export interface ShellNavItem {
  */
 @Component({
   selector: 'crm-app-shell',
-  imports: [
-    LanguageSwitcherComponent,
-    MatToolbarModule,
-    RouterLink,
-    RouterLinkActive,
-    RouterOutlet,
-    TranslocoPipe,
-  ],
+  imports: [LanguageSwitcherComponent, RouterLink, RouterLinkActive, RouterOutlet, TranslocoPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './app-shell.component.html',
   styleUrl: './app-shell.component.scss',

@@ -1,26 +1,48 @@
 <a class="crm-shell__skip" href="#crm-main">{{ 'app.skipToContent' | transloco }}</a>
 
-<mat-toolbar class="crm-shell__bar" color="primary">
-  <span class="crm-shell__title">{{ 'app.title' | transloco }}</span>
+<div class="crm-shell">
+  <!--
+    The sidebar is the primary navigation on a desktop and becomes a horizontal strip under the
+    header on narrow screens. It is one <nav> in both cases rather than two that hide each other,
+    so assistive technology sees a single navigation landmark and the tab order never changes.
+  -->
+  <nav class="crm-shell__side" [attr.aria-label]="'app.primaryNavigation' | transloco">
+    <div class="crm-shell__brand">
+      <span class="crm-shell__mark" aria-hidden="true"></span>
+      <span class="crm-shell__brand-text">{{ 'app.title' | transloco }}</span>
+    </div>
 
-  <nav class="crm-shell__nav" [attr.aria-label]="'app.primaryNavigation' | transloco">
-    @for (item of navigation(); track item.path) {
-      <a
-        class="crm-shell__link"
-        [routerLink]="item.path"
-        routerLinkActive="crm-shell__link--active"
-        [routerLinkActiveOptions]="{ exact: false }"
-        >{{ item.labelKey | transloco }}</a
-      >
-    }
+    <ul class="crm-shell__links">
+      @for (item of navigation(); track item.path) {
+        <li>
+          <a
+            class="crm-shell__link"
+            [routerLink]="item.path"
+            routerLinkActive="crm-shell__link--active"
+            #active="routerLinkActive"
+            [routerLinkActiveOptions]="{ exact: false }"
+            [attr.aria-current]="active.isActive ? 'page' : null"
+            >{{ item.labelKey | transloco }}</a
+          >
+        </li>
+      }
+    </ul>
   </nav>
 
-  <span class="crm-shell__spacer"></span>
+  <div class="crm-shell__frame">
+    <header class="crm-shell__bar">
+      <span class="crm-shell__bar-title">{{ 'app.title' | transloco }}</span>
 
-  <crm-language-switcher />
-  <ng-content select="[crmShellActions]" />
-</mat-toolbar>
+      <span class="crm-spacer"></span>
 
-<main id="crm-main" class="crm-shell__content" tabindex="-1">
-  <router-outlet />
-</main>
+      <crm-language-switcher />
+      <ng-content select="[crmShellActions]" />
+    </header>
+
+    <main id="crm-main" class="crm-shell__content" tabindex="-1">
+      <div class="crm-shell__measure">
+        <router-outlet />
+      </div>
+    </main>
+  </div>
+</div>

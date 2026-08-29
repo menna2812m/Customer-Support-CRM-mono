@@ -20,3 +20,17 @@ export { EmptyStateComponent } from './lib/states/empty-state.component';
 export { ValidationErrorComponent } from './lib/states/validation-error.component';
 export { ForbiddenStateComponent } from './lib/states/forbidden-state.component';
 export { ServerErrorComponent } from './lib/states/server-error.component';
+
+/*
+ * Design-system primitives (003 design refactor).
+ *
+ * These live here rather than in the application because @crm/ui is what a second application - the
+ * planned external customer portal - imports to inherit the same look. A primitive in
+ * crm-web/src/app/shared would be unreachable from there, and the design system would split in two.
+ */
+export { PageHeaderComponent } from './lib/layout/page-header.component';
+export { PanelComponent } from './lib/layout/panel.component';
+export { BadgeComponent } from './lib/data/badge.component';
+export type { BadgeTone } from './lib/data/badge.component';
+export { CodeComponent } from './lib/data/code.component';
+export { NoticeComponent } from './lib/states/notice.component';

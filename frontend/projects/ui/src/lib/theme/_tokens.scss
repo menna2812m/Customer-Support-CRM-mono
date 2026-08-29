@@ -1,0 +1,214 @@
+// Design tokens for the Customer Support CRM.
+//
+// THE RULE THIS SYSTEM IS BUILT ON
+//
+// Separation comes from hairline rules and background steps. Elevation is reserved for things that
+// genuinely overlay the page - a dialog, a menu, a toast - and nothing else casts a shadow. A
+// support CRM is a record-keeping instrument, and a ruled ledger reads as institutional where
+// floating cards read as a marketing dashboard. There is exactly one shadow token below, and its
+// name says where it may be used.
+//
+// Every value here is a decision. Features consume these tokens and define none of their own: a
+// one-off colour or spacing value in a feature is a bug in this file, not a local exception.
+//
+// Direction is never set here. It is applied at runtime from the active language by @crm/core, and
+// every rule in this workspace uses logical properties so no component needs a right-to-left case.
+
+// Breakpoints are SCSS variables rather than custom properties, because a custom property cannot be
+// used inside a media query. Values are content-driven: the point where the shell's navigation stops
+// fitting beside the title, and the point where a two-column form stops being readable.
+$crm-bp-sm: 40rem; // 640px - phone to large phone
+$crm-bp-md: 48rem; // 768px - tablet portrait
+$crm-bp-lg: 64rem; // 1024px - tablet landscape and small laptop
+$crm-bp-xl: 90rem; // 1440px - the width the content container stops growing at
+
+@mixin crm-tokens() {
+  :root {
+    // ── Type ──────────────────────────────────────────────────────────────────
+    //
+    // IBM Plex Sans Arabic carries both scripts in families designed together, so Arabic is set in
+    // the product's own typeface rather than in whatever the operating system happens to supply.
+    // That was the single largest defect in the previous design: the interface loaded Roboto, which
+    // has no Arabic glyphs at all.
+    --crm-font-sans:
+      'IBM Plex Sans Arabic', 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+    // Identifiers - unit codes, correlation ids, durations - are the spine of this system. They are
+    // read aloud, compared by eye, and copied by hand, so they get a face that makes every character
+    // unambiguous and every column align.
+    --crm-font-mono: 'IBM Plex Mono', ui-monospace, 'Cascadia Mono', Consolas, monospace;
+
+    // A deliberately short scale. An enterprise CRM is read, not browsed: six sizes covering
+    // 12-24px, with the work happening at 14. Anything larger belongs to a marketing page.
+    --crm-text-2xs: 0.6875rem; // 11 - table meta, dense captions
+    --crm-text-xs: 0.75rem; // 12 - labels, helper text
+    --crm-text-sm: 0.8125rem; // 13 - dense table body
+    --crm-text-md: 0.875rem; // 14 - body default
+    --crm-text-lg: 1rem; // 16 - section heading
+    --crm-text-xl: 1.375rem; // 22 - page title
+    --crm-text-2xl: 1.75rem; // 28 - the one screen that needs a statement
+
+    --crm-leading-tight: 1.3;
+    --crm-leading-normal: 1.55;
+
+    --crm-weight-regular: 400;
+    --crm-weight-medium: 500;
+    --crm-weight-semibold: 600;
+
+    // Arabic sits slightly smaller than Latin at the same point size and benefits from a little more
+    // line height. Applied by [lang='ar'] below rather than by a component.
+    --crm-tracking-tight: -0.01em;
+    --crm-tracking-wide: 0.02em;
+
+    // ── Space ─────────────────────────────────────────────────────────────────
+    //
+    // A numeric 4px ladder, not t-shirt sizes. "Is lg 16 or 24?" is a question a team answers
+    // differently every time; a number is not ambiguous. The previous scale jumped 16 -> 24 -> 40
+    // with nothing between, which is why six components hand-wrote their own margins.
+    --crm-space-0: 0;
+    --crm-space-1: 0.25rem; // 4
+    --crm-space-2: 0.5rem; // 8
+    --crm-space-3: 0.75rem; // 12
+    --crm-space-4: 1rem; // 16
+    --crm-space-5: 1.5rem; // 24
+    --crm-space-6: 2rem; // 32
+    --crm-space-7: 2.5rem; // 40
+    --crm-space-8: 3rem; // 48
+
+    // ── Surfaces ──────────────────────────────────────────────────────────────
+    //
+    // Four steps, and they are steps rather than shadows. The page sits lowest, panels sit on it,
+    // and a sunken well marks something inset - a table header, a code block.
+    --crm-surface-page: #f6f7f7;
+    --crm-surface: #ffffff;
+    --crm-surface-sunken: #f0f2f2;
+    --crm-surface-raised: #ffffff;
+    --crm-surface-inverse: #14201e;
+
+    // ── Ink ───────────────────────────────────────────────────────────────────
+    //
+    // Warm near-black rather than pure black: #000 on white is harsh at 14px, and this product is
+    // read for eight hours at a time.
+    --crm-ink: #14201e;
+    --crm-ink-secondary: #4a5654;
+    --crm-ink-muted: #6b7877;
+    --crm-ink-inverse: #f6f7f7;
+
+    // ── Accent ────────────────────────────────────────────────────────────────
+    //
+    // Deep teal-green. Chosen over the corporate blue every CRM defaults to: it reads institutional
+    // rather than technological, and it is distinct enough that a screenshot is recognisably this
+    // product. Used sparingly - selection, focus, the active navigation item, one primary action per
+    // view. If two things on screen are this colour, one of them is wrong.
+    --crm-accent: #0f6e5c;
+    --crm-accent-hover: #0c6150;
+    --crm-accent-strong: #0a5446;
+    --crm-accent-soft: #e6f1ee;
+    --crm-on-accent: #ffffff;
+
+    // ── Semantic ──────────────────────────────────────────────────────────────
+    //
+    // Muted, not bright. A status badge should be legible at a glance without competing with the
+    // content it describes.
+    --crm-success: #1c6b4a;
+    --crm-success-soft: #e5f0ea;
+    --crm-warning: #8a5a00;
+    --crm-warning-soft: #fbf0da;
+    --crm-danger: #a32020;
+    --crm-danger-soft: #fbe9e9;
+    --crm-info: #1f5a8a;
+    --crm-info-soft: #e6eef5;
+
+    // ── Borders ───────────────────────────────────────────────────────────────
+    //
+    // The load-bearing element of this design. Hairlines do the work shadows would do elsewhere.
+    --crm-border-width: 1px;
+    --crm-border: #dde1e0;
+    --crm-border-strong: #c2c9c7;
+    --crm-border-accent: var(--crm-accent);
+
+    // ── Radius ────────────────────────────────────────────────────────────────
+    //
+    // Small, and only where something is interactive or contains something. 8px everywhere - the
+    // previous single token - is the rounding of a consumer app.
+    --crm-radius-sm: 2px;
+    --crm-radius: 4px;
+    --crm-radius-lg: 6px;
+    --crm-radius-pill: 999px;
+
+    // ── Elevation ─────────────────────────────────────────────────────────────
+    //
+    // One token, named for the only place it is permitted. If a component that is not an overlay
+    // wants a shadow, the answer is a border.
+    --crm-shadow-overlay: 0 1px 2px rgb(20 32 30 / 8%), 0 8px 24px rgb(20 32 30 / 12%);
+
+    // ── Controls ──────────────────────────────────────────────────────────────
+    //
+    // 36px is the honest height for a dense administrative interface: comfortably clickable, and
+    // small enough that a filter bar does not become a second toolbar.
+    --crm-control-height: 2.25rem; // 36
+    --crm-control-height-sm: 1.75rem; // 28
+    --crm-control-padding-inline: var(--crm-space-3);
+
+    // ── Icons ─────────────────────────────────────────────────────────────────
+    --crm-icon-sm: 1rem; // 16
+    --crm-icon: 1.25rem; // 20
+    --crm-icon-lg: 1.5rem; // 24
+
+    // ── Containers ────────────────────────────────────────────────────────────
+    --crm-container: 90rem;
+    --crm-container-narrow: 44rem; // sign-in and other single-purpose screens
+    --crm-gutter: var(--crm-space-4);
+
+    // ── Motion ────────────────────────────────────────────────────────────────
+    //
+    // Short and few. Motion here confirms an action landed; it never announces itself.
+    --crm-duration: 120ms;
+    --crm-ease: cubic-bezier(0.2, 0, 0.2, 1);
+  }
+
+  // Arabic needs a little more room between lines and no negative tracking; Latin display sizes want
+  // slightly tighter tracking. One rule each, rather than a per-component override.
+  :root:lang(ar),
+  [lang='ar'] {
+    --crm-leading-normal: 1.7;
+    --crm-tracking-tight: 0;
+  }
+
+  // Dark scheme. Same structure inverted: the ledger still rules its lines, they are just lighter
+  // than the paper instead of darker.
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --crm-surface-page: #0f1817;
+      --crm-surface: #16211f;
+      --crm-surface-sunken: #101a19;
+      --crm-surface-raised: #1c2827;
+      --crm-surface-inverse: #f6f7f7;
+
+      --crm-ink: #e8ecea;
+      --crm-ink-secondary: #a8b3b1;
+      --crm-ink-muted: #7e8b88;
+      --crm-ink-inverse: #14201e;
+
+      --crm-accent: #4db6a0;
+      --crm-accent-hover: #66c4b0;
+      --crm-accent-strong: #7fd2bf;
+      --crm-accent-soft: #14312b;
+      --crm-on-accent: #06211b;
+
+      --crm-success: #6fc79c;
+      --crm-success-soft: #14302a;
+      --crm-warning: #d9a84a;
+      --crm-warning-soft: #2e2413;
+      --crm-danger: #e08585;
+      --crm-danger-soft: #331a1a;
+      --crm-info: #7fb3d9;
+      --crm-info-soft: #14252e;
+
+      --crm-border: #2a3634;
+      --crm-border-strong: #3d4b48;
+
+      --crm-shadow-overlay: 0 1px 2px rgb(0 0 0 / 40%), 0 8px 24px rgb(0 0 0 / 50%);
+    }
+  }
+}

@@ -1,12 +1,18 @@
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { AppError, RequestSignal, applyServerErrors, serverErrorCodes } from '@crm/core';
-import { StateContainerComponent } from '@crm/ui';
+import {
+  BadgeComponent,
+  CodeComponent,
+  PageHeaderComponent,
+  PanelComponent,
+  StateContainerComponent,
+  NoticeComponent,
+} from '@crm/ui';
 import { TranslocoPipe } from '@jsverse/transloco';
 import {
   OrganizationApiService,
@@ -27,46 +33,67 @@ import { UnitNamePipe } from './unit-name.pipe';
 @Component({
   selector: 'crm-departments-page',
   imports: [
+    BadgeComponent,
+    CodeComponent,
     MatButtonModule,
-    MatCardModule,
     MatDialogModule,
     MatFormFieldModule,
     MatInputModule,
+    PageHeaderComponent,
+    PanelComponent,
     ReactiveFormsModule,
     StateContainerComponent,
     TranslocoPipe,
     UnitNamePipe,
+    NoticeComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './departments.page.html',
   styles: `
-    .crm-org__section {
-      margin-block-end: var(--crm-space-lg);
-    }
-
-    .crm-org__form {
-      display: flex;
-      flex-wrap: wrap;
-      gap: var(--crm-space-md);
-      align-items: start;
-    }
-
-    .crm-org__row {
-      display: flex;
-      align-items: center;
-      gap: var(--crm-space-sm);
-      padding-block: var(--crm-space-xs);
+    /* The expanded teams region. Inset on the leading edge and on a sunken surface, so the nesting
+       is visible without a second panel border - and it leans the correct way in both directions
+       because the padding is logical. */
+    .crm-org__teams-row > td {
+      padding: 0;
+      background: var(--crm-surface-sunken);
     }
 
     .crm-org__teams {
-      /* Logical, so the hierarchy indents from the correct side under both directions. */
-      margin-inline-start: var(--crm-space-lg);
-      border-inline-start: 2px solid var(--crm-color-outline, currentColor);
-      padding-inline-start: var(--crm-space-md);
+      padding-inline: var(--crm-space-4);
+      padding-block: var(--crm-space-4);
+      border-inline-start: 3px solid var(--crm-accent);
     }
 
-    .crm-org__inactive {
-      opacity: 0.6;
+    .crm-org__teams-title {
+      margin-block-end: var(--crm-space-3);
+      color: var(--crm-ink-secondary);
+      font-size: var(--crm-text-xs);
+      font-weight: var(--crm-weight-semibold);
+      letter-spacing: var(--crm-tracking-wide);
+      text-transform: uppercase;
+    }
+
+    .crm-org__team-form {
+      margin-block-start: var(--crm-space-4);
+      padding-block-start: var(--crm-space-4);
+      border-block-start: var(--crm-border-width) solid var(--crm-border);
+    }
+
+    /* The department name doubles as the control that reveals its teams. Styled as text rather
+       than as a button so the table still reads as a table. */
+    .crm-org__disclosure {
+      padding: 0;
+      border: 0;
+      background: none;
+      font: inherit;
+      font-weight: var(--crm-weight-medium);
+      color: var(--crm-accent);
+      cursor: pointer;
+      text-align: start;
+    }
+
+    .crm-org__disclosure:hover {
+      text-decoration: underline;
     }
   `,
 })

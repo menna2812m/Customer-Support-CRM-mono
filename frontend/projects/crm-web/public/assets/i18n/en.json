@@ -87,7 +87,8 @@
   "home": {
     "title": "Platform status",
     "apiReports": "API reports",
-    "milliseconds": "ms"
+    "milliseconds": "ms",
+    "subtitle": "Live status of the platform and its dependencies."
   },
   "diagnostics": {
     "title": "Diagnostics",
@@ -99,7 +100,10 @@
     "previous": "Previous",
     "next": "Next",
     "pageOf": "Page {{page}} of {{totalPages}} ({{totalCount}} items)",
-    "rejected": "The request was rejected ({{code}})."
+    "rejected": "The request was rejected ({{code}}).",
+    "subtitle": "A reference screen proving the platform conventions end to end.",
+    "itemName": "Name",
+    "itemCreated": "Created"
   },
   "auth": {
     "signIn": {
@@ -127,13 +131,15 @@
       "create": "New department",
       "edit": "Edit department",
       "empty": "No departments yet",
-      "teams": "Teams"
+      "teams": "Teams",
+      "description": "Functional divisions of the business, and the teams inside them."
     },
     "branches": {
       "title": "Branches",
       "create": "New branch",
       "edit": "Edit branch",
-      "empty": "No branches yet"
+      "empty": "No branches yet",
+      "description": "Locations the organization operates from."
     },
     "teams": {
       "title": "Teams",
@@ -146,7 +152,9 @@
       "nameEn": "English name",
       "code": "Code",
       "status": "Status",
-      "department": "Department"
+      "department": "Department",
+      "name": "Name",
+      "actions": "Actions"
     },
     "status": {
       "active": "Active",

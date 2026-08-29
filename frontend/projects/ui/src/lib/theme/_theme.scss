@@ -1,58 +1,200 @@
 // The single theme definition for the CRM (Constitution VII, spec FR-032).
 //
-// Every application in this workspace imports this file and nothing else for
-// theming. Features never define colors, typography, or spacing primitives -
-// they consume Angular Material system variables (--mat-sys-*) so a theme change
-// lands in one place.
+// Every application in this workspace imports this file and nothing else for theming. Features never
+// define colours, typography, or spacing primitives - they consume the tokens in _tokens.scss, and a
+// change lands in one place.
 //
-// Direction is NOT set here. It is applied at runtime from the active language
-// by @crm/core (spec FR-037), and all spacing below uses logical properties so
-// no component needs a right-to-left special case.
+// Angular Material stays, but it is retokenised rather than accepted as-is: the bridge below points
+// --mat-sys-* at our own values, so a Material button and a plain button are the same object and
+// nobody has to remember which one a screen is using.
+//
+// Direction is NOT set here. It is applied at runtime from the active language by @crm/core, and all
+// spacing uses logical properties so no component needs a right-to-left special case.
 
 @use '@angular/material' as mat;
+@use 'fonts';
+@use 'tokens';
+@use '../layout/layout';
+@use '../data/table';
 
 @mixin crm-theme() {
+  @include tokens.crm-tokens();
+
   html {
     height: 100%;
 
     @include mat.theme(
       (
         color: (
+          // Material needs a palette to generate its own ramps. Azure is the closest built-in to
+          // the teal-green accent; every surface and text colour it produces is then overridden by
+          // the bridge below, so what remains from this palette is only the ripple and state-layer
+          // tints - where an approximate hue is correct.
           primary: mat.$azure-palette,
-          tertiary: mat.$blue-palette,
+          tertiary: mat.$azure-palette,
         ),
-        typography: Roboto,
-        density: 0,
+        typography: (
+          plain-family: var(--crm-font-sans),
+          brand-family: var(--crm-font-sans),
+        ),
+        // -1 tightens Material's default control heights toward the 36px this system uses. 0 leaves
+        // a filter bar as tall as a toolbar.
+        density: -1,
       )
     );
+  }
+
+  // ── The bridge ──────────────────────────────────────────────────────────────
+  //
+  // Material's system variables are pointed at our tokens. This is what stops the interface being
+  // two design systems wearing one theme.
+  :root {
+    --mat-sys-surface: var(--crm-surface);
+    --mat-sys-surface-container: var(--crm-surface);
+    --mat-sys-surface-container-low: var(--crm-surface);
+    --mat-sys-surface-container-high: var(--crm-surface-sunken);
+    --mat-sys-surface-container-highest: var(--crm-surface-sunken);
+    --mat-sys-surface-variant: var(--crm-surface-sunken);
+    --mat-sys-background: var(--crm-surface-page);
+
+    --mat-sys-on-surface: var(--crm-ink);
+    --mat-sys-on-surface-variant: var(--crm-ink-secondary);
+    --mat-sys-on-background: var(--crm-ink);
+
+    --mat-sys-primary: var(--crm-accent);
+    --mat-sys-on-primary: var(--crm-on-accent);
+    --mat-sys-primary-container: var(--crm-accent-soft);
+    --mat-sys-on-primary-container: var(--crm-accent-strong);
+
+    --mat-sys-error: var(--crm-danger);
+    --mat-sys-on-error: #ffffff;
+    --mat-sys-error-container: var(--crm-danger-soft);
+    --mat-sys-on-error-container: var(--crm-danger);
+
+    --mat-sys-outline: var(--crm-border-strong);
+    --mat-sys-outline-variant: var(--crm-border);
+
+    --mat-sys-corner-small: var(--crm-radius);
+    --mat-sys-corner-medium: var(--crm-radius);
+    --mat-sys-corner-large: var(--crm-radius-lg);
+
+    // Material 3 ships pill-shaped buttons. A fully rounded button is the single loudest signal
+    // that an interface is a consumer application, and it is the opposite of the restraint this
+    // system is built on - so corner-full is redefined rather than worked around per component.
+    --mat-sys-corner-full: var(--crm-radius);
+    --mat-sys-corner-extra-large: var(--crm-radius-lg);
+  }
+
+  // The shape tokens above cover most of Material, but the button components carry their own
+  // container-shape variables that do not read from the system scale.
+  .mat-mdc-button-base {
+    --mdc-text-button-container-shape: var(--crm-radius);
+    --mdc-filled-button-container-shape: var(--crm-radius);
+    --mdc-outlined-button-container-shape: var(--crm-radius);
+    --mdc-protected-button-container-shape: var(--crm-radius);
+
+    // Buttons sit in dense rows of table actions, so they hold the system control height rather
+    // than Material's taller default.
+    --mdc-text-button-container-height: var(--crm-control-height);
+    --mdc-filled-button-container-height: var(--crm-control-height);
+    --mdc-outlined-button-container-height: var(--crm-control-height);
+
+    font-weight: var(--crm-weight-medium);
+    letter-spacing: 0;
   }
 
   body {
     // Follow the operating system preference rather than forcing light.
     color-scheme: light dark;
 
-    background-color: var(--mat-sys-surface);
-    color: var(--mat-sys-on-surface);
-    font: var(--mat-sys-body-medium);
-
     margin: 0;
     height: 100%;
+
+    background-color: var(--crm-surface-page);
+    color: var(--crm-ink);
+
+    font-family: var(--crm-font-sans);
+    font-size: var(--crm-text-md);
+    line-height: var(--crm-leading-normal);
+
+    // Plex is a little heavy without this at small sizes on Windows.
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
   }
 
-  // Shared spacing scale. Logical properties only - see FR-037.
-  :root {
-    --crm-space-xs: 0.25rem;
-    --crm-space-sm: 0.5rem;
-    --crm-space-md: 1rem;
-    --crm-space-lg: 1.5rem;
-    --crm-space-xl: 2.5rem;
-    --crm-radius: 0.5rem;
-    --crm-content-max: 80rem;
+  // ── Base elements ───────────────────────────────────────────────────────────
+  //
+  // Set once here so no page has to. Every heading below was previously styled by whichever
+  // component happened to render it.
+  h1,
+  h2,
+  h3,
+  h4 {
+    margin: 0;
+    font-weight: var(--crm-weight-semibold);
+    line-height: var(--crm-leading-tight);
+    letter-spacing: var(--crm-tracking-tight);
+    color: var(--crm-ink);
   }
 
-  // Visible focus for every interactive element (spec FR-057).
+  h1 {
+    font-size: var(--crm-text-xl);
+  }
+
+  h2 {
+    font-size: var(--crm-text-lg);
+  }
+
+  h3 {
+    font-size: var(--crm-text-md);
+  }
+
+  p {
+    margin: 0;
+  }
+
+  // Identifiers read as identifiers wherever they appear.
+  code,
+  kbd,
+  samp,
+  pre {
+    font-family: var(--crm-font-mono);
+    font-size: 0.95em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  a {
+    color: var(--crm-accent);
+    text-underline-offset: 0.2em;
+  }
+
+  // ── Focus ───────────────────────────────────────────────────────────────────
+  //
+  // Visible on every interactive element (spec FR-057). Two pixels of accent with an offset reads
+  // clearly on both the page and a sunken surface, and never relies on colour alone - the ring is a
+  // shape change as well as a colour change.
   :focus-visible {
-    outline: 2px solid var(--mat-sys-primary);
+    outline: 2px solid var(--crm-accent);
     outline-offset: 2px;
+    border-radius: var(--crm-radius-sm);
+  }
+
+  // Material draws its own focus indicators; ours is the one that should win.
+  .mat-mdc-button-base:focus-visible,
+  .mat-mdc-form-field:focus-within {
+    outline: 2px solid var(--crm-accent);
+    outline-offset: 2px;
+  }
+
+  // ── Motion ──────────────────────────────────────────────────────────────────
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
   }
 }
