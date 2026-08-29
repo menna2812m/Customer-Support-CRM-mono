@@ -67,6 +67,38 @@ than a belief, since a case-sensitive deployment would silently weaken FR-006 ra
 | Migration reviewed rather than assumed | **Yes** - T014's four checks, by hand |
 | Manual walkthrough completed | **Not yet** - see below |
 
+## Migration safety
+
+The migration adds three foreign keys to an existing table, so it was checked against real data
+before being applied anywhere rather than after.
+
+**Why any non-null placement is a problem, not only a dangling one.** `Branch`, `Department`, and
+`Team` are created empty and the foreign keys are added in the same migration, so at the moment the
+constraints are created there is nothing for them to reference. Every non-null placement value is
+therefore an orphan by definition, which is why the check does not join to the new tables.
+
+**How it fails.** EF Core emits `ALTER TABLE [User] ADD CONSTRAINT ... FOREIGN KEY` with no
+`WITH NOCHECK`, so SQL Server validates existing rows as the constraint is created. A violating row
+raises error 547, and because the migration carries no `SuppressTransaction` it runs inside a
+transaction that rolls back in full - no tables, no constraints, no history row. The database is left
+exactly as it was and the deployment stops with an error naming the constraint. Nothing is repaired
+and nothing is deleted; resolving a bad placement is a decision for a person, not something a schema
+migration should do quietly.
+
+**The check** is committed at `scripts/check-organization-migration-safety.sql`. It is read-only.
+
+**Result on the development database (2026-08-30):**
+
+| Measure | Value |
+|---|---|
+| Users | 1 |
+| With a department / branch / team | 0 / 0 / 0 |
+| Organization tables present | 0 - migration not yet applied |
+| Verdict | **SAFE** |
+
+Consistent with the reasoning in the plan: nothing could ever write placement, because the provider
+claims required CRM identifiers no provider was configured to supply.
+
 ## Outstanding
 
 **The feature has not been exercised in a browser.** Every rule it enforces is covered by an

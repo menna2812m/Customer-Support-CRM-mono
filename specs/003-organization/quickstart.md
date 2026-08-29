@@ -8,6 +8,23 @@ containers running, user secrets set, and staff sign-in enabled.
 
 ---
 
+## Before the first run: check the migration is safe
+
+This migration adds three foreign keys to the existing `User` table, so any placement value already
+stored there must reference a unit that exists. Nothing could ever write one - the provider claims
+required CRM identifiers no provider supplies - but that is a reason to confirm, not to assume.
+
+```powershell
+sqlcmd -S <server> -d <database> -i scripts/check-organization-migration-safety.sql
+```
+
+Expect `Verdict = SAFE`. If rows are listed, **do not apply the migration**: resolve them
+deliberately first. The script explains the two options and why neither is automated.
+
+Applying it anyway is not dangerous, only disruptive - SQL Server validates the rows as it creates
+each constraint, and the whole migration rolls back on the first violation, leaving the database
+untouched. It fails loudly rather than repairing anything.
+
 ## Run it
 
 ```powershell
