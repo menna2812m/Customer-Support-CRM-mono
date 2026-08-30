@@ -170,42 +170,52 @@ public sealed class PeopleStore(CrmDbContext context, TimeProvider clock) : IPeo
         return await ReadBackAsync(personId, cancellationToken);
     }
 
-    public async Task<PersonWriteResult> RevokeRoleAsync(
+    public Task<PersonWriteResult> RevokeRoleAsync(
         Guid actorId,
         Guid personId,
         Guid roleId,
         CancellationToken cancellationToken = default)
     {
-        await using var transaction = await context.Database.BeginTransactionAsync(
-            IsolationLevel.Serializable,
-            cancellationToken);
+        // The transaction is opened inside the execution strategy, not around it: the connection is
+        // configured with EnableRetryOnFailure, whose strategy refuses a user-initiated transaction
+        // outright. Everything is read inside the delegate for the same reason feature 003 does it -
+        // a retry re-runs the whole thing and must not act on state fetched before the attempt that
+        // failed, which for a guard over a count is the difference between correct and dangerous.
+        var strategy = context.Database.CreateExecutionStrategy();
 
-        var person = await context.Users.FirstOrDefaultAsync(user => user.Id == personId, cancellationToken);
-
-        if (person is null)
+        return strategy.ExecuteAsync(async () =>
         {
-            return PersonWriteResult.Refused(PersonRefusal.NotFound);
-        }
+            await using var transaction = await context.Database.BeginTransactionAsync(
+                IsolationLevel.Serializable,
+                cancellationToken);
 
-        var refusal = await GuardAsync(actorId, personId, cancellationToken);
+            var person = await context.Users.FirstOrDefaultAsync(user => user.Id == personId, cancellationToken);
 
-        if (refusal != PersonRefusal.None)
-        {
-            return PersonWriteResult.Refused(refusal);
-        }
+            if (person is null)
+            {
+                return PersonWriteResult.Refused(PersonRefusal.NotFound);
+            }
 
-        var assignment = await context.RoleAssignments
-            .FirstOrDefaultAsync(a => a.UserId == personId && a.RoleId == roleId, cancellationToken);
+            var refusal = await GuardAsync(actorId, personId, cancellationToken);
 
-        if (assignment is not null)
-        {
-            context.RoleAssignments.Remove(assignment);
-            await context.SaveChangesAsync(cancellationToken);
-        }
+            if (refusal != PersonRefusal.None)
+            {
+                return PersonWriteResult.Refused(refusal);
+            }
 
-        await transaction.CommitAsync(cancellationToken);
+            var assignment = await context.RoleAssignments
+                .FirstOrDefaultAsync(a => a.UserId == personId && a.RoleId == roleId, cancellationToken);
 
-        return await ReadBackAsync(personId, cancellationToken);
+            if (assignment is not null)
+            {
+                context.RoleAssignments.Remove(assignment);
+                await context.SaveChangesAsync(cancellationToken);
+            }
+
+            await transaction.CommitAsync(cancellationToken);
+
+            return await ReadBackAsync(personId, cancellationToken);
+        });
     }
 
     public async Task<PersonWriteResult> SetPlacementAsync(
@@ -235,53 +245,68 @@ public sealed class PeopleStore(CrmDbContext context, TimeProvider clock) : IPeo
         return await ReadBackAsync(personId, cancellationToken);
     }
 
-    public async Task<PersonWriteResult> SetActivationAsync(
+    public Task<PersonWriteResult> SetActivationAsync(
         Guid actorId,
         Guid personId,
         bool isActive,
         CancellationToken cancellationToken = default)
     {
-        await using var transaction = await context.Database.BeginTransactionAsync(
-            IsolationLevel.Serializable,
-            cancellationToken);
+        var strategy = context.Database.CreateExecutionStrategy();
 
-        var person = await context.Users.FirstOrDefaultAsync(user => user.Id == personId, cancellationToken);
-
-        if (person is null)
+        return strategy.ExecuteAsync(async () =>
         {
-            return PersonWriteResult.Refused(PersonRefusal.NotFound);
-        }
+            await using var transaction = await context.Database.BeginTransactionAsync(
+                IsolationLevel.Serializable,
+                cancellationToken);
 
-        if (!isActive)
-        {
-            var refusal = await GuardAsync(actorId, personId, cancellationToken);
+            var person = await context.Users.FirstOrDefaultAsync(user => user.Id == personId, cancellationToken);
 
-            if (refusal != PersonRefusal.None)
+            if (person is null)
             {
-                return PersonWriteResult.Refused(refusal);
+                return PersonWriteResult.Refused(PersonRefusal.NotFound);
             }
 
-            person.Deactivate();
+            if (!isActive)
+            {
+                var refusal = await GuardAsync(actorId, personId, cancellationToken);
 
-            // Access that ends at the next renewal has not ended. Token validation resolves the
-            // session on every request, so revoking lands on the next one (spec FR-023).
-            await RevokeSessionsAsync(personId, cancellationToken);
-        }
-        else
-        {
-            person.Reactivate();
-        }
+                if (refusal != PersonRefusal.None)
+                {
+                    return PersonWriteResult.Refused(refusal);
+                }
 
-        await context.SaveChangesAsync(cancellationToken);
-        await transaction.CommitAsync(cancellationToken);
+                person.Deactivate();
 
-        return await ReadBackAsync(personId, cancellationToken);
+                // Access that ends at the next renewal has not ended. Token validation resolves the
+                // session on every request, so revoking lands on the next one (spec FR-023).
+                await RevokeSessionsAsync(personId, cancellationToken);
+            }
+            else
+            {
+                person.Reactivate();
+            }
+
+            await context.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+
+            return await ReadBackAsync(personId, cancellationToken);
+        });
     }
 
-    public async Task<PersonDeletionResult> DeleteAsync(
+    public Task<PersonDeletionResult> DeleteAsync(
         Guid actorId,
         Guid personId,
         CancellationToken cancellationToken = default)
+    {
+        var strategy = context.Database.CreateExecutionStrategy();
+
+        return strategy.ExecuteAsync(async () => await DeleteInTransactionAsync(actorId, personId, cancellationToken));
+    }
+
+    private async Task<PersonDeletionResult> DeleteInTransactionAsync(
+        Guid actorId,
+        Guid personId,
+        CancellationToken cancellationToken)
     {
         await using var transaction = await context.Database.BeginTransactionAsync(
             IsolationLevel.Serializable,
@@ -459,17 +484,29 @@ public sealed class PeopleStore(CrmDbContext context, TimeProvider clock) : IPeo
         return new PersonDetail(ToSummary(row, placements), roles, effective, lastSignedInAt);
     }
 
-    private async Task<IReadOnlyList<RoleView>> ReadRolesAsync(Guid personId, CancellationToken cancellationToken) =>
-        await context.RoleAssignments
+    /// <summary>
+    /// The roles a person holds, ordered by name.
+    /// </summary>
+    /// <remarks>
+    /// Ordered and materialised before the projection rather than after. Sorting a projected record
+    /// leaves EF unable to translate the ordering back to SQL, which fails at runtime rather than
+    /// at build time - the query looks perfectly reasonable until it runs.
+    /// </remarks>
+    private async Task<IReadOnlyList<RoleView>> ReadRolesAsync(Guid personId, CancellationToken cancellationToken)
+    {
+        var roles = await context.RoleAssignments
             .AsNoTracking()
             .Where(assignment => assignment.UserId == personId)
             .Join(
                 context.Roles,
                 assignment => assignment.RoleId,
                 role => role.Id,
-                (_, role) => new RoleView(role.Id, role.Name))
+                (_, role) => new { role.Id, role.Name })
             .OrderBy(role => role.Name)
             .ToListAsync(cancellationToken);
+
+        return [.. roles.Select(role => new RoleView(role.Id, role.Name))];
+    }
 
     /// <summary>
     /// Looks up the unit names for a page of people in three queries rather than three per row.

@@ -118,14 +118,14 @@ placement, and confirm both are reflected on that person's next request.
 
 ### Tests for User Story 1
 
-- [ ] T016 [P] [US1] Unit tests in
+- [X] T016 [P] [US1] Unit tests in
       `backend/tests/Crm.UnitTests/Identity/PlacementRulesTests.cs`: selecting a team derives that
       team's department; a request naming a different department is refused rather than corrected; a
       placement with no team accepts a department directly; clearing all three is allowed
-- [ ] T017 [P] [US1] Unit tests in `backend/tests/Crm.UnitTests/Identity/RoleGrantTests.cs`: a person
+- [X] T017 [P] [US1] Unit tests in `backend/tests/Crm.UnitTests/Identity/RoleGrantTests.cs`: a person
       may hold several roles, effective permissions are the union, granting a held role changes
       nothing and does not fail
-- [ ] T018 [P] [US1] Unit tests in `backend/tests/Crm.UnitTests/Identity/RoleGuardTests.cs`: revoking
+- [X] T018 [P] [US1] Unit tests in `backend/tests/Crm.UnitTests/Identity/RoleGuardTests.cs`: revoking
       the last administrator's role is refused, and revoking one's own administrator role is refused
       even when others remain
 
