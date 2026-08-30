@@ -36,7 +36,27 @@
               ) | transloco
             }}
           </button>
+
+          <button matButton type="button" [disabled]="isSelf()" (click)="remove()">
+            {{ 'identity.actions.delete' | transloco }}
+          </button>
         </div>
+
+        @if (confirmingDelete()) {
+          <!-- The consequences are stated before the action, not after it: what is revoked, and
+               that access stops now rather than when a credential expires. -->
+          <crm-notice tone="warning" messageKey="identity.delete.warning" />
+
+          <div class="crm-table__actions">
+            <button matButton type="button" (click)="cancelDelete()">
+              {{ 'identity.actions.cancel' | transloco }}
+            </button>
+
+            <button matButton="filled" type="button" (click)="confirmDelete()">
+              {{ 'identity.delete.confirm' | transloco }}
+            </button>
+          </div>
+        }
 
         @if (isSelf()) {
           <!-- Stated rather than hidden: a control that vanishes is indistinguishable from a

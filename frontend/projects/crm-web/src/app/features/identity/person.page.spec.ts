@@ -1,6 +1,6 @@
 import { HttpTestingController } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
-import { ActivatedRoute, convertToParamMap } from '@angular/router';
+import { ActivatedRoute, Router, convertToParamMap } from '@angular/router';
 import { AuthSession, AuthUser } from '@crm/core';
 import { provideCrmTesting } from '@crm/core/testing';
 import { PersonPage } from './person.page';
@@ -15,8 +15,11 @@ const TEAM_ID = '33333333-3333-3333-3333-333333333333';
  */
 describe('PersonPage', () => {
   let http: HttpTestingController;
+  let navigated: unknown[][];
 
   beforeEach(async () => {
+    navigated = [];
+
     await TestBed.configureTestingModule({
       imports: [PersonPage],
       providers: [
@@ -24,6 +27,18 @@ describe('PersonPage', () => {
         {
           provide: ActivatedRoute,
           useValue: { snapshot: { paramMap: convertToParamMap({ id: PERSON_ID }) } },
+        },
+        {
+          // Recorded rather than performed. The testing providers register no routes, so a real
+          // navigation rejects - and asserting where the page went is worth more than watching it
+          // arrive somewhere this spec does not render anyway.
+          provide: Router,
+          useValue: {
+            navigate: (commands: unknown[]) => {
+              navigated.push(commands);
+              return Promise.resolve(true);
+            },
+          },
         },
       ],
     }).compileComponents();
@@ -169,6 +184,59 @@ describe('PersonPage', () => {
     // a feature that does not exist. The server refuses independently either way.
     const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
     expect(text).toContain('Another administrator must make this change');
+  });
+
+  it('asks before deleting, and says what deleting does', () => {
+    signInAs('somebody-else');
+    const fixture = render();
+    const page = fixture.componentInstance as unknown as {
+      remove: () => void;
+      confirmingDelete: () => boolean;
+    };
+
+    page.remove();
+    fixture.detectChanges();
+
+    // Nothing is sent yet. A person cannot weigh a decision whose effects are not in front of them,
+    // so the consequences are stated before the action rather than reported after it.
+    http.expectNone((request) => request.method === 'DELETE');
+    expect(page.confirmingDelete()).toBe(true);
+
+    const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
+    expect(text).toContain('ends their sessions immediately');
+  });
+
+  it('sends the delete only after it is confirmed', () => {
+    signInAs('somebody-else');
+    const fixture = render();
+    const page = fixture.componentInstance as unknown as {
+      remove: () => void;
+      confirmDelete: () => void;
+    };
+
+    page.remove();
+    page.confirmDelete();
+
+    http.expectOne(`/api/v1/identity/people/${PERSON_ID}`).flush(null);
+
+    // Back to the list: the page this person was on no longer describes anything.
+    expect(navigated).toEqual([['/identity/people']]);
+  });
+
+  it('abandons the delete when it is cancelled', () => {
+    signInAs('somebody-else');
+    const fixture = render();
+    const page = fixture.componentInstance as unknown as {
+      remove: () => void;
+      cancelDelete: () => void;
+      confirmingDelete: () => boolean;
+    };
+
+    page.remove();
+    page.cancelDelete();
+
+    expect(page.confirmingDelete()).toBe(false);
+    http.expectNone((request) => request.method === 'DELETE');
   });
 
   it('surfaces a refused role change instead of silently doing nothing', () => {

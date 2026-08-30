@@ -182,6 +182,10 @@
       "save": "Save",
       "cancel": "Cancel"
     },
+    "delete": {
+      "warning": "Deleting removes their roles and ends their sessions immediately. Their email address becomes available again.",
+      "confirm": "Delete permanently"
+    },
     "guards": {
       "self": "Another administrator must make this change to your account.",
       "sessionsEnd": "This ends their active sessions immediately."

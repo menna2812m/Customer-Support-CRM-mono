@@ -263,40 +263,40 @@ the audit records what they held.
 
 ### Tests for User Story 3
 
-- [ ] T051 [P] [US3] Unit tests in `backend/tests/Crm.UnitTests/Identity/DeletionRulesTests.cs`:
+- [X] T051 [P] [US3] Unit tests in `backend/tests/Crm.UnitTests/Identity/DeletionRulesTests.cs`:
       deleting the last administrator is refused, deleting oneself is refused, and the audit payload
       carries the roles held immediately beforehand
-- [ ] T052 [P] [US3] Unit tests in `backend/tests/Crm.UnitTests/Identity/ActivationRulesTests.cs`:
+- [X] T052 [P] [US3] Unit tests in `backend/tests/Crm.UnitTests/Identity/ActivationRulesTests.cs`:
       deactivating revokes sessions, deactivating oneself is refused, and reactivating restores
       neither roles nor sessions
 
 ### Implementation for User Story 3
 
-- [ ] T053 [US3] Add the activation use case in
+- [X] T053 [US3] Add the activation use case in
       `backend/src/Crm.Application/Identity/People/SetActivation.cs`, revoking every active session
       as part of deactivating (FR-023)
-- [ ] T054 [US3] Add the delete use case in
+- [X] T054 [US3] Add the delete use case in
       `backend/src/Crm.Application/Identity/People/DeletePerson.cs`: revoke every role, revoke every
       session, soft-delete the person, and record the roles held - all inside one explicit
       transaction so the operation succeeds or fails as a whole (FR-024)
-- [ ] T055 [US3] In `backend/src/Crm.Application/Identity/People/DeletePerson.cs` and
+- [X] T055 [US3] In `backend/src/Crm.Application/Identity/People/DeletePerson.cs` and
       `SetActivation.cs`, do **not** use `ExecuteUpdateAsync` for the role or session revocation; it
       bypasses `AuditingSaveChangesInterceptor`, so the operation that most needs a trail would be
       the one that stops writing one (research decision 4, and feature 003's identical finding)
-- [ ] T056 [US3] Add the activation and delete endpoints to
+- [X] T056 [US3] Add the activation and delete endpoints to
       `backend/src/Crm.Api/Identity/PeopleController.cs`, mapping both guard refusals to their
       `errorCode`s
-- [ ] T057 [P] [US3] Integration test in
+- [X] T057 [P] [US3] Integration test in
       `backend/tests/Crm.IntegrationTests/Identity/DeletionTests.cs` proving atomicity: a delete that
       fails partway leaves the person, their roles, and their sessions all unchanged
-- [ ] T058 [P] [US3] Integration test in
+- [X] T058 [P] [US3] Integration test in
       `backend/tests/Crm.IntegrationTests/Identity/SessionEndingTests.cs` proving a deactivated
       person's existing credential is refused on the very next request rather than at its expiry
       (SC-005)
-- [ ] T059 [US3] Add the deactivate and delete controls to
+- [X] T059 [US3] Add the deactivate and delete controls to
       `frontend/projects/crm-web/src/app/features/identity/person.page.ts`, with confirmations that
       state plainly that sessions end immediately
-- [ ] T060 [P] [US3] Frontend spec coverage for the lifecycle controls in
+- [X] T060 [P] [US3] Frontend spec coverage for the lifecycle controls in
       `frontend/projects/crm-web/src/app/features/identity/person.page.spec.ts`, including both
       guard refusals reaching the reader
 - [X] T061 [US3] Remove `x-status: planned` from the activation and delete paths in

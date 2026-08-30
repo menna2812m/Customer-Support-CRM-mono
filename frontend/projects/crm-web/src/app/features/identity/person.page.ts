@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -57,12 +57,14 @@ export class PersonPage implements OnInit {
   private readonly api = inject(IdentityApiService);
   private readonly lookups = inject(PlacementLookupService);
   private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
   private readonly session = inject(AuthSession);
   private readonly formBuilder = inject(FormBuilder);
 
   protected readonly person = new RequestSignal<PersonDetail>();
   protected readonly roles = signal<RoleDetail[]>([]);
   protected readonly formError = signal<AppError | null>(null);
+  protected readonly confirmingDelete = signal(false);
 
   protected readonly branches = signal<PlacementUnit[]>([]);
   protected readonly departments = signal<PlacementUnit[]>([]);
@@ -189,6 +191,31 @@ export class PersonPage implements OnInit {
 
     this.api.setActivation(this.personId, !current.summary.isActive).subscribe({
       next: (person) => this.person.setSuccess(person),
+      error: (error: AppError) => this.formError.set(error),
+    });
+  }
+
+  /**
+   * Deleting asks first, in the page rather than in a browser dialog.
+   *
+   * Two reasons: a native confirm cannot say what is about to be revoked, and it cannot be read in
+   * the reader's language. The confirmation states the consequences - roles revoked, sessions ended
+   * now - because a person cannot weigh a decision whose effects are not in front of them.
+   */
+  protected remove(): void {
+    this.formError.set(null);
+    this.confirmingDelete.set(true);
+  }
+
+  protected cancelDelete(): void {
+    this.confirmingDelete.set(false);
+  }
+
+  protected confirmDelete(): void {
+    this.confirmingDelete.set(false);
+
+    this.api.deletePerson(this.personId).subscribe({
+      next: () => this.router.navigate(['/identity/people']),
       error: (error: AppError) => this.formError.set(error),
     });
   }
