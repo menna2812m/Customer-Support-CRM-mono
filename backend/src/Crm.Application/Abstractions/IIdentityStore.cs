@@ -23,6 +23,7 @@ public interface IIdentityStore
     /// - not the provider - assigns it later (spec FR-018).
     /// </summary>
     Task<UserRecord> ProvisionAsync(
+        string provider,
         string providerSubject,
         string email,
         string displayName,
@@ -71,7 +72,7 @@ public sealed record RolePermissionGrant(string RoleName, string Permission);
 /// <summary>What the sign-in use case needs to know about a user. Not the entity.</summary>
 public sealed record UserRecord(
     Guid Id,
-    string ProviderSubject,
+    string? ProviderSubject,
     string Email,
     string DisplayName,
     bool IsActive,

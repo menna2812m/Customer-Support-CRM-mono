@@ -106,6 +106,7 @@ public sealed class StaffSignIn(
         // Placement is null at provisioning: the CRM owns it, and an administrator sets it later
         // through the organization screens (spec FR-018).
         await identityStore.ProvisionAsync(
+            provider.Issuer,
             provider.Subject,
             email,
             provider.DisplayName,

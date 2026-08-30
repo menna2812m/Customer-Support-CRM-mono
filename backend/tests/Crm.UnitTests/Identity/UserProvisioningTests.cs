@@ -10,6 +10,9 @@ namespace Crm.UnitTests.Identity;
 /// </summary>
 public sealed class UserProvisioningTests
 {
+    /// <summary>The provider half of an identity: a subject is only unique within its issuer.</summary>
+    private const string TestProvider = "https://tests.local/realms/crm";
+
     private static readonly Guid Department = Guid.Parse("11111111-1111-1111-1111-111111111111");
     private static readonly Guid Branch = Guid.Parse("22222222-2222-2222-2222-222222222222");
 
@@ -17,6 +20,7 @@ public sealed class UserProvisioningTests
     public void A_returning_user_keeps_their_identifier_while_name_and_email_are_refreshed()
     {
         var user = User.Provision(
+            TestProvider,
             "provider|stable-subject",
             "layla.hassan@example.com",
             "Layla Hassan",
@@ -44,6 +48,7 @@ public sealed class UserProvisioningTests
         // to real records, a provider-asserted identifier could only ever be a constraint violation.
         // What an administrator sets now survives every subsequent sign-in.
         var user = User.Provision(
+            TestProvider,
             "provider|subject",
             "agent@example.com",
             "Agent",
@@ -62,6 +67,7 @@ public sealed class UserProvisioningTests
     public void Email_is_normalized_so_two_spellings_cannot_become_two_users(string email)
     {
         var user = User.Provision(
+            TestProvider,
             "provider|subject",
             email,
             "Layla",
@@ -76,6 +82,7 @@ public sealed class UserProvisioningTests
     public void A_provider_that_sends_no_display_name_falls_back_to_the_address_rather_than_blank()
     {
         var user = User.Provision(
+            TestProvider,
             "provider|subject",
             "agent@example.com",
             "   ",

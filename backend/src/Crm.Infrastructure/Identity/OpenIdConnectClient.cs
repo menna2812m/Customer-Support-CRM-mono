@@ -189,6 +189,7 @@ public sealed class OpenIdConnectClient(
 
         // Organizational placement is not read from the provider (spec FR-018). The CRM owns it.
         return new ProviderIdentity(
+            token.Issuer,
             ReadClaim(token, names.Subject) ?? throw new IdentityProviderException("The identity token carried no subject."),
             ReadClaim(token, names.Email) ?? string.Empty,
             ReadClaim(token, names.Name) ?? string.Empty);

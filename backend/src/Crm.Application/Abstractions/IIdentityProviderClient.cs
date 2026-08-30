@@ -48,7 +48,7 @@ public sealed record AuthorizationRequest(Uri AuthorizationUri, string CodeVerif
 /// foreign key to real records, so a provider-asserted identifier is no longer merely unhelpful -
 /// it is a constraint violation. The CRM owns placement outright; the provider owns who someone is.
 /// </remarks>
-public sealed record ProviderIdentity(string Subject, string Email, string DisplayName);
+public sealed record ProviderIdentity(string Issuer, string Subject, string Email, string DisplayName);
 
 /// <summary>
 /// The provider could not be reached, or refused the exchange. Distinct from a user error, because

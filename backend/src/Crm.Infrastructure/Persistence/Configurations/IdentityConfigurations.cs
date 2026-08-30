@@ -17,14 +17,35 @@ public sealed class UserConfiguration : IEntityTypeConfiguration<User>
         ArgumentNullException.ThrowIfNull(builder);
 
         builder.ToTable("User");
-        builder.Property(user => user.ProviderSubject).HasMaxLength(200).IsRequired();
+
+        // Nullable since feature 004: a person may be prepared by email before they have ever
+        // signed in, and "no identity yet" is expressed by having no subject rather than by a
+        // status column that could disagree with one.
+        builder.Property(user => user.ProviderSubject).HasMaxLength(200);
+        builder.Property(user => user.Provider).HasMaxLength(400);
         builder.Property(user => user.Email).HasMaxLength(256).IsRequired();
         builder.Property(user => user.DisplayName).HasMaxLength(200).IsRequired();
 
         // The subject is how a returning person is recognised; the email uniqueness is what turns a
         // reissued address into a refusal rather than a silent merge (spec FR-005).
-        builder.HasIndex(user => user.ProviderSubject).IsUnique();
-        builder.HasIndex(user => user.Email).IsUnique();
+        //
+        // Both are filtered, and neither filter is decoration:
+        //
+        // The identity is the provider together with the subject (FR-015a), because a subject is
+        // only unique within the issuer that minted it. The filter is what allows many prepared
+        // people to coexist - SQL Server treats NULL as a value in a unique index and permits
+        // exactly one row to hold it, so without it the second invitation ever created would be
+        // rejected by a constraint that looks correct.
+        //
+        // The email filter lets a deleted person release their address (FR-026), so a record
+        // created by typo can be fixed by deleting it and adding it again. Feature 003 met the same
+        // problem with unit codes and answered it the same way.
+        builder
+            .HasIndex(user => new { user.Provider, user.ProviderSubject })
+            .IsUnique()
+            .HasFilter("[ProviderSubject] IS NOT NULL");
+
+        builder.HasIndex(user => user.Email).IsUnique().HasFilter("[IsDeleted] = 0");
         builder.HasIndex(user => user.IsActive);
 
         // Feature 003 closes the exception feature 002 recorded against Constitution VIII: the

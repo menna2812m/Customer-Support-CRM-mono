@@ -48,6 +48,7 @@ public static class TestTokens
         var issuer = scope.ServiceProvider.GetRequiredService<ITokenIssuer>();
 
         var user = User.Provision(
+            provider: "https://tests.local/realms/crm",
             providerSubject: $"test|{Guid.CreateVersion7()}",
             email: $"{Guid.CreateVersion7():n}@tests.local",
             displayName: "Test Staff",
@@ -87,6 +88,7 @@ public static class TestTokens
         var issuer = scope.ServiceProvider.GetRequiredService<ITokenIssuer>();
 
         var user = User.Provision(
+            provider: "https://tests.local/realms/crm",
             providerSubject: $"portal|{Guid.CreateVersion7()}",
             email: $"{Guid.CreateVersion7():n}@customers.local",
             displayName: "Test Customer",

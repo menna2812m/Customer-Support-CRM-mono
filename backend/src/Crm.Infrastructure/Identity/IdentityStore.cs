@@ -50,6 +50,7 @@ public sealed class IdentityStore(
     }
 
     public async Task<UserRecord> ProvisionAsync(
+        string provider,
         string providerSubject,
         string email,
         string displayName,
@@ -57,6 +58,7 @@ public sealed class IdentityStore(
     {
         // A new user has no placement. An administrator assigns it afterwards (spec FR-018).
         var user = User.Provision(
+            provider,
             providerSubject,
             email,
             displayName,

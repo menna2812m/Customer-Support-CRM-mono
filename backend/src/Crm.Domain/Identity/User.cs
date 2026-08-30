@@ -12,17 +12,20 @@ public sealed class User : Entity, IAuditableEntity, ISoftDeletable, IHasOrganiz
         : base(NewId()) { }
 
     public static User Provision(
+        string provider,
         string providerSubject,
         string email,
         string displayName,
         int population,
         OrganizationPlacement placement)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(provider);
         ArgumentException.ThrowIfNullOrWhiteSpace(providerSubject);
         ArgumentException.ThrowIfNullOrWhiteSpace(email);
 
         return new User
         {
+            Provider = provider,
             ProviderSubject = providerSubject,
             Email = NormalizeEmail(email),
             DisplayName = string.IsNullOrWhiteSpace(displayName) ? email : displayName,
@@ -33,8 +36,46 @@ public sealed class User : Entity, IAuditableEntity, ISoftDeletable, IHasOrganiz
         };
     }
 
-    /// <summary>Stable subject from the identity provider. The only key used to recognise a returning user.</summary>
-    public string ProviderSubject { get; private set; } = string.Empty;
+    /// <summary>
+    /// Creates somebody who has never signed in, so an administrator can arrange their roles and
+    /// placement before their first day (spec FR-013).
+    /// </summary>
+    /// <remarks>
+    /// The identity is absent rather than blank. "Prepared but not yet arrived" is expressed by
+    /// having no subject at all, not by a status column beside one - two facts about the same thing
+    /// can disagree, and this way there is only one fact.
+    /// </remarks>
+    public static User PreProvision(string email, string displayName, int population)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(email);
+
+        var normalized = NormalizeEmail(email);
+
+        return new User
+        {
+            Provider = null,
+            ProviderSubject = null,
+            Email = normalized,
+            DisplayName = string.IsNullOrWhiteSpace(displayName) ? normalized : displayName,
+            Population = population,
+        };
+    }
+
+    /// <summary>Which identity provider issued <see cref="ProviderSubject"/>. Null until bound.</summary>
+    /// <remarks>
+    /// Recorded alongside the subject because a subject is only unique within the provider that
+    /// issued it (spec FR-015a). With one provider configured the distinction is invisible; with two
+    /// it is the difference between two people and one.
+    /// </remarks>
+    public string? Provider { get; private set; }
+
+    /// <summary>
+    /// Stable subject from the identity provider. Null until the first sign-in binds it.
+    /// </summary>
+    public string? ProviderSubject { get; private set; }
+
+    /// <summary>Whether a real identity has been bound yet. False means prepared and not yet arrived.</summary>
+    public bool HasBoundIdentity => ProviderSubject is not null;
 
     /// <summary>Normalized lower-case. Unique; a conflict is refused and escalated (spec FR-005).</summary>
     public string Email { get; private set; } = string.Empty;
@@ -108,6 +149,64 @@ public sealed class User : Entity, IAuditableEntity, ISoftDeletable, IHasOrganiz
         DepartmentId = departmentId;
     }
 
+    /// <summary>
+    /// Binds this person to the identity that just signed in, permanently (spec FR-020, INV-5).
+    /// </summary>
+    /// <remarks>
+    /// Refuses a person who already has one. An email address is a one-time bootstrap for finding a
+    /// prepared record; it is never grounds for moving an established account to a different
+    /// identity. The sign-in path refuses that case first and records the collision - this refuses
+    /// it again, because the consequence of getting it wrong is somebody else's account.
+    /// </remarks>
+    public void BindIdentity(string provider, string providerSubject)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(provider);
+        ArgumentException.ThrowIfNullOrWhiteSpace(providerSubject);
+
+        if (HasBoundIdentity)
+        {
+            throw new InvalidOperationException(
+                "This person is already bound to an identity. Rebinding is never permitted.");
+        }
+
+        Provider = provider;
+        ProviderSubject = providerSubject;
+    }
+
+    /// <summary>
+    /// Records where this person sits: a branch, and either a department or a team within one
+    /// (spec FR-009, FR-010, FR-011).
+    /// </summary>
+    /// <remarks>
+    /// When a team is given, the department comes from that team and is not accepted separately.
+    /// Passing a department that disagrees is refused rather than quietly replaced: by the time a
+    /// call reaches here the application layer has already refused a mismatch with
+    /// <c>identity_placement_mismatch</c>, so a disagreement at this depth is a programming error,
+    /// and silently storing something the caller did not ask for would hide it.
+    ///
+    /// Passing nothing clears the placement, which is how somebody is removed from a unit.
+    /// </remarks>
+    public void Place(Guid? branchId, Guid? departmentId, TeamPlacement? team)
+    {
+        BranchId = branchId;
+
+        if (team is not { } assignment)
+        {
+            TeamId = null;
+            DepartmentId = departmentId;
+            return;
+        }
+
+        if (departmentId is { } named && named != assignment.DepartmentId)
+        {
+            throw new InvalidOperationException(
+                "A placement named a department that disagrees with the team's department.");
+        }
+
+        TeamId = assignment.TeamId;
+        DepartmentId = assignment.DepartmentId;
+    }
+
     public void RecordSignIn(DateTimeOffset at) => LastSignedInAt = at;
 
     public void Deactivate() => IsActive = false;
@@ -116,6 +215,16 @@ public sealed class User : Entity, IAuditableEntity, ISoftDeletable, IHasOrganiz
 
     public static string NormalizeEmail(string email) => email.Trim().ToLowerInvariant();
 }
+
+/// <summary>
+/// A team together with the department it belongs to.
+/// </summary>
+/// <remarks>
+/// The pair travels as one value because the domain cannot reach a team to look its department up,
+/// and because separating them is precisely how INV-2 gets broken - by setting one and forgetting
+/// the other.
+/// </remarks>
+public readonly record struct TeamPlacement(Guid TeamId, Guid DepartmentId);
 
 /// <summary>Organizational placement as asserted or stored. Absent means "sees nothing extra".</summary>
 public readonly record struct OrganizationPlacement(Guid? DepartmentId, Guid? BranchId, Guid? TeamId)

@@ -64,22 +64,22 @@ feature 002 built rather than adding one beside it.
 **Purpose**: The schema change and the store every story reads through. Nothing below Phase 2 can
 start until the identity column can be null and the guards exist.
 
-- [ ] T005 Make `ProviderSubject` nullable and add `Provider` in
+- [X] T005 Make `ProviderSubject` nullable and add `Provider` in
       `backend/src/Crm.Domain/Identity/User.cs`, with a `BindIdentity(provider, subject)` method that
       refuses a row already bound (INV-5) and a `Place(branchId, department, team)` method that
       derives the department from the team
-- [ ] T006 Replace the two plain unique indexes in
+- [X] T006 Replace the two plain unique indexes in
       `backend/src/Crm.Infrastructure/Persistence/Configurations/IdentityConfigurations.cs`: subject
       becomes `UNIQUE (Provider, ProviderSubject) WHERE ProviderSubject IS NOT NULL`, email becomes
       `UNIQUE (Email) WHERE IsDeleted = 0` (research decisions 1 and 2)
-- [ ] T007 Create the migration with `dotnet ef migrations add IdentityAdministration --project
+- [X] T007 Create the migration with `dotnet ef migrations add IdentityAdministration --project
       backend/src/Crm.Infrastructure --startup-project backend/src/Crm.Api`
-- [ ] T008 Review the generated migration in `backend/src/Crm.Infrastructure/Migrations/` by hand and
+- [X] T008 Review the generated migration in `backend/src/Crm.Infrastructure/Migrations/` by hand and
       confirm four things: the column widens to nullable rather than being dropped and recreated,
       both new indexes carry their filters, the `Provider` column is added without a default that
       would falsely claim existing rows came from an unknown issuer, and no data migration was
       generated
-- [ ] T009 Add a seed migration in `backend/src/Crm.Infrastructure/Migrations/` granting
+- [X] T009 Add a seed migration in `backend/src/Crm.Infrastructure/Migrations/` granting
       `identity.view` and `identity.manage` to the seeded `Administrator` role, following the pattern
       in `20260826210055_IdentitySeed.cs`; the `Agent` role receives neither
 - [ ] T010 [P] Define `IPeopleStore` in `backend/src/Crm.Application/Abstractions/IPeopleStore.cs`
@@ -87,11 +87,11 @@ start until the identity column can be null and the guards exist.
       and the session revocation the lifecycle needs
 - [ ] T011 Implement it in `backend/src/Crm.Infrastructure/Identity/PeopleStore.cs`, relying on the
       global soft-delete query filter so no call site writes `WHERE IsDeleted = 0` by hand
-- [ ] T012 [P] Add an integration test in
+- [X] T012 [P] Add an integration test in
       `backend/tests/Crm.IntegrationTests/Identity/SchemaTests.cs` proving two people can exist with
       no bound identity at once - the case a plain unique index on a nullable column would reject,
       and the reason the filter exists
-- [ ] T013 [P] Add an integration test in
+- [X] T013 [P] Add an integration test in
       `backend/tests/Crm.IntegrationTests/Identity/SchemaTests.cs` proving a deleted person's email
       can be reused while a live duplicate is still refused by the database rather than only by a
       prior read

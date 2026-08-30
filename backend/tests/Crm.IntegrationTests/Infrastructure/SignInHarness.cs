@@ -21,6 +21,9 @@ namespace Crm.IntegrationTests.Infrastructure;
 /// </summary>
 public sealed partial class SignInHarness : IAsyncDisposable
 {
+    /// <summary>The provider half of an identity: a subject is only unique within its issuer.</summary>
+    internal const string TestProvider = "https://tests.local/realms/crm";
+
     private readonly WebApplicationFactory<Program> _factory;
     private readonly CookieJar _cookies = new();
 
@@ -229,7 +232,7 @@ public sealed partial class SignInHarness : IAsyncDisposable
         using var scope = _factory.Services.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<CrmDbContext>();
 
-        var user = User.Provision(subject, email, "Seeded", (int)CallerPopulation.Staff, OrganizationPlacement.None);
+        var user = User.Provision(TestProvider, subject, email, "Seeded", (int)CallerPopulation.Staff, OrganizationPlacement.None);
 
         if (!isActive)
         {
