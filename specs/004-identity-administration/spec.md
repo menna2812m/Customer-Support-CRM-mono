@@ -54,6 +54,11 @@ starting from nothing.
   deliberately, never resurrected. The audit record says what they held; it is not an undo buffer.
 - Q: Does deactivating end sessions too? → A: Yes, immediately. Access that ends at the next renewal
   is access that has not ended.
+- Q: Is the identity the subject alone, or the provider and the subject together? → A: Both
+  together, and the provider is recorded. Only the subject is stored today, which is unambiguous
+  while exactly one provider is configured and silently wrong the moment a second one is. Recording
+  it now costs one field; recording it later means changing the identity of every existing person
+  and touching the sign-in path a second time.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -194,6 +199,9 @@ the audit records what they held.
   be refused.
 - **FR-015**: On first sign-in, the system MUST identify a returning person by their provider and
   subject before considering their email address.
+- **FR-015a**: The system MUST record which identity provider a person's subject belongs to, and
+  MUST treat the provider and subject together as that person's identity. Two people MUST be able to
+  hold the same subject value if it was issued by different providers.
 - **FR-016**: When no person matches by provider and subject, the system MUST claim a pre-provisioned
   person only when exactly one unclaimed record matches the normalized email address and the identity
   provider asserts that the address is verified.
@@ -303,12 +311,6 @@ the audit records what they held.
 
 ## Assumptions
 
-- **The canonical identity is the provider together with the subject, and the system records which
-  provider.** The description called the identity "provider + subject", and only the subject is
-  stored today. This specification assumes the provider is recorded alongside it, so a second
-  identity provider can never be mistaken for the first. If a single provider is guaranteed
-  permanently, this can be dropped - but doing so later means changing the identity of every
-  existing person and the sign-in path a second time.
 - Roles are those the deployment seeds. The administrator role is the one that carries
   `identity.manage`, which is what makes the never-zero rule meaningful.
 - The identity provider owns each person's display name and email address, and the CRM reflects them

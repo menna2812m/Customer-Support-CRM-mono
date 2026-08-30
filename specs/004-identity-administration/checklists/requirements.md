@@ -44,10 +44,8 @@ platform and deployment concerns with no sensible user-facing scenario. Both are
 enough to test without one, so the acceptance-criteria item passes, but they will need explicit test
 tasks in the plan rather than being covered incidentally by a story.
 
-**One assumption is load-bearing and unconfirmed.** The specification assumes the identity provider
-is recorded alongside the subject, so that "provider + subject" is genuinely the canonical identity.
-This was raised during the session and not settled. It is recorded as an assumption rather than a
-[NEEDS CLARIFICATION] marker because a reasonable default exists and was recommended - but it is the
-one decision here whose cost rises sharply if deferred, since reversing it later means changing the
-identity of every existing person and touching the sign-in path a second time. It should be
-confirmed or overturned before planning proceeds.
+**The one open decision has since been settled.** Whether the identity provider is recorded
+alongside the subject was carried as an assumption in the first pass and was confirmed before
+planning: it is recorded. It now appears as a clarification and as FR-015a rather than an
+assumption, which is the right place for it - it is a requirement the implementation must satisfy,
+not a default someone might quietly reinterpret.
