@@ -77,6 +77,10 @@ public static class DependencyInjection
         services.AddScoped<ITokenIssuer, TokenIssuer>();
         services.AddScoped<IIdentityStore, IdentityStore>();
         services.AddScoped<IOrganizationStore, OrganizationStore>();
+
+        // Feature 004. Separate from IIdentityStore: sign-in asks who an arriving identity is,
+        // administration asks who exists and what they may do.
+        services.AddScoped<IPeopleStore, PeopleStore>();
         services.AddScoped<IAuthenticationEventLog, AuthenticationEventLog>();
         services.AddScoped<ISessionStore, SessionStore>();
 

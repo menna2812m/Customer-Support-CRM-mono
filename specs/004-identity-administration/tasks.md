@@ -85,7 +85,7 @@ start until the identity column can be null and the guards exist.
 - [X] T010 [P] Define `IPeopleStore` in `backend/src/Crm.Application/Abstractions/IPeopleStore.cs`
       covering the paged read, the single read, the writes, the administrator count the guards need,
       and the session revocation the lifecycle needs
-- [ ] T011 Implement it in `backend/src/Crm.Infrastructure/Identity/PeopleStore.cs`, relying on the
+- [X] T011 Implement it in `backend/src/Crm.Infrastructure/Identity/PeopleStore.cs`, relying on the
       global soft-delete query filter so no call site writes `WHERE IsDeleted = 0` by hand
 - [X] T012 [P] Add an integration test in
       `backend/tests/Crm.IntegrationTests/Identity/SchemaTests.cs` proving two people can exist with
