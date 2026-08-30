@@ -82,7 +82,7 @@ start until the identity column can be null and the guards exist.
 - [X] T009 Add a seed migration in `backend/src/Crm.Infrastructure/Migrations/` granting
       `identity.view` and `identity.manage` to the seeded `Administrator` role, following the pattern
       in `20260826210055_IdentitySeed.cs`; the `Agent` role receives neither
-- [ ] T010 [P] Define `IPeopleStore` in `backend/src/Crm.Application/Abstractions/IPeopleStore.cs`
+- [X] T010 [P] Define `IPeopleStore` in `backend/src/Crm.Application/Abstractions/IPeopleStore.cs`
       covering the paged read, the single read, the writes, the administrator count the guards need,
       and the session revocation the lifecycle needs
 - [ ] T011 Implement it in `backend/src/Crm.Infrastructure/Identity/PeopleStore.cs`, relying on the
@@ -95,11 +95,11 @@ start until the identity column can be null and the guards exist.
       `backend/tests/Crm.IntegrationTests/Identity/SchemaTests.cs` proving a deleted person's email
       can be reused while a live duplicate is still refused by the database rather than only by a
       prior read
-- [ ] T014 Add the administrator guards in
+- [X] T014 Add the administrator guards in
       `backend/src/Crm.Application/Identity/People/AdministratorGuard.cs`: never zero active
       administrators, and no self-demotion, with the count and the mutation inside one serializable
       transaction (research decision 5)
-- [ ] T015 [P] Unit tests in `backend/tests/Crm.UnitTests/Identity/AdministratorGuardTests.cs` for
+- [X] T015 [P] Unit tests in `backend/tests/Crm.UnitTests/Identity/AdministratorGuardTests.cs` for
       both guards, including the case that matters - the guard refusing when the caller is the last
       administrator, and permitting when another remains
 
