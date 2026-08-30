@@ -46,6 +46,45 @@ public static class ErrorCodes
     /// <summary>A team cannot be moved into a department that is not active.</summary>
     public const string OrganizationDepartmentInactive = "organization_department_inactive";
 
+    /// <summary>Added by feature 004 (identity administration). See contracts/identity-api.yaml.</summary>
+    public const string IdentityEmailInUse = "identity_email_in_use";
+
+    /// <summary>
+    /// A change was refused because it would leave the system with no active administrator. The
+    /// only rule in the feature enforced by a transaction rather than by the schema, because no
+    /// constraint can express "at least one row must remain".
+    /// </summary>
+    public const string IdentityLastAdministrator = "identity_last_administrator";
+
+    /// <summary>
+    /// An administrator may not remove their own administrator role, deactivate themselves, or
+    /// delete themselves. Someone else must do it.
+    /// </summary>
+    public const string IdentitySelfDemotion = "identity_self_demotion";
+
+    /// <summary>
+    /// A placement named a department that disagrees with the given team's department. Refused
+    /// rather than silently corrected: a caller sending a stale department has a bug, and storing
+    /// something it did not ask for hides it.
+    /// </summary>
+    public const string IdentityPlacementMismatch = "identity_placement_mismatch";
+
+    /// <summary>
+    /// A sign-in presented an email address belonging to somebody already bound to a different
+    /// provider subject. Refused and recorded for a person to resolve, because re-binding an
+    /// established account from an email would be an account takeover with extra steps.
+    /// </summary>
+    public const string IdentitySubjectCollision = "identity_subject_collision";
+
+    /// <summary>
+    /// A pre-provisioned record was not claimed because the provider did not assert the address is
+    /// verified. The claim fails closed and an ordinary account is created instead.
+    /// </summary>
+    public const string IdentityEmailNotVerified = "identity_email_not_verified";
+
+    /// <summary>More than one unclaimed record matched the address, so none was claimed.</summary>
+    public const string IdentityEmailAmbiguous = "identity_email_ambiguous";
+
     /// <summary>Per-field rule identifiers used inside the <c>errors</c> array.</summary>
     public static class Field
     {

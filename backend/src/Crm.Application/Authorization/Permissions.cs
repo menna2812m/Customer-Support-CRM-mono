@@ -35,6 +35,19 @@ public static class Permissions
     }
 
     /// <summary>
+    /// People and their placement (feature 004). Separated from <see cref="Users"/> deliberately:
+    /// <c>users.manage</c> is the constitution's example name and is reserved for the later feature
+    /// that defines roles and edits the permissions behind them. This pair governs administering
+    /// the people who hold those roles, which is a different act - granting authority rather than
+    /// defining it.
+    /// </summary>
+    public static class Identity
+    {
+        public const string View = "identity.view";
+        public const string Manage = "identity.manage";
+    }
+
+    /// <summary>
     /// Organizational structure (feature 003). Reading is separated from managing because most
     /// staff need to see the structure their work is placed in, while maintaining it is
     /// administrative.

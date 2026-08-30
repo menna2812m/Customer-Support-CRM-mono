@@ -72,7 +72,14 @@
       "organization_code_conflict": "This code is already used by another unit.",
       "organization_name_conflict": "This name is already in use.",
       "organization_has_dependents": "This cannot be deleted while other records depend on it.",
-      "organization_department_inactive": "The destination department is not active."
+      "organization_department_inactive": "The destination department is not active.",
+      "identity_email_in_use": "This email address already belongs to someone.",
+      "identity_last_administrator": "The system must keep at least one active administrator.",
+      "identity_self_demotion": "Another administrator must make this change to your account.",
+      "identity_placement_mismatch": "The chosen department does not match the team's department.",
+      "identity_subject_collision": "This account needs an administrator to resolve a sign-in conflict.",
+      "identity_email_not_verified": "The sign-in service did not confirm this email address.",
+      "identity_email_ambiguous": "More than one prepared record matches this email address."
     },
     "field": {
       "required": "This value is required.",
@@ -124,6 +131,60 @@
     "signOutEverywhere": "Sign out everywhere",
     "endDeviceAccess": "Also end access on this computer",
     "sessionExpired": "Your session has ended. Please sign in again."
+  },
+  "identity": {
+    "title": "People",
+    "people": {
+      "title": "People",
+      "description": "Everyone who may sign in, and those prepared to.",
+      "empty": "No people yet"
+    },
+    "person": {
+      "identity": "Identity",
+      "roles": "Roles",
+      "effectivePermissions": "Effective permissions",
+      "effectiveHint": "Granted by the roles above. Not editable directly.",
+      "placement": "Placement",
+      "neverSignedIn": "Has never signed in"
+    },
+    "create": {
+      "title": "Add a person",
+      "description": "Prepare somebody by email address before their first sign-in.",
+      "submit": "Add person"
+    },
+    "fields": {
+      "displayName": "Name",
+      "email": "Email",
+      "status": "Status",
+      "branch": "Branch",
+      "department": "Department",
+      "team": "Team",
+      "lastSignedIn": "Last signed in",
+      "actions": "Actions"
+    },
+    "status": {
+      "invited": "Invited",
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "filters": {
+      "search": "Search by name or email",
+      "activeOnly": "Active only",
+      "unlinkedOnly": "Never signed in"
+    },
+    "actions": {
+      "grant": "Grant",
+      "revoke": "Revoke",
+      "activate": "Activate",
+      "deactivate": "Deactivate",
+      "delete": "Delete",
+      "save": "Save",
+      "cancel": "Cancel"
+    },
+    "guards": {
+      "self": "Another administrator must make this change to your account.",
+      "sessionsEnd": "This ends their active sessions immediately."
+    }
   },
   "organization": {
     "title": "Organization",

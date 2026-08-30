@@ -72,7 +72,14 @@
       "organization_code_conflict": "هذا الرمز مستخدم بالفعل لوحدة أخرى.",
       "organization_name_conflict": "هذا الاسم مستخدم بالفعل.",
       "organization_has_dependents": "لا يمكن الحذف لوجود سجلات أخرى مرتبطة بهذه الوحدة.",
-      "organization_department_inactive": "الإدارة الوجهة غير نشطة."
+      "organization_department_inactive": "الإدارة الوجهة غير نشطة.",
+      "identity_email_in_use": "هذا البريد الإلكتروني مستخدم بالفعل.",
+      "identity_last_administrator": "يجب أن يبقى مسؤول واحد نشط على الأقل.",
+      "identity_self_demotion": "يجب أن يقوم مسؤول آخر بهذا التغيير على حسابك.",
+      "identity_placement_mismatch": "الإدارة المختارة لا تطابق إدارة الفريق.",
+      "identity_subject_collision": "يحتاج هذا الحساب إلى مسؤول لحل تعارض في تسجيل الدخول.",
+      "identity_email_not_verified": "لم تؤكد خدمة تسجيل الدخول هذا البريد الإلكتروني.",
+      "identity_email_ambiguous": "يوجد أكثر من سجل مُهيأ مطابق لهذا البريد الإلكتروني."
     },
     "field": {
       "required": "هذه القيمة مطلوبة.",
@@ -124,6 +131,60 @@
     "signOutEverywhere": "تسجيل الخروج من كل الأجهزة",
     "endDeviceAccess": "إنهاء الوصول على هذا الجهاز أيضًا",
     "sessionExpired": "انتهت جلستك. يرجى تسجيل الدخول مرة أخرى."
+  },
+  "identity": {
+    "title": "الأشخاص",
+    "people": {
+      "title": "الأشخاص",
+      "description": "كل من يمكنه تسجيل الدخول، ومن تم تهيئتهم لذلك.",
+      "empty": "لا يوجد أشخاص بعد"
+    },
+    "person": {
+      "identity": "الهوية",
+      "roles": "الأدوار",
+      "effectivePermissions": "الصلاحيات الفعلية",
+      "effectiveHint": "ممنوحة من الأدوار أعلاه، ولا يمكن تعديلها مباشرة.",
+      "placement": "التعيين",
+      "neverSignedIn": "لم يسجل الدخول مطلقًا"
+    },
+    "create": {
+      "title": "إضافة شخص",
+      "description": "هيّئ شخصًا بالبريد الإلكتروني قبل أول تسجيل دخول له.",
+      "submit": "إضافة شخص"
+    },
+    "fields": {
+      "displayName": "الاسم",
+      "email": "البريد الإلكتروني",
+      "status": "الحالة",
+      "branch": "الفرع",
+      "department": "الإدارة",
+      "team": "الفريق",
+      "lastSignedIn": "آخر تسجيل دخول",
+      "actions": "الإجراءات"
+    },
+    "status": {
+      "invited": "مُهيأ",
+      "active": "نشط",
+      "inactive": "غير نشط"
+    },
+    "filters": {
+      "search": "ابحث بالاسم أو البريد الإلكتروني",
+      "activeOnly": "النشطون فقط",
+      "unlinkedOnly": "لم يسجلوا الدخول مطلقًا"
+    },
+    "actions": {
+      "grant": "منح",
+      "revoke": "سحب",
+      "activate": "تنشيط",
+      "deactivate": "إلغاء التنشيط",
+      "delete": "حذف",
+      "save": "حفظ",
+      "cancel": "إلغاء"
+    },
+    "guards": {
+      "self": "يجب أن يقوم مسؤول آخر بهذا التغيير على حسابك.",
+      "sessionsEnd": "سيؤدي هذا إلى إنهاء جلساته النشطة فورًا."
+    }
   },
   "organization": {
     "title": "الهيكل التنظيمي",

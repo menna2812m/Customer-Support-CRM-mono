@@ -45,16 +45,16 @@ feature 002 built rather than adding one beside it.
 
 **Purpose**: The constants, permissions, and strings the rest of the feature refers to.
 
-- [ ] T001 [P] Add the `Identity` group with `View` (`identity.view`) and `Manage`
+- [X] T001 [P] Add the `Identity` group with `View` (`identity.view`) and `Manage`
       (`identity.manage`) to `backend/src/Crm.Application/Authorization/Permissions.cs`; the existing
       reflection scan discovers them, so no registration is needed
-- [ ] T002 [P] Add `identity_email_in_use`, `identity_last_administrator`, `identity_self_demotion`,
+- [X] T002 [P] Add `identity_email_in_use`, `identity_last_administrator`, `identity_self_demotion`,
       `identity_placement_mismatch`, `identity_subject_collision`, `identity_email_not_verified`, and
       `identity_email_ambiguous` to `backend/src/Crm.Application/Common/ErrorCodes.cs`
-- [ ] T003 [P] Add `identity.*` keys and the seven new `errors.code.*` entries to
+- [X] T003 [P] Add `identity.*` keys and the seven new `errors.code.*` entries to
       `frontend/projects/crm-web/public/assets/i18n/en.json` and `ar.json`, keeping key parity green
       under `npm run i18n:check`
-- [ ] T004 [P] Add a unit test in `backend/tests/Crm.UnitTests/Authorization/PermissionCatalogTests.cs`
+- [X] T004 [P] Add a unit test in `backend/tests/Crm.UnitTests/Authorization/PermissionCatalogTests.cs`
       asserting both new permissions are discovered by `Permissions.All`
 
 ---

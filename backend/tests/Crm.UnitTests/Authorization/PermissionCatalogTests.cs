@@ -40,6 +40,18 @@ public sealed class PermissionCatalogTests
         Permissions.Exists(permission).ShouldBeTrue();
     }
 
+    /// <summary>
+    /// Feature 004. Reading people is separated from administering them for the same reason as the
+    /// organization pair: seeing who sits where is ordinary, while granting somebody a role is not.
+    /// </summary>
+    [Theory]
+    [InlineData("identity.view")]
+    [InlineData("identity.manage")]
+    public void The_catalog_expresses_the_identity_permissions(string permission)
+    {
+        Permissions.Exists(permission).ShouldBeTrue();
+    }
+
     [Fact]
     public void Every_permission_follows_the_area_dot_action_convention()
     {
