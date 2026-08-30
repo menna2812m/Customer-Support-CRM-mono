@@ -1,0 +1,339 @@
+openapi: 3.1.0
+info:
+  title: Customer Support CRM - Identity Administration API
+  version: "1.0"
+  description: >
+    Endpoints delivered by feature 004-identity-administration. Staff only, and administrative:
+    every read requires `identity.view` and every write requires `identity.manage`.
+
+    A person may exist before their identity does. Pre-provisioning creates somebody by email
+    address, and their first sign-in claims that record when the identity provider asserts the
+    address is verified. After binding, the provider and subject are the identity, and an email
+    address never rebinds an established account.
+
+    Placement is one operation rather than three fields, because it carries an invariant: when a
+    team is given, the department is that team's department. A request supplying a different one is
+    refused rather than silently corrected.
+
+    Administration is global. Unlike most collections in this product it is not filtered by the
+    caller's own placement - scoping the people list by the placement this feature exists to assign
+    would be circular.
+
+    Every path in this contract is marked `x-status: planned`. The marker is removed as each is
+    implemented; a path documented but not yet running is deliberate, because the contract describes
+    a whole feature while delivery is incremental by user story.
+servers:
+  - url: http://localhost:5233
+    description: Local development
+
+tags:
+  - name: People
+    description: The people who may sign in, and those prepared to
+  - name: Roles
+    description: The roles a deployment seeds, readable so they can be granted
+
+paths:
+  /api/v1/identity/people:
+    x-status: planned
+    get:
+      tags: [People]
+      summary: List people
+      description: >
+        Paged, searchable by name or email, and filterable by placement, activation, and whether the
+        person has ever signed in. `unlinkedOnly=true` answers "who has been prepared and not yet
+        arrived", which is the question pre-provisioning creates.
+      operationId: listPeople
+      parameters:
+        - { name: page, in: query, schema: { type: integer, minimum: 1, default: 1 } }
+        - { name: pageSize, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 25 } }
+        - { name: search, in: query, schema: { type: string }, description: Matches display name or email address }
+        - { name: branchId, in: query, schema: { type: string, format: uuid } }
+        - { name: departmentId, in: query, schema: { type: string, format: uuid } }
+        - { name: teamId, in: query, schema: { type: string, format: uuid } }
+        - { name: activeOnly, in: query, schema: { type: boolean, default: false } }
+        - { name: unlinkedOnly, in: query, schema: { type: boolean, default: false }, description: Only people who have never signed in }
+      responses:
+        "200": { description: A page of people, content: { application/json: { schema: { $ref: "#/components/schemas/PagedPeople" } } } }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+    post:
+      tags: [People]
+      summary: Prepare a person by email address
+      description: >
+        Creates somebody who has never signed in, optionally with roles and placement already set.
+        Refused when the address already belongs to anyone, deleted people excepted - a deleted
+        person releases their address.
+      operationId: preProvisionPerson
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: "#/components/schemas/PreProvisionRequest" } } }
+      responses:
+        "201": { description: Prepared, content: { application/json: { schema: { $ref: "#/components/schemas/PersonDetail" } } } }
+        "400": { $ref: "#/components/responses/Validation" }
+        "409": { description: "`identity_email_in_use`", content: { application/problem+json: { schema: { $ref: "#/components/schemas/Problem" } } } }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /api/v1/identity/people/{id}:
+    x-status: planned
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      tags: [People]
+      summary: Read one person
+      operationId: getPerson
+      responses:
+        "200": { description: The person, content: { application/json: { schema: { $ref: "#/components/schemas/PersonDetail" } } } }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+    delete:
+      tags: [People]
+      summary: Delete a person
+      description: >
+        One indivisible operation: revokes every role, ends every session, records the roles held
+        immediately beforehand, and removes the person from the lists. Their email address becomes
+        available again. Refused when it would leave no active administrator, and when the caller is
+        deleting themselves.
+      operationId: deletePerson
+      responses:
+        "204": { description: Deleted }
+        "409":
+          description: "`identity_last_administrator` or `identity_self_demotion`"
+          content: { application/problem+json: { schema: { $ref: "#/components/schemas/Problem" } } }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /api/v1/identity/people/{id}/placement:
+    x-status: planned
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    put:
+      tags: [People]
+      summary: Set a person's placement
+      description: >
+        Branch is independent. When `teamId` is given the department is that team's department; a
+        `departmentId` that disagrees is refused rather than overwritten, because a caller sending a
+        stale department has a bug and storing something it did not ask for hides it. All three may
+        be null, which clears the placement. Only active units may be chosen.
+      operationId: setPlacement
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: "#/components/schemas/PlacementRequest" } } }
+      responses:
+        "200": { description: Placed, content: { application/json: { schema: { $ref: "#/components/schemas/PersonDetail" } } } }
+        "400": { $ref: "#/components/responses/Validation" }
+        "409":
+          description: "`identity_placement_mismatch` or `organization_department_inactive`"
+          content: { application/problem+json: { schema: { $ref: "#/components/schemas/Problem" } } }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /api/v1/identity/people/{id}/activation:
+    x-status: planned
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    put:
+      tags: [People]
+      summary: Activate or deactivate a person
+      description: >
+        Deactivating ends every active session at once. Because token validation resolves the
+        session on every request, access stops on the next one rather than at credential expiry.
+      operationId: setActivation
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: "#/components/schemas/ActivationRequest" } } }
+      responses:
+        "200": { description: Updated, content: { application/json: { schema: { $ref: "#/components/schemas/PersonDetail" } } } }
+        "409":
+          description: "`identity_last_administrator` or `identity_self_demotion`"
+          content: { application/problem+json: { schema: { $ref: "#/components/schemas/Problem" } } }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /api/v1/identity/people/{id}/roles/{roleId}:
+    x-status: planned
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      - { name: roleId, in: path, required: true, schema: { type: string, format: uuid } }
+    post:
+      tags: [People]
+      summary: Grant a role
+      description: Idempotent. Granting a role already held succeeds and creates no duplicate.
+      operationId: grantRole
+      responses:
+        "200": { description: Held, content: { application/json: { schema: { $ref: "#/components/schemas/PersonDetail" } } } }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+    delete:
+      tags: [People]
+      summary: Revoke a role
+      description: >
+        Refused when it would leave no active administrator, and when the caller is revoking their
+        own administrator role.
+      operationId: revokeRole
+      responses:
+        "200": { description: Revoked, content: { application/json: { schema: { $ref: "#/components/schemas/PersonDetail" } } } }
+        "409":
+          description: "`identity_last_administrator` or `identity_self_demotion`"
+          content: { application/problem+json: { schema: { $ref: "#/components/schemas/Problem" } } }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /api/v1/identity/roles:
+    x-status: planned
+    get:
+      tags: [Roles]
+      summary: List the seeded roles
+      description: >
+        Read-only. This feature grants roles; it does not define them. Each role carries the
+        permissions it grants so the interface can show effective permissions as derived.
+      operationId: listRoles
+      responses:
+        "200":
+          description: The roles
+          content: { application/json: { schema: { type: array, items: { $ref: "#/components/schemas/RoleDetail" } } } }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+components:
+  responses:
+    Unauthenticated:
+      description: No valid session
+      content: { application/problem+json: { schema: { $ref: "#/components/schemas/Problem" } } }
+    Forbidden:
+      description: The session lacks the required permission, or is not Staff
+      content: { application/problem+json: { schema: { $ref: "#/components/schemas/Problem" } } }
+    NotFound:
+      description: No such person
+      content: { application/problem+json: { schema: { $ref: "#/components/schemas/Problem" } } }
+    Validation:
+      description: The request failed validation
+      content: { application/problem+json: { schema: { $ref: "#/components/schemas/Problem" } } }
+
+  schemas:
+    PersonSummary:
+      type: object
+      required: [id, displayName, email, status, isActive, hasSignedIn]
+      properties:
+        id: { type: string, format: uuid }
+        displayName: { type: string }
+        email: { type: string, format: email }
+        status:
+          type: string
+          enum: [invited, active, inactive]
+          description: Derived from whether an identity is bound and whether the person is enabled. Never stored.
+        isActive: { type: boolean }
+        hasSignedIn: { type: boolean, description: False while the person is only prepared }
+        placement: { $ref: "#/components/schemas/Placement" }
+
+    PersonDetail:
+      allOf:
+        - $ref: "#/components/schemas/PersonSummary"
+        - type: object
+          required: [roles, effectivePermissions]
+          properties:
+            roles:
+              type: array
+              items: { $ref: "#/components/schemas/RoleSummary" }
+            effectivePermissions:
+              type: array
+              items: { type: string }
+              description: >
+                The union of the permissions granted by the roles held. Derived and never editable;
+                there are no deny or override semantics.
+            lastSignedInAt: { type: [string, "null"], format: date-time }
+
+    Placement:
+      type: object
+      description: >
+        The department is the team's department whenever a team is present. Unit names are carried
+        in both languages so a list can show them in the reader's language without a second call.
+      properties:
+        branchId: { type: [string, "null"], format: uuid }
+        branchNameAr: { type: [string, "null"] }
+        branchNameEn: { type: [string, "null"] }
+        departmentId: { type: [string, "null"], format: uuid }
+        departmentNameAr: { type: [string, "null"] }
+        departmentNameEn: { type: [string, "null"] }
+        teamId: { type: [string, "null"], format: uuid }
+        teamNameAr: { type: [string, "null"] }
+        teamNameEn: { type: [string, "null"] }
+
+    RoleSummary:
+      type: object
+      required: [id, name]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+
+    RoleDetail:
+      allOf:
+        - $ref: "#/components/schemas/RoleSummary"
+        - type: object
+          required: [permissions]
+          properties:
+            permissions: { type: array, items: { type: string } }
+
+    PreProvisionRequest:
+      type: object
+      required: [email, displayName]
+      properties:
+        email: { type: string, format: email, maxLength: 256 }
+        displayName:
+          type: string
+          maxLength: 200
+          description: >
+            A working label until the provider supplies the real one. The provider owns the name
+            once the record is claimed, and overwrites this.
+        roleIds: { type: array, items: { type: string, format: uuid } }
+        placement: { $ref: "#/components/schemas/PlacementRequest" }
+
+    PlacementRequest:
+      type: object
+      description: All three may be null, which clears the placement.
+      properties:
+        branchId: { type: [string, "null"], format: uuid }
+        departmentId: { type: [string, "null"], format: uuid }
+        teamId: { type: [string, "null"], format: uuid }
+
+    ActivationRequest:
+      type: object
+      required: [isActive]
+      properties:
+        isActive: { type: boolean }
+
+    Problem:
+      type: object
+      description: The shared error contract. `errorCode` is what a client switches on; `detail` is for developers and logs.
+      required: [type, title, status, errorCode]
+      properties:
+        type: { type: string }
+        title: { type: string }
+        status: { type: integer }
+        detail: { type: string }
+        errorCode:
+          type: string
+          enum:
+            - identity_email_in_use
+            - identity_last_administrator
+            - identity_self_demotion
+            - identity_placement_mismatch
+            - identity_subject_collision
+            - identity_email_not_verified
+            - identity_email_ambiguous
+            - organization_department_inactive
+        correlationId: { type: string }
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              field: { type: string }
+              code: { type: string }
+              message: { type: string }
