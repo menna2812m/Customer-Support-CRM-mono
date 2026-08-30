@@ -13,6 +13,7 @@ import {
   baseUrlInterceptor,
   correlationInterceptor,
   errorNormalizationInterceptor,
+  languageInterceptor,
 } from './http/interceptors';
 
 /**
@@ -30,6 +31,7 @@ export function provideCrmCore(): EnvironmentProviders {
       withInterceptors([
         baseUrlInterceptor,
         correlationInterceptor,
+        languageInterceptor,
         authTokenInterceptor,
         errorNormalizationInterceptor,
       ]),

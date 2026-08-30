@@ -12,7 +12,8 @@
   "nav": {
     "home": "الرئيسية",
     "diagnostics": "التشخيص",
-    "organization": "الهيكل التنظيمي"
+    "departments": "الإدارات",
+    "branches": "الفروع"
   },
   "states": {
     "loading": "جارٍ التحميل...",
@@ -173,6 +174,7 @@
       "title": "نقل الفريق",
       "destination": "الإدارة الوجهة",
       "affected": "سيتم نقل {{count}} من الموظفين مع الفريق.",
+      "reassigned": "تم النقل. انتقل {{count}} من الموظفين مع الفريق.",
       "confirm": "نقل الفريق"
     },
     "remove": {

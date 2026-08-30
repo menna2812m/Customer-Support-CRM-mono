@@ -19,6 +19,7 @@ import {
   OrganizationUnit,
   PagedResult,
   Team,
+  TeamMoveResult,
 } from './organization-api.service';
 import { MoveTeamDialog, MoveTeamDialogData } from './move-team.dialog';
 import { UnitNamePipe } from './unit-name.pipe';
@@ -108,6 +109,7 @@ export class DepartmentsPage implements OnInit {
   /** Which department's teams are open. Null means none - the list is collapsed. */
   protected readonly openDepartment = signal<OrganizationUnit | null>(null);
   protected readonly formError = signal<AppError | null>(null);
+  protected readonly moveOutcome = signal<TeamMoveResult | null>(null);
 
   protected readonly form = this.formBuilder.nonNullable.group({
     nameAr: ['', [Validators.required, Validators.maxLength(200)]],
@@ -252,11 +254,16 @@ export class DepartmentsPage implements OnInit {
     this.dialog
       .open(MoveTeamDialog, { data })
       .afterClosed()
-      .subscribe((moved: boolean | undefined) => {
-        if (moved) {
-          this.loadTeams(team.departmentId);
-          this.load();
+      .subscribe((result: TeamMoveResult | undefined) => {
+        if (!result) {
+          return;
         }
+
+        // How many people were reassigned is the part of the move nobody can verify by looking at
+        // the screen, so it is reported rather than discarded (spec FR-015).
+        this.moveOutcome.set(result);
+        this.loadTeams(team.departmentId);
+        this.load();
       });
   }
 

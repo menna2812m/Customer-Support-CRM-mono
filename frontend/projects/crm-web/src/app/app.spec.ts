@@ -47,6 +47,18 @@ describe('App', () => {
     expect(text).toContain('Diagnostics');
   });
 
+  // Both organization screens are top-level destinations. Branches belong to nothing and contain
+  // nothing (FR-003), so there is no department to reach them through - without their own entry
+  // the screen exists and is routed and no one can get to it.
+  it('offers both organization screens to a session that may see them', async () => {
+    signIn('organization.view');
+
+    const text = await render();
+
+    expect(text).toContain('Departments');
+    expect(text).toContain('Branches');
+  });
+
   it('offers only the destinations this session may reach', async () => {
     signIn('tickets.view');
 

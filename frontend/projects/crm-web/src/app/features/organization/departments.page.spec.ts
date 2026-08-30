@@ -1,7 +1,16 @@
 import { HttpTestingController } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
+import { MatDialog } from '@angular/material/dialog';
 import { provideCrmTesting } from '@crm/core/testing';
+import { of } from 'rxjs';
 import { DepartmentsPage } from './departments.page';
+
+/**
+ * Stands in for the move dialog so this spec can assert what the page does with the outcome. The
+ * dialog's own behaviour - closing with the result, staying open on a refusal - is covered in
+ * move-team.dialog.spec.ts.
+ */
+const MOVE_RESULT = { team: { id: 't1', departmentId: 'd2' }, membersReassigned: 3 };
 
 /**
  * The departments screen. What is worth testing here is not that a list renders, but that the
@@ -14,7 +23,16 @@ describe('DepartmentsPage', () => {
     await TestBed.configureTestingModule({
       imports: [DepartmentsPage],
       providers: [provideCrmTesting()],
-    }).compileComponents();
+    });
+
+    // The page imports MatDialogModule, so MatDialog is a component-level provider; overriding the
+    // token reaches it where a root-level provider would be shadowed. Has to happen before the
+    // module is instantiated.
+    TestBed.overrideProvider(MatDialog, {
+      useValue: { open: () => ({ afterClosed: () => of(MOVE_RESULT) }) },
+    });
+
+    await TestBed.compileComponents();
 
     http = TestBed.inject(HttpTestingController);
   });
@@ -79,6 +97,41 @@ describe('DepartmentsPage', () => {
     // A delete refused because teams depend on it must reach the administrator - that refusal is
     // the only thing telling them what to fix first.
     expect(page.formError()?.code).toBe('organization_has_dependents');
+  });
+
+  // The count is the only evidence the move did more than change one row, and it is the one thing
+  // an administrator cannot check for themselves (spec FR-015).
+  it('reports how many people a completed move reassigned', () => {
+    const fixture = render([department('d1', 'Operations')]);
+    const page = fixture.componentInstance as unknown as {
+      move: (team: { id: string; departmentId: string }) => void;
+      moveOutcome: () => { membersReassigned: number } | null;
+    };
+
+    page.move({ id: 't1', departmentId: 'd1' });
+    fixture.detectChanges();
+
+    expect(page.moveOutcome()?.membersReassigned).toBe(3);
+
+    // A completed move refreshes both lists; flushing them keeps the verify in afterEach honest.
+    http
+      .expectOne((request) => request.url === '/api/v1/organization/departments/d1/teams')
+      .flush({
+        items: [],
+        page: 1,
+        pageSize: 100,
+        totalCount: 0,
+        totalPages: 1,
+      });
+    http
+      .expectOne((request) => request.url === '/api/v1/organization/departments')
+      .flush({
+        items: [],
+        page: 1,
+        pageSize: 100,
+        totalCount: 0,
+        totalPages: 1,
+      });
   });
 
   it('loads a department’s teams from under that department', () => {

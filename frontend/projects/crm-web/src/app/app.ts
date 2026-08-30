@@ -24,9 +24,17 @@ export class App {
   private readonly allNavigation: readonly PermittedNavItem[] = [
     { path: '/home', labelKey: 'nav.home' },
     { path: '/diagnostics', labelKey: 'nav.diagnostics', permission: 'diagnostics.read' },
+    // Two entries rather than one. A branch belongs to nothing and contains nothing (FR-003), so
+    // unlike a team there is no parent screen to reach it through - it needs its own destination or
+    // it has none at all.
     {
       path: '/organization/departments',
-      labelKey: 'nav.organization',
+      labelKey: 'nav.departments',
+      permission: 'organization.view',
+    },
+    {
+      path: '/organization/branches',
+      labelKey: 'nav.branches',
       permission: 'organization.view',
     },
   ];

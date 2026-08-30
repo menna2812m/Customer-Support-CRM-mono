@@ -6,7 +6,12 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { AppError } from '@crm/core';
 import { TranslocoPipe } from '@jsverse/transloco';
-import { OrganizationApiService, OrganizationUnit, Team } from './organization-api.service';
+import {
+  OrganizationApiService,
+  OrganizationUnit,
+  Team,
+  TeamMoveResult,
+} from './organization-api.service';
 import { UnitNamePipe } from './unit-name.pipe';
 
 export interface MoveTeamDialogData {
@@ -72,7 +77,7 @@ export interface MoveTeamDialogData {
 export class MoveTeamDialog {
   private readonly api = inject(OrganizationApiService);
   private readonly formBuilder = inject(FormBuilder);
-  private readonly reference = inject<MatDialogRef<MoveTeamDialog, boolean>>(MatDialogRef);
+  private readonly reference = inject<MatDialogRef<MoveTeamDialog, TeamMoveResult>>(MatDialogRef);
 
   protected readonly data = inject<MoveTeamDialogData>(MAT_DIALOG_DATA);
   protected readonly error = signal<AppError | null>(null);
@@ -82,7 +87,7 @@ export class MoveTeamDialog {
   });
 
   protected cancel(): void {
-    this.reference.close(false);
+    this.reference.close();
   }
 
   protected confirm(): void {
@@ -94,7 +99,9 @@ export class MoveTeamDialog {
     this.error.set(null);
 
     this.api.moveTeam(this.data.team.id, this.form.getRawValue().departmentId).subscribe({
-      next: () => this.reference.close(true),
+      // Closing with the result rather than a flag: how many people were reassigned is the part of
+      // the move nobody can see for themselves, and the caller is what shows it.
+      next: (result) => this.reference.close(result),
 
       // A refusal here is meaningful - an inactive destination, or a name already taken there - so
       // the dialog stays open showing why rather than closing as though the move happened.

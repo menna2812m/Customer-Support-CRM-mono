@@ -4,7 +4,11 @@ import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideRouter } from '@angular/router';
 import { TranslocoTestingModule } from '@jsverse/transloco';
 import { APP_CONFIG, AppConfig } from '../lib/config/app-config';
-import { authTokenInterceptor, errorNormalizationInterceptor } from '../lib/http/interceptors';
+import {
+  authTokenInterceptor,
+  errorNormalizationInterceptor,
+  languageInterceptor,
+} from '../lib/http/interceptors';
 import en from '../../../crm-web/public/assets/i18n/en.json';
 import ar from '../../../crm-web/public/assets/i18n/ar.json';
 
@@ -31,7 +35,9 @@ export function provideCrmTesting(
 ): (Provider | EnvironmentProviders)[] {
   return [
     { provide: APP_CONFIG, useValue: { ...TEST_APP_CONFIG, ...config } },
-    provideHttpClient(withInterceptors([authTokenInterceptor, errorNormalizationInterceptor])),
+    provideHttpClient(
+      withInterceptors([languageInterceptor, authTokenInterceptor, errorNormalizationInterceptor]),
+    ),
     provideHttpClientTesting(),
 
     // AuthService routes to sign-in when a session ends, so a router has to exist. Empty routes:

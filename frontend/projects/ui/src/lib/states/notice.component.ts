@@ -19,7 +19,7 @@ import { BadgeTone } from '../data/badge.component';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="crm-notice" [class]="'crm-notice--' + tone()" role="alert">
-      <p class="crm-notice__message">{{ messageKey() | transloco }}</p>
+      <p class="crm-notice__message">{{ messageKey() | transloco: params() }}</p>
     </div>
   `,
   styles: `
@@ -74,4 +74,11 @@ import { BadgeTone } from '../data/badge.component';
 export class NoticeComponent {
   readonly messageKey = input.required<string>();
   readonly tone = input<BadgeTone>('danger');
+
+  /**
+   * Values the message interpolates - a count, a name. Still the client's own wording: the numbers
+   * come from the server, the sentence around them does not, which is what lets a refusal say how
+   * many teams are in the way without quoting server prose (spec LR-003).
+   */
+  readonly params = input<Record<string, unknown>>({});
 }

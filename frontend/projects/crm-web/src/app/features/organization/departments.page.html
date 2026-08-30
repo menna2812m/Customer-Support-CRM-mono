@@ -7,6 +7,14 @@
   <crm-notice [messageKey]="'errors.code.' + error.code" />
 }
 
+@if (moveOutcome(); as outcome) {
+  <crm-notice
+    tone="success"
+    messageKey="organization.move.reassigned"
+    [params]="{ count: outcome.membersReassigned }"
+  />
+}
+
 <div class="crm-stack">
   <crm-panel titleKey="organization.departments.create">
     <form class="crm-form-row" [formGroup]="form" (ngSubmit)="create()">

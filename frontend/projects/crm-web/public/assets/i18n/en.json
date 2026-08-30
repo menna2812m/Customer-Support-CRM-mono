@@ -12,7 +12,8 @@
   "nav": {
     "home": "Home",
     "diagnostics": "Diagnostics",
-    "organization": "Organization"
+    "departments": "Departments",
+    "branches": "Branches"
   },
   "states": {
     "loading": "Loading...",
@@ -173,6 +174,7 @@
       "title": "Move team",
       "destination": "Destination department",
       "affected": "This will move {{count}} people with the team.",
+      "reassigned": "Moved. {{count}} people moved with the team.",
       "confirm": "Move team"
     },
     "remove": {
