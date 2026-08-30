@@ -81,6 +81,7 @@ public static class DependencyInjection
         // Feature 004. Separate from IIdentityStore: sign-in asks who an arriving identity is,
         // administration asks who exists and what they may do.
         services.AddScoped<IPeopleStore, PeopleStore>();
+        services.AddScoped<IRoleCatalog, RoleCatalog>();
         services.AddScoped<IAuthenticationEventLog, AuthenticationEventLog>();
         services.AddScoped<ISessionStore, SessionStore>();
 

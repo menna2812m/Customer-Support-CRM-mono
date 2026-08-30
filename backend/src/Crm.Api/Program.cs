@@ -63,6 +63,7 @@ builder.Services.AddScoped<Crm.Application.Abstractions.ICorrelationAccessor, Cr
 builder.Services.AddScoped<Crm.Application.Diagnostics.DiagnosticItemQuery>();
 builder.Services.AddScoped<Crm.Application.Organization.OrganizationUnitService>();
 builder.Services.AddScoped<Crm.Application.Organization.TeamService>();
+builder.Services.AddScoped<Crm.Application.Identity.People.PeopleService>();
 
 // Authentication and authorization seams. Deny by default: anything without an explicit
 // [AllowAnonymous] requires an authenticated caller (Constitution IV, spec FR-025).

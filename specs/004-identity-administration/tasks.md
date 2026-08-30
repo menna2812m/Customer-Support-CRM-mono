@@ -131,35 +131,35 @@ placement, and confirm both are reflected on that person's next request.
 
 ### Implementation for User Story 1
 
-- [ ] T019 [P] [US1] Add the read use cases in
+- [X] T019 [P] [US1] Add the read use cases in
       `backend/src/Crm.Application/Identity/People/`: list with search and the branch, department,
       team, active, and never-signed-in filters, and get one person with roles and effective
       permissions
-- [ ] T020 [P] [US1] Add the role use cases in
+- [X] T020 [P] [US1] Add the role use cases in
       `backend/src/Crm.Application/Identity/People/GrantRole.cs` and `RevokeRole.cs`, both routed
       through the guards from T014
-- [ ] T021 [US1] Add the placement use case in
+- [X] T021 [US1] Add the placement use case in
       `backend/src/Crm.Application/Identity/People/SetPlacement.cs`, deriving the department from the
       team and refusing a mismatch (FR-010, FR-011)
-- [ ] T022 [US1] Add `PeopleController` in `backend/src/Crm.Api/Identity/PeopleController.cs` with
+- [X] T022 [US1] Add `PeopleController` in `backend/src/Crm.Api/Identity/PeopleController.cs` with
       `[RequirePermission(Permissions.Identity.View)]` on reads and `Manage` on writes, Staff
       population only, matching `contracts/identity-api.yaml` exactly
-- [ ] T023 [US1] Add `RolesController` in `backend/src/Crm.Api/Identity/RolesController.cs` for the
+- [X] T023 [US1] Add `RolesController` in `backend/src/Crm.Api/Identity/RolesController.cs` for the
       read-only role list carrying each role's permissions, so the client can show effective
       permissions as derived
-- [ ] T024 [US1] Map the placement, guard, and not-found refusals to the shared `ProblemDetails`
+- [X] T024 [US1] Map the placement, guard, and not-found refusals to the shared `ProblemDetails`
       contract with their `errorCode`s in `backend/src/Crm.Api/Identity/IdentityProblems.cs`
-- [ ] T025 [US1] Record audit entries through `IAuditRecorder` in the use cases under
+- [X] T025 [US1] Record audit entries through `IAuditRecorder` in the use cases under
       `backend/src/Crm.Application/Identity/People/` for every grant, revocation, and placement
       change, capturing actor, person, and what changed (AR-005, AR-006)
-- [ ] T026 [P] [US1] Integration tests in
+- [X] T026 [P] [US1] Integration tests in
       `backend/tests/Crm.IntegrationTests/Identity/PeopleEndpointsTests.cs` covering each endpoint,
       the paged list shape, and every filter
-- [ ] T027 [P] [US1] Integration tests in
+- [X] T027 [P] [US1] Integration tests in
       `backend/tests/Crm.IntegrationTests/Identity/AuthorizationTests.cs`: a caller without
       `identity.view` is refused a read, a caller with view but not `manage` is refused every write,
       and a portal-population caller is refused everything (AR-003)
-- [ ] T028 [P] [US1] Integration tests in
+- [X] T028 [P] [US1] Integration tests in
       `backend/tests/Crm.IntegrationTests/Identity/GuardTests.cs` proving both guards refuse through
       the endpoint, not only in the use case
 - [ ] T029 [P] [US1] Add `identity-api.service.ts` in
@@ -184,7 +184,7 @@ placement, and confirm both are reflected on that person's next request.
 - [ ] T035 [P] [US1] Frontend specs
       `frontend/projects/crm-web/src/app/features/identity/people.page.spec.ts`,
       `person.page.spec.ts`, `placement-form.component.spec.ts`, and `identity-api.service.spec.ts`
-- [ ] T036 [US1] Remove `x-status: planned` from the paths this story implements in
+- [X] T036 [US1] Remove `x-status: planned` from the paths this story implements in
       `specs/004-identity-administration/contracts/identity-api.yaml`, so the contract drift test
       begins holding them
 
@@ -212,12 +212,12 @@ confirm the prepared roles and placement survive with no duplicate record.
 
 ### Implementation for User Story 2
 
-- [ ] T039 [US2] Add the pre-provision use case in
+- [X] T039 [US2] Add the pre-provision use case in
       `backend/src/Crm.Application/Identity/People/PreProvisionPerson.cs`, refusing an address
       already in use (FR-014)
-- [ ] T040 [US2] Add the create endpoint to `backend/src/Crm.Api/Identity/PeopleController.cs` and
+- [X] T040 [US2] Add the create endpoint to `backend/src/Crm.Api/Identity/PeopleController.cs` and
       record the creation through `IAuditRecorder`
-- [ ] T041 [P] [US2] Integration tests in
+- [X] T041 [P] [US2] Integration tests in
       `backend/tests/Crm.IntegrationTests/Identity/PreProvisionEndpointTests.cs` covering creation
       with and without roles and placement, and the duplicate-address refusal
 - [ ] T042 [US2] Add `EmailVerified` to `ProviderClaimNames` in
@@ -246,7 +246,7 @@ confirm the prepared roles and placement survive with no duplicate record.
 - [ ] T049 [P] [US2] Frontend spec
       `frontend/projects/crm-web/src/app/features/identity/pre-provision-form.component.spec.ts`,
       including the duplicate-address refusal
-- [ ] T050 [US2] Remove `x-status: planned` from the create path in
+- [X] T050 [US2] Remove `x-status: planned` from the create path in
       `specs/004-identity-administration/contracts/identity-api.yaml`
 
 **Checkpoint**: Somebody can be ready before they arrive, and arriving cannot take over an account.
@@ -299,7 +299,7 @@ the audit records what they held.
 - [ ] T060 [P] [US3] Frontend spec coverage for the lifecycle controls in
       `frontend/projects/crm-web/src/app/features/identity/person.page.spec.ts`, including both
       guard refusals reaching the reader
-- [ ] T061 [US3] Remove `x-status: planned` from the activation and delete paths in
+- [X] T061 [US3] Remove `x-status: planned` from the activation and delete paths in
       `specs/004-identity-administration/contracts/identity-api.yaml`
 
 **Checkpoint**: Access can be removed and is genuinely gone. All three stories complete.

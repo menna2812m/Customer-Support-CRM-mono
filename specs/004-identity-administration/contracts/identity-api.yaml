@@ -19,9 +19,8 @@ info:
     caller's own placement - scoping the people list by the placement this feature exists to assign
     would be circular.
 
-    Every path in this contract is marked `x-status: planned`. The marker is removed as each is
-    implemented; a path documented but not yet running is deliberate, because the contract describes
-    a whole feature while delivery is incremental by user story.
+    Every path here is implemented and held by the contract-drift test, which compares this document
+    against the live OpenAPI document in both directions.
 servers:
   - url: http://localhost:5233
     description: Local development
@@ -34,7 +33,6 @@ tags:
 
 paths:
   /api/v1/identity/people:
-    x-status: planned
     get:
       tags: [People]
       summary: List people
@@ -75,7 +73,6 @@ paths:
         "403": { $ref: "#/components/responses/Forbidden" }
 
   /api/v1/identity/people/{id}:
-    x-status: planned
     parameters:
       - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
     get:
@@ -106,7 +103,6 @@ paths:
         "403": { $ref: "#/components/responses/Forbidden" }
 
   /api/v1/identity/people/{id}/placement:
-    x-status: planned
     parameters:
       - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
     put:
@@ -132,7 +128,6 @@ paths:
         "403": { $ref: "#/components/responses/Forbidden" }
 
   /api/v1/identity/people/{id}/activation:
-    x-status: planned
     parameters:
       - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
     put:
@@ -155,7 +150,6 @@ paths:
         "403": { $ref: "#/components/responses/Forbidden" }
 
   /api/v1/identity/people/{id}/roles/{roleId}:
-    x-status: planned
     parameters:
       - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
       - { name: roleId, in: path, required: true, schema: { type: string, format: uuid } }
@@ -186,7 +180,6 @@ paths:
         "403": { $ref: "#/components/responses/Forbidden" }
 
   /api/v1/identity/roles:
-    x-status: planned
     get:
       tags: [Roles]
       summary: List the seeded roles
