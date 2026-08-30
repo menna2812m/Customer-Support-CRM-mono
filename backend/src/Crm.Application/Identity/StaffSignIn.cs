@@ -24,13 +24,12 @@ public sealed class StaffSignIn(
         ArgumentNullException.ThrowIfNull(settings);
 
         var email = NormalizeEmail(provider.Email);
-        var placement = ReadPlacement(provider);
 
         var existing = await identityStore.FindBySubjectAsync(provider.Subject, cancellationToken);
 
         if (existing is null)
         {
-            var outcome = await ProvisionAsync(provider, email, placement, settings, cancellationToken);
+            var outcome = await ProvisionAsync(provider, email, settings, cancellationToken);
 
             if (outcome is not null)
             {
@@ -45,7 +44,7 @@ public sealed class StaffSignIn(
             // Only what the provider owns is refreshed. Placement is left alone when the provider
             // asserted none, so a directory without organizational data does not erase a value the
             // organization feature will later populate (spec FR-026).
-            await identityStore.RefreshAsync(existing.Id, email, provider.DisplayName, placement, cancellationToken);
+            await identityStore.RefreshAsync(existing.Id, email, provider.DisplayName, cancellationToken);
         }
 
         if (!existing.IsActive)
@@ -84,7 +83,6 @@ public sealed class StaffSignIn(
     private async Task<SignInOutcome?> ProvisionAsync(
         ProviderIdentity provider,
         string email,
-        OrganizationScope? placement,
         IdentitySettings settings,
         CancellationToken cancellationToken)
     {
@@ -105,11 +103,12 @@ public sealed class StaffSignIn(
             return SignInOutcome.Refused(SignInRefusal.IdentityCollision);
         }
 
+        // Placement is null at provisioning: the CRM owns it, and an administrator sets it later
+        // through the organization screens (spec FR-018).
         await identityStore.ProvisionAsync(
             provider.Subject,
             email,
             provider.DisplayName,
-            placement,
             cancellationToken);
 
         return null;
@@ -174,15 +173,6 @@ public sealed class StaffSignIn(
         !string.IsNullOrWhiteSpace(configured)
         && (string.Equals(configured, subject, StringComparison.Ordinal)
             || string.Equals(NormalizeEmail(configured), email, StringComparison.Ordinal));
-
-    /// <summary>
-    /// Reads placement claims when the provider asserted them. Returns null when it asserted none,
-    /// which means "leave whatever the CRM already holds".
-    /// </summary>
-    private static OrganizationScope? ReadPlacement(ProviderIdentity provider) =>
-        provider.DepartmentId is null && provider.BranchId is null && provider.TeamId is null
-            ? null
-            : new OrganizationScope(provider.DepartmentId, provider.BranchId, provider.TeamId);
 
     private static string NormalizeEmail(string email) => email.Trim().ToLowerInvariant();
 }

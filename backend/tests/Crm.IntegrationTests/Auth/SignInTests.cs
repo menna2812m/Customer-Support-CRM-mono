@@ -202,8 +202,15 @@ public sealed class SignInTests(SqlServerFixture database)
     }
 
     [Fact]
-    public async Task Placement_asserted_by_the_provider_reaches_the_session()
+    public async Task Placement_asserted_by_the_provider_is_ignored()
     {
+        // Feature 002 let the provider assert placement and carried it into the session. Feature 003
+        // retires that (spec FR-018, SC-005): the CRM owns placement, and a provider still
+        // configured to assert it is ignored rather than merely inactive by default.
+        //
+        // This is not only a matter of ownership. Placement is now a foreign key to real records, so
+        // an identifier invented by the provider could only ever be a constraint violation - it
+        // would fail the whole sign-in rather than quietly setting a wrong department.
         var department = Guid.CreateVersion7();
 
         await using var harness = SignInHarness.Create(database.ConnectionString);
@@ -214,12 +221,15 @@ public sealed class SignInTests(SqlServerFixture database)
         var session = await harness.RequestSessionAsync();
         using var document = JsonDocument.Parse(await session.Content.ReadAsStringAsync());
 
-        document.RootElement
-            .GetProperty("user")
-            .GetProperty("scope")
-            .GetProperty("departmentId")
-            .GetString()
-            .ShouldBe(department.ToString());
+        // Absent scope means "sees nothing extra", which is what an unplaced user has. The member
+        // may be omitted entirely or present and null; both say the same thing, and neither may
+        // carry the department the provider asserted.
+        var user = document.RootElement.GetProperty("user");
+
+        if (user.TryGetProperty("scope", out var scope) && scope.ValueKind is not JsonValueKind.Null)
+        {
+            scope.GetProperty("departmentId").ValueKind.ShouldBe(JsonValueKind.Null);
+        }
     }
 
     [Fact]

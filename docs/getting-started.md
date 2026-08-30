@@ -138,7 +138,33 @@ somebody grants it.
 `specs/002-auth-login/quickstart.md` walks the same setup in more detail, with a table of the
 mistakes that are easy to make.
 
-## 7. Run the verification suites
+## 7. Build an organization
+
+Sign in as a user holding the `Administrator` role, then open **Organization**. Nothing else
+grants `organization.manage`, so an `Agent` sees no such entry and is refused the routes directly.
+
+1. **Create a branch** under Organization → Branches: Riyadh / الرياض, code `RUH`. Both names are
+   required on the same form - a unit created in one language and completed in the other later is
+   the half-translated state the product exists to avoid.
+2. **Create a department**, Technical Support / الدعم الفني, code `TS`.
+3. **Add teams from inside the department.** Open it and add Tier 1 and Tier 2. The department is
+   not a dropdown; it comes from the context you are in, which is why a team can never be created
+   without one.
+4. **Create a second department** with a team also called Tier 1. This is allowed: team names are
+   unique only within their own department.
+5. **Switch to Arabic.** The lists re-sort by the Arabic name, and the team hierarchy indents from
+   the other side.
+
+The code is set once and cannot be changed afterwards. A unit created with the wrong code is
+deleted and recreated, which frees the code again.
+
+Nobody can be *placed* in any of this yet - that is the users-and-permissions feature. Until then
+the structure is real and unused.
+
+`specs/003-organization/quickstart.md` lists the rules worth trying to break, and the SQL that
+proves a team move carried its members.
+
+## 8. Run the verification suites
 
 ```powershell
 ./scripts/verify-backend.ps1      # restore, build, tests, format check
@@ -150,7 +176,7 @@ database, and disposes of it at the end - it never touches `CrmDev`. The first r
 image (about 2.3 GB); later runs take about 20 seconds. If Docker is not running, the suite fails
 with a message naming Docker rather than a misleading test failure.
 
-## 8. Add your first feature
+## 9. Add your first feature
 
 1. Create the branch and specification with `/speckit.specify`.
 2. Backend: entity and rules in `Crm.Domain`, use case, DTOs and validator in `Crm.Application`,

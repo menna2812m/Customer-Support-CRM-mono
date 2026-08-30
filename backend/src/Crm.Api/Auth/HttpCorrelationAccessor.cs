@@ -1,5 +1,5 @@
 using Crm.Api.Common.Correlation;
-using Crm.Infrastructure.Identity;
+using Crm.Application.Abstractions;
 
 namespace Crm.Api.Auth;
 

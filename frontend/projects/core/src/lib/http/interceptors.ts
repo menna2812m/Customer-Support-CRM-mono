@@ -4,17 +4,19 @@ import { catchError, from, switchMap, throwError } from 'rxjs';
 import { AuthSession } from '../auth/auth-session.store';
 import { SessionRenewal } from '../auth/session-renewal.service';
 import { APP_CONFIG } from '../config/app-config';
+import { LanguageService } from '../i18n/language.service';
 import { AppError, AppErrorKind, FieldError } from '../state/app-error';
 
 /**
  * The cross-cutting request seam (spec FR-030). Order matters and is fixed in provideCrmCore:
  *
- *   baseUrl -> correlation -> auth token -> error normalization
+ *   baseUrl -> correlation -> language -> auth token -> error normalization
  *
  * Components never touch HttpClient; only `*-api.service.ts` files do, and a lint rule enforces it.
  */
 
 const CORRELATION_HEADER = 'X-Correlation-Id';
+const LANGUAGE_HEADER = 'Accept-Language';
 
 /** Turns a relative API path into an absolute one using the runtime configuration. */
 export const baseUrlInterceptor: HttpInterceptorFn = (request, next) => {
@@ -41,6 +43,28 @@ export const correlationInterceptor: HttpInterceptorFn = (request, next) => {
   }
 
   return next(request.clone({ setHeaders: { [CORRELATION_HEADER]: newCorrelationId() } }));
+};
+
+/**
+ * Tells the server which language the reader is in, so a list comes back ordered by the name they
+ * actually see rather than always by English (spec LR-002).
+ *
+ * The ordering has to happen in the database to compose with paging - sorting one page after the
+ * fact would order within each page and not across them - so the language has to travel with the
+ * request. `Accept-Language` is the standard place for it, and the server reads only the primary
+ * subtag.
+ *
+ * A caller that set the header itself is left alone: an explicit choice at the call site is more
+ * specific than the ambient one, and overriding it here would make that call impossible to write.
+ */
+export const languageInterceptor: HttpInterceptorFn = (request, next) => {
+  if (request.headers.has(LANGUAGE_HEADER)) {
+    return next(request);
+  }
+
+  const languages = inject(LanguageService);
+
+  return next(request.clone({ setHeaders: { [LANGUAGE_HEADER]: languages.language() } }));
 };
 
 /**

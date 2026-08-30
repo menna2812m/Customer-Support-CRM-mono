@@ -1,9 +1,9 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { AuthService, errorCodeKey, safeReturnUrl } from '@crm/core';
+import { NoticeComponent, PanelComponent } from '@crm/ui';
 
 /**
  * Explains what is about to happen and starts the handshake (spec US1).
@@ -14,18 +14,22 @@ import { AuthService, errorCodeKey, safeReturnUrl } from '@crm/core';
  */
 @Component({
   selector: 'crm-sign-in-page',
-  imports: [MatButtonModule, MatCardModule, TranslocoPipe],
+  imports: [MatButtonModule, NoticeComponent, PanelComponent, TranslocoPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <mat-card class="crm-signin" appearance="outlined">
-      <mat-card-content>
-        <h1 class="crm-signin__title">{{ 'auth.signIn.title' | transloco }}</h1>
-
+    <!--
+      A single-purpose screen reads better narrow and centred than stretched across the content
+      container, which is what crm-measure is for.
+    -->
+    <div class="crm-measure crm-signin">
+      <crm-panel titleKey="auth.signIn.title">
         @if (errorKey(); as key) {
-          <p class="crm-signin__error" role="alert">{{ key | transloco }}</p>
+          <crm-notice [messageKey]="key" />
         }
 
-        <p class="crm-signin__description">{{ 'auth.signIn.description' | transloco }}</p>
+        <p class="crm-muted crm-signin__description">
+          {{ 'auth.signIn.description' | transloco }}
+        </p>
 
         <button
           matButton="filled"
@@ -36,28 +40,16 @@ import { AuthService, errorCodeKey, safeReturnUrl } from '@crm/core';
         >
           {{ (redirecting() ? 'auth.completing' : 'auth.signIn.action') | transloco }}
         </button>
-      </mat-card-content>
-    </mat-card>
+      </crm-panel>
+    </div>
   `,
   styles: `
     .crm-signin {
-      margin-block: var(--crm-space-lg);
-      margin-inline: auto;
-      max-inline-size: 32rem;
-    }
-
-    .crm-signin__title {
-      font: var(--mat-sys-headline-small);
-      margin-block-end: var(--crm-space-md);
+      margin-block-start: var(--crm-space-8);
     }
 
     .crm-signin__description {
-      margin-block-end: var(--crm-space-lg);
-    }
-
-    .crm-signin__error {
-      color: var(--mat-sys-error);
-      margin-block-end: var(--crm-space-md);
+      margin-block-end: var(--crm-space-5);
     }
   `,
 })

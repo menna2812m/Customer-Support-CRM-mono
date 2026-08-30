@@ -53,15 +53,15 @@ public sealed class IdentityStore(
         string providerSubject,
         string email,
         string displayName,
-        OrganizationScope? placement,
         CancellationToken cancellationToken = default)
     {
+        // A new user has no placement. An administrator assigns it afterwards (spec FR-018).
         var user = User.Provision(
             providerSubject,
             email,
             displayName,
             (int)CallerPopulation.Staff,
-            new OrganizationPlacement(placement?.DepartmentId, placement?.BranchId, placement?.TeamId));
+            OrganizationPlacement.None);
 
         user.RecordSignIn(clock.GetUtcNow());
 
@@ -75,7 +75,6 @@ public sealed class IdentityStore(
         Guid userId,
         string email,
         string displayName,
-        OrganizationScope? placement,
         CancellationToken cancellationToken = default)
     {
         var user = await context.Users.FirstOrDefaultAsync(entry => entry.Id == userId, cancellationToken);
@@ -85,10 +84,7 @@ public sealed class IdentityStore(
             return;
         }
 
-        user.RefreshFromProvider(
-            email,
-            displayName,
-            new OrganizationPlacement(placement?.DepartmentId, placement?.BranchId, placement?.TeamId));
+        user.RefreshFromProvider(email, displayName);
 
         user.RecordSignIn(clock.GetUtcNow());
 

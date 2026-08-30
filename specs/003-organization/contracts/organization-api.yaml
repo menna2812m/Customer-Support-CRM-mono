@@ -1,0 +1,556 @@
+openapi: 3.1.0
+info:
+  title: Customer Support CRM - Organization API
+  version: "1.0"
+  description: >
+    Endpoints delivered by feature 003-organization. Staff only, and administrative: every read
+    requires `organization.view` and every write requires `organization.manage`.
+
+    Branches stand alone as geography. Teams belong to exactly one department, which is why a team
+    is created and listed under its department rather than at the top level. The one exception is
+    moving a team, which necessarily addresses it from outside its current department.
+
+    Organizational structure is global reference data. Unlike most collections in this product, it
+    is not filtered by the caller's own placement - scoping the tree by the tree would be circular.
+servers:
+  - url: http://localhost:5233
+    description: Local development
+
+tags:
+  - name: Departments
+    description: Functional divisions of the business
+  - name: Branches
+    description: Geographic locations
+  - name: Teams
+    description: Working groups inside a department
+
+paths:
+  /api/v1/organization/departments:
+    get:
+      tags: [Departments]
+      summary: List departments
+      description: Paged with the shared pagination contract. Sortable by `nameAr`, `nameEn`, `code`.
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PageSize"
+        - $ref: "#/components/parameters/Sort"
+        - $ref: "#/components/parameters/Search"
+        - $ref: "#/components/parameters/ActiveOnly"
+      responses:
+        "200":
+          description: A page of departments
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PagedUnitResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+    post:
+      tags: [Departments]
+      summary: Create a department
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateUnitRequest" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/UnitResponse" }
+        "400": { $ref: "#/components/responses/ValidationFailed" }
+        "409": { $ref: "#/components/responses/Conflict" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /api/v1/organization/departments/{id}:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    get:
+      tags: [Departments]
+      summary: Get a department
+      responses:
+        "200":
+          description: The department
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/UnitResponse" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+    put:
+      tags: [Departments]
+      summary: Rename a department
+      description: >
+        Names only. The code is immutable once set, so it is absent from this request rather than
+        ignored in it.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/RenameUnitRequest" }
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/UnitResponse" }
+        "400": { $ref: "#/components/responses/ValidationFailed" }
+        "409": { $ref: "#/components/responses/Conflict" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+    delete:
+      tags: [Departments]
+      summary: Delete a department
+      description: >
+        Recorded rather than destructive. Refused with 409 while any live team belongs to it or any
+        person is placed in it; the problem detail names what depends on it.
+      responses:
+        "204": { description: Deleted }
+        "409": { $ref: "#/components/responses/Conflict" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /api/v1/organization/departments/{id}/activation:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    put:
+      tags: [Departments]
+      summary: Activate or deactivate a department
+      description: >
+        Deactivation does not change anyone's existing placement; it removes the unit from the
+        active listing a placement chooser consumes.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ActivationRequest" }
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/UnitResponse" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /api/v1/organization/departments/{departmentId}/teams:
+    parameters:
+      - $ref: "#/components/parameters/DepartmentId"
+    get:
+      tags: [Teams]
+      summary: List the teams of a department
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PageSize"
+        - $ref: "#/components/parameters/Sort"
+        - $ref: "#/components/parameters/Search"
+        - $ref: "#/components/parameters/ActiveOnly"
+      responses:
+        "200":
+          description: A page of teams
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PagedTeamResponse" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+    post:
+      tags: [Teams]
+      summary: Create a team in this department
+      description: >
+        The department comes from the route, so a team can never be created without one. Team names
+        are unique within their department, not globally.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateUnitRequest" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TeamResponse" }
+        "400": { $ref: "#/components/responses/ValidationFailed" }
+        "409": { $ref: "#/components/responses/Conflict" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /api/v1/organization/teams/{id}:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    get:
+      tags: [Teams]
+      summary: Get a team
+      responses:
+        "200":
+          description: The team
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TeamResponse" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+    put:
+      tags: [Teams]
+      summary: Rename a team
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/RenameUnitRequest" }
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TeamResponse" }
+        "400": { $ref: "#/components/responses/ValidationFailed" }
+        "409": { $ref: "#/components/responses/Conflict" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+    delete:
+      tags: [Teams]
+      summary: Delete a team
+      description: Refused with 409 while any person is placed in it.
+      responses:
+        "204": { description: Deleted }
+        "409": { $ref: "#/components/responses/Conflict" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /api/v1/organization/teams/{id}/activation:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    put:
+      tags: [Teams]
+      summary: Activate or deactivate a team
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ActivationRequest" }
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TeamResponse" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /api/v1/organization/teams/{id}/department:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    put:
+      tags: [Teams]
+      summary: Move a team to another department
+      description: >
+        Moves the team and updates the recorded department of every person on it, as one atomic
+        operation. Refused when the destination is inactive, or already has a team of this name.
+        Moving a team to the department it is already in succeeds and changes nothing.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/MoveTeamRequest" }
+      responses:
+        "200":
+          description: Moved. `membersReassigned` reports how many people were affected.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/MoveTeamResponse" }
+        "409": { $ref: "#/components/responses/Conflict" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /api/v1/organization/branches:
+    get:
+      tags: [Branches]
+      summary: List branches
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PageSize"
+        - $ref: "#/components/parameters/Sort"
+        - $ref: "#/components/parameters/Search"
+        - $ref: "#/components/parameters/ActiveOnly"
+      responses:
+        "200":
+          description: A page of branches
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PagedUnitResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+    post:
+      tags: [Branches]
+      summary: Create a branch
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateUnitRequest" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/UnitResponse" }
+        "400": { $ref: "#/components/responses/ValidationFailed" }
+        "409": { $ref: "#/components/responses/Conflict" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /api/v1/organization/branches/{id}:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    get:
+      tags: [Branches]
+      summary: Get a branch
+      responses:
+        "200":
+          description: The branch
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/UnitResponse" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+    put:
+      tags: [Branches]
+      summary: Rename a branch
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/RenameUnitRequest" }
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/UnitResponse" }
+        "400": { $ref: "#/components/responses/ValidationFailed" }
+        "409": { $ref: "#/components/responses/Conflict" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+    delete:
+      tags: [Branches]
+      summary: Delete a branch
+      description: Refused with 409 while any person is placed in it.
+      responses:
+        "204": { description: Deleted }
+        "409": { $ref: "#/components/responses/Conflict" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /api/v1/organization/branches/{id}/activation:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    put:
+      tags: [Branches]
+      summary: Activate or deactivate a branch
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ActivationRequest" }
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/UnitResponse" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+components:
+  parameters:
+    Id:
+      name: id
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    DepartmentId:
+      name: departmentId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    Page:
+      name: page
+      in: query
+      description: 1-based page number.
+      schema: { type: integer, minimum: 1, default: 1 }
+    PageSize:
+      name: pageSize
+      in: query
+      description: >
+        Items per page. Exceeding the maximum is a validation failure rather than a silent clamp.
+      schema: { type: integer, minimum: 1, maximum: 100, default: 25 }
+    Sort:
+      name: sort
+      in: query
+      description: "`field` ascending, `-field` descending. Allowed: nameAr, nameEn, code."
+      schema: { type: string }
+    Search:
+      name: search
+      in: query
+      description: Matches either name or the code.
+      schema: { type: string }
+    ActiveOnly:
+      name: activeOnly
+      in: query
+      description: >
+        When true, returns only active units - the list a placement chooser consumes, so that no
+        consumer has to filter inactive units out for itself.
+        Defaults false, because administration shows both.
+      schema: { type: boolean, default: false }
+
+  schemas:
+    CreateUnitRequest:
+      type: object
+      required: [nameAr, nameEn, code]
+      properties:
+        nameAr: { type: string, minLength: 1, maxLength: 200 }
+        nameEn: { type: string, minLength: 1, maxLength: 200 }
+        code:
+          type: string
+          minLength: 1
+          maxLength: 32
+          description: Immutable once set. Unique among units of this kind.
+
+    RenameUnitRequest:
+      type: object
+      required: [nameAr, nameEn]
+      description: Both names are required together, so a unit cannot be half-translated.
+      properties:
+        nameAr: { type: string, minLength: 1, maxLength: 200 }
+        nameEn: { type: string, minLength: 1, maxLength: 200 }
+
+    ActivationRequest:
+      type: object
+      required: [isActive]
+      properties:
+        isActive: { type: boolean }
+
+    MoveTeamRequest:
+      type: object
+      required: [departmentId]
+      properties:
+        departmentId:
+          type: string
+          format: uuid
+          description: The destination department. Must be active.
+
+    MoveTeamResponse:
+      type: object
+      required: [team, membersReassigned]
+      properties:
+        team: { $ref: "#/components/schemas/TeamResponse" }
+        membersReassigned:
+          type: integer
+          description: How many people had their recorded department changed by this move.
+
+    UnitResponse:
+      type: object
+      required: [id, nameAr, nameEn, code, isActive]
+      properties:
+        id: { type: string, format: uuid }
+        nameAr: { type: string }
+        nameEn: { type: string }
+        code: { type: string }
+        isActive: { type: boolean }
+
+    TeamResponse:
+      allOf:
+        - $ref: "#/components/schemas/UnitResponse"
+        - type: object
+          required: [departmentId]
+          properties:
+            departmentId: { type: string, format: uuid }
+            departmentNameAr: { type: string }
+            departmentNameEn: { type: string }
+
+    PagedUnitResponse:
+      type: object
+      required: [items, page, pageSize, totalCount, totalPages]
+      properties:
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/UnitResponse" }
+        page: { type: integer }
+        pageSize: { type: integer }
+        totalCount: { type: integer, format: int64 }
+        totalPages: { type: integer }
+
+    PagedTeamResponse:
+      type: object
+      required: [items, page, pageSize, totalCount, totalPages]
+      properties:
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/TeamResponse" }
+        page: { type: integer }
+        pageSize: { type: integer }
+        totalCount: { type: integer, format: int64 }
+        totalPages: { type: integer }
+
+    ProblemDetails:
+      type: object
+      description: The shared error contract from feature 001.
+      properties:
+        type: { type: string }
+        title: { type: string }
+        status: { type: integer }
+        detail: { type: string }
+        instance: { type: string }
+        errorCode:
+          type: string
+          description: >
+            Stable code the client translates. This feature adds:
+            `organization_code_conflict`, `organization_name_conflict`,
+            `organization_has_dependents`, `organization_department_inactive`.
+        correlationId: { type: string }
+
+  responses:
+    ValidationFailed:
+      description: A field failed validation - a missing name, or a page size over the maximum.
+      content:
+        application/problem+json:
+          schema: { $ref: "#/components/schemas/ProblemDetails" }
+    Conflict:
+      description: >
+        A duplicate code or name, a delete refused because dependents exist, or a move into an
+        inactive department. The `errorCode` distinguishes them and the detail names what conflicted.
+      content:
+        application/problem+json:
+          schema: { $ref: "#/components/schemas/ProblemDetails" }
+    NotFound:
+      description: No such unit, or it has been deleted.
+      content:
+        application/problem+json:
+          schema: { $ref: "#/components/schemas/ProblemDetails" }
+    Unauthorized:
+      description: No live session.
+      content:
+        application/problem+json:
+          schema: { $ref: "#/components/schemas/ProblemDetails" }
+    Forbidden:
+      description: >
+        The session lacks `organization.view` for a read or `organization.manage` for a write, or
+        belongs to the portal population.
+      content:
+        application/problem+json:
+          schema: { $ref: "#/components/schemas/ProblemDetails" }

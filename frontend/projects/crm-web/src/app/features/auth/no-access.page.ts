@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { MatCardModule } from '@angular/material/card';
 import { ActivatedRoute } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { errorCodeKey } from '@crm/core';
+import { CodeComponent, PanelComponent } from '@crm/ui';
 
 /**
  * Authenticated, and granted nothing (spec US1).
@@ -13,40 +13,35 @@ import { errorCodeKey } from '@crm/core';
  */
 @Component({
   selector: 'crm-no-access-page',
-  imports: [MatCardModule, TranslocoPipe],
+  imports: [CodeComponent, PanelComponent, TranslocoPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <mat-card class="crm-no-access" appearance="outlined">
-      <mat-card-content>
+    <div class="crm-measure crm-no-access">
+      <crm-panel titleKey="auth.noAccess.title">
         <div role="alert">
-          <h1 class="crm-no-access__title">{{ 'auth.noAccess.title' | transloco }}</h1>
-          <p class="crm-no-access__message">{{ messageKey | transloco }}</p>
+          <p class="crm-muted">{{ messageKey | transloco }}</p>
         </div>
 
         @if (correlationId) {
           <p class="crm-no-access__reference">
-            {{ 'states.server.reference' | transloco }}
-            <code data-testid="correlation-id">{{ correlationId }}</code>
+            <span class="crm-hint">{{ 'states.server.reference' | transloco }}</span>
+            <crm-code data-testid="correlation-id">{{ correlationId }}</crm-code>
           </p>
         }
-      </mat-card-content>
-    </mat-card>
+      </crm-panel>
+    </div>
   `,
   styles: `
     .crm-no-access {
-      margin-block: var(--crm-space-lg);
-      margin-inline: auto;
-      max-inline-size: 32rem;
-    }
-
-    .crm-no-access__title {
-      font: var(--mat-sys-headline-small);
-      margin-block-end: var(--crm-space-md);
+      margin-block-start: var(--crm-space-8);
     }
 
     .crm-no-access__reference {
-      color: var(--mat-sys-on-surface-variant);
-      margin-block-start: var(--crm-space-lg);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--crm-space-2);
+      margin-block-start: var(--crm-space-5);
     }
   `,
 })

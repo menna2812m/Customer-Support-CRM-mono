@@ -14,7 +14,7 @@ public sealed class UserProvisioningTests
     private static readonly Guid Branch = Guid.Parse("22222222-2222-2222-2222-222222222222");
 
     [Fact]
-    public void A_returning_user_keeps_their_identifier_while_name_email_and_placement_are_refreshed()
+    public void A_returning_user_keeps_their_identifier_while_name_and_email_are_refreshed()
     {
         var user = User.Provision(
             "provider|stable-subject",
@@ -25,11 +25,8 @@ public sealed class UserProvisioningTests
 
         var identifier = user.Id;
 
-        // She married, changed her name, moved branch, and the provider knows all three.
-        user.RefreshFromProvider(
-            "layla.saeed@example.com",
-            "Layla Saeed",
-            new OrganizationPlacement(Department, Branch, null));
+        // She married and changed her name, and the provider knows both.
+        user.RefreshFromProvider("layla.saeed@example.com", "Layla Saeed");
 
         // The identifier is what every ticket, note, and audit record already points at. Changing
         // it would orphan her history, which is exactly why the subject - not the email - is the key.
@@ -37,12 +34,15 @@ public sealed class UserProvisioningTests
         user.ProviderSubject.ShouldBe("provider|stable-subject");
         user.Email.ShouldBe("layla.saeed@example.com");
         user.DisplayName.ShouldBe("Layla Saeed");
-        user.BranchId.ShouldBe(Branch);
     }
 
     [Fact]
-    public void A_provider_that_asserts_no_placement_leaves_the_stored_placement_alone()
+    public void Refreshing_from_the_provider_never_touches_placement()
     {
+        // Feature 003 (spec FR-018) gave the CRM sole ownership of placement. Feature 002 let a
+        // provider-asserted value overwrite it on every sign-in; once placement became a foreign key
+        // to real records, a provider-asserted identifier could only ever be a constraint violation.
+        // What an administrator sets now survives every subsequent sign-in.
         var user = User.Provision(
             "provider|subject",
             "agent@example.com",
@@ -50,10 +50,8 @@ public sealed class UserProvisioningTests
             (int)CallerPopulation.Staff,
             new OrganizationPlacement(Department, Branch, null));
 
-        user.RefreshFromProvider("agent@example.com", "Agent", OrganizationPlacement.None);
+        user.RefreshFromProvider("agent@example.com", "Agent");
 
-        // Most providers carry no organizational claims. Treating silence as "no department" would
-        // wipe the placement an administrator set, on every single sign-in.
         user.DepartmentId.ShouldBe(Department);
         user.BranchId.ShouldBe(Branch);
     }

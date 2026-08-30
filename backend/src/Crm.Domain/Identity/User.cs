@@ -68,21 +68,44 @@ public sealed class User : Entity, IAuditableEntity, ISoftDeletable, IHasOrganiz
     public Guid? DeletedBy { get; set; }
 
     /// <summary>
-    /// Refreshes what the provider owns. Placement is only overwritten when the provider actually
-    /// asserted it, so a provider that carries no organizational data does not erase a value the
-    /// organization feature will later populate (spec FR-026).
+    /// Refreshes what the provider owns: the email address and the display name, and nothing else.
     /// </summary>
-    public void RefreshFromProvider(string email, string displayName, OrganizationPlacement placement)
+    /// <remarks>
+    /// Placement is conspicuously absent. Feature 002 let a provider-asserted value overwrite it;
+    /// feature 003 made placement a foreign key to real records and gave the CRM sole ownership of
+    /// it (spec FR-018), so sign-in no longer touches it at all. An administrator sets placement,
+    /// and it survives every subsequent sign-in.
+    /// </remarks>
+    public void RefreshFromProvider(string email, string displayName)
     {
         Email = NormalizeEmail(email);
         DisplayName = string.IsNullOrWhiteSpace(displayName) ? Email : displayName;
+    }
 
-        if (placement.HasAny)
-        {
-            DepartmentId = placement.DepartmentId;
-            BranchId = placement.BranchId;
-            TeamId = placement.TeamId;
-        }
+    /// <summary>
+    /// Records that this person's department changed because their team moved (spec FR-015).
+    /// </summary>
+    /// <remarks>
+    /// This exists so the invariant has one owner. A user's department must agree with their team's
+    /// department whenever both are present (INV-2), and a team move is the only thing in this
+    /// feature that can break that agreement. Feature 004 will place people directly and must
+    /// maintain the same invariant.
+    /// </remarks>
+    public void PlaceInDepartment(Guid departmentId) => DepartmentId = departmentId;
+
+    /// <summary>
+    /// Places this person on a team, in the department that team belongs to.
+    /// </summary>
+    /// <remarks>
+    /// The department is a parameter rather than something looked up, because the domain cannot
+    /// reach the team. Passing both together is what makes INV-2 - a user's department agrees with
+    /// their team's - impossible to break by setting one and forgetting the other. Feature 004 will
+    /// use this from its placement screen.
+    /// </remarks>
+    public void PlaceOnTeam(Guid teamId, Guid departmentId)
+    {
+        TeamId = teamId;
+        DepartmentId = departmentId;
     }
 
     public void RecordSignIn(DateTimeOffset at) => LastSignedInAt = at;

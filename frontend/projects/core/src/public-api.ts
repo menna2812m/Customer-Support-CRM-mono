@@ -21,6 +21,7 @@ export {
   authTokenInterceptor,
   baseUrlInterceptor,
   correlationInterceptor,
+  languageInterceptor,
   errorNormalizationInterceptor,
   toAppError,
 } from './lib/http/interceptors';

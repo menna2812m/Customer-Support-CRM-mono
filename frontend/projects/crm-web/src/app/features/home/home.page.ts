@@ -1,9 +1,13 @@
 import { ChangeDetectionStrategy, Component, inject, OnInit } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { MatCardModule } from '@angular/material/card';
+
 import { RequestSignal } from '@crm/core';
-import { StateContainerComponent } from '@crm/ui';
+import {
+  BadgeComponent,
+  PageHeaderComponent,
+  PanelComponent,
+  StateContainerComponent,
+} from '@crm/ui';
 import { HealthApiService, HealthReport } from './health-api.service';
 
 /**
@@ -13,45 +17,86 @@ import { HealthApiService, HealthReport } from './health-api.service';
  */
 @Component({
   selector: 'crm-home-page',
-  imports: [DecimalPipe, MatCardModule, StateContainerComponent, TranslocoPipe],
+  imports: [
+    BadgeComponent,
+    DecimalPipe,
+    PageHeaderComponent,
+    PanelComponent,
+    StateContainerComponent,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <h1 class="crm-home__title">{{ 'home.title' | transloco }}</h1>
+    <crm-page-header titleKey="home.title" descriptionKey="home.subtitle" />
 
     <crm-state-container [state]="health.value()" (retry)="load()">
-      <mat-card appearance="outlined">
-        <mat-card-content>
-          <p class="crm-home__status">
-            {{ 'home.apiReports' | transloco }} <strong>{{ health.data()?.status }}</strong>
-          </p>
+      <crm-panel titleKey="home.apiReports">
+        <div crmPanelActions>
+          <crm-badge [tone]="health.data()?.status === 'Healthy' ? 'success' : 'danger'">
+            {{ health.data()?.status }}
+          </crm-badge>
+        </div>
 
-          <ul class="crm-home__checks">
-            @for (check of health.data()?.checks ?? []; track check.name) {
-              <li>
-                {{ check.name }}: {{ check.status }}
-                <span class="crm-home__duration"
-                  >({{ check.durationMs | number: '1.0-0' }} ms)</span
-                >
-              </li>
-            }
-          </ul>
-        </mat-card-content>
-      </mat-card>
+        <dl class="crm-home__checks">
+          @for (check of health.data()?.checks ?? []; track check.name) {
+            <div class="crm-home__check">
+              <dt class="crm-home__check-name">{{ check.name }}</dt>
+              <dd class="crm-home__check-value">
+                <crm-badge [tone]="check.status === 'Healthy' ? 'success' : 'danger'">
+                  {{ check.status }}
+                </crm-badge>
+                <span class="crm-home__duration">{{ check.durationMs | number: '1.0-0' }} ms</span>
+              </dd>
+            </div>
+          }
+        </dl>
+      </crm-panel>
     </crm-state-container>
   `,
   styles: `
-    .crm-home__title {
-      font: var(--mat-sys-headline-small);
-      margin-block-end: var(--crm-space-md);
+    /* A description list, because each check genuinely is a name and its value - and it gives the
+       relationship to assistive technology for free. */
+    .crm-home__checks {
+      display: flex;
+      flex-direction: column;
+      margin: 0;
     }
 
-    .crm-home__checks {
-      margin-block: var(--crm-space-sm) 0;
-      padding-inline-start: var(--crm-space-lg);
+    .crm-home__check {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--crm-space-3);
+
+      padding-block: var(--crm-space-3);
+      border-block-end: var(--crm-border-width) solid var(--crm-border);
+    }
+
+    .crm-home__check:last-child {
+      border-block-end: none;
+      padding-block-end: 0;
+    }
+
+    .crm-home__check:first-child {
+      padding-block-start: 0;
+    }
+
+    .crm-home__check-name {
+      font-weight: var(--crm-weight-medium);
+    }
+
+    .crm-home__check-value {
+      display: flex;
+      align-items: center;
+      gap: var(--crm-space-2);
+      margin: 0;
     }
 
     .crm-home__duration {
-      color: var(--mat-sys-on-surface-variant);
+      color: var(--crm-ink-muted);
+      font-family: var(--crm-font-mono);
+      font-size: var(--crm-text-xs);
+      font-variant-numeric: tabular-nums;
     }
   `,
 })

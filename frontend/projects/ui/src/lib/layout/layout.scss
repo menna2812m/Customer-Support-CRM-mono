@@ -1,0 +1,79 @@
+// Layout utilities shared by every feature.
+//
+// Each of these existed already, hand-written in four to six components with slightly different
+// values. A rule that appears more than twice is a token or a utility, not a local style - keeping
+// them here is what stops the next feature inventing a seventh variant.
+//
+// Imported once by the application's global stylesheet, because these are structural and a feature
+// should not have to import a stylesheet to lay out a form.
+
+// A row of form controls that wraps. Replaces `.crm-org__form` and `.crm-diagnostics__form`, which
+// were the same three declarations written twice.
+.crm-form-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--crm-space-3);
+}
+
+// The vertical rhythm of a page. Replaces `margin-block-end: var(--crm-space-lg)` written by hand in
+// six components, each choosing its own value.
+.crm-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--crm-space-5);
+}
+
+.crm-stack--tight {
+  gap: var(--crm-space-3);
+}
+
+// A horizontal group of related controls - a filter bar, a set of row actions.
+.crm-cluster {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--crm-space-2);
+}
+
+.crm-cluster--between {
+  justify-content: space-between;
+}
+
+// Pushes what follows to the far edge of a cluster, in whichever direction the page runs.
+.crm-spacer {
+  flex: 1 1 auto;
+}
+
+// A screen with a single job - sign-in, no-access - reads better narrow and centred than stretched
+// across a 90rem container.
+.crm-measure {
+  inline-size: 100%;
+  max-inline-size: var(--crm-container-narrow);
+  margin-inline: auto;
+}
+
+// Secondary explanatory text, wherever it appears.
+.crm-muted {
+  color: var(--crm-ink-secondary);
+  font-size: var(--crm-text-md);
+}
+
+.crm-hint {
+  color: var(--crm-ink-muted);
+  font-size: var(--crm-text-xs);
+}
+
+// Available to assistive technology, invisible on screen. Used for table captions and for the live
+// region that announces a list changing.
+.crm-visually-hidden {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}

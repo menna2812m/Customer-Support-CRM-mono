@@ -1,60 +1,219 @@
-// Logical properties only - the shell must mirror under RTL with no per-rule exception (FR-037).
+// Application shell.
+//
+// Logical properties throughout: the sidebar sits on the inline-start edge, which is the left in
+// English and the right in Arabic, with no rule written twice. RTL is the same layout read from the
+// other side rather than a mirrored special case.
+
+@use '../theme/tokens' as tokens;
+
 :host {
-  display: flex;
-  flex-direction: column;
+  display: block;
   min-block-size: 100vh;
 }
 
+.crm-shell {
+  display: flex;
+  min-block-size: 100vh;
+
+  // Below the large breakpoint the sidebar becomes a strip above the content, so the two stack.
+  flex-direction: column;
+
+  @media (min-width: tokens.$crm-bp-lg) {
+    flex-direction: row;
+  }
+}
+
+// ── Skip link ────────────────────────────────────────────────────────────────
 .crm-shell__skip {
   position: absolute;
-  inset-block-start: -3rem;
-  inset-inline-start: var(--crm-space-sm);
-  z-index: 10;
-  padding: var(--crm-space-sm) var(--crm-space-md);
+  inset-block-start: -4rem;
+  inset-inline-start: var(--crm-space-2);
+  z-index: 100;
+
+  padding: var(--crm-space-2) var(--crm-space-4);
+  border: var(--crm-border-width) solid var(--crm-border-strong);
   border-radius: var(--crm-radius);
-  background: var(--mat-sys-surface);
-  color: var(--mat-sys-on-surface);
+
+  background: var(--crm-surface);
+  color: var(--crm-ink);
+  font-weight: var(--crm-weight-medium);
+  text-decoration: none;
 
   &:focus-visible {
-    inset-block-start: var(--crm-space-sm);
+    inset-block-start: var(--crm-space-2);
   }
+}
+
+// ── Sidebar ──────────────────────────────────────────────────────────────────
+.crm-shell__side {
+  display: flex;
+  align-items: center;
+  gap: var(--crm-space-4);
+
+  padding-inline: var(--crm-gutter);
+  padding-block: var(--crm-space-2);
+
+  background: var(--crm-surface);
+  border-block-end: var(--crm-border-width) solid var(--crm-border);
+
+  @media (min-width: tokens.$crm-bp-lg) {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--crm-space-5);
+
+    inline-size: 15rem;
+    flex: 0 0 15rem;
+
+    padding-block: var(--crm-space-5);
+
+    // On desktop the sidebar is ruled off from the content on its inline edge instead of below.
+    border-block-end: none;
+    border-inline-end: var(--crm-border-width) solid var(--crm-border);
+
+    // The navigation stays put while a long record list scrolls.
+    position: sticky;
+    inset-block-start: 0;
+    block-size: 100vh;
+    overflow-y: auto;
+  }
+}
+
+.crm-shell__brand {
+  display: flex;
+  align-items: center;
+  gap: var(--crm-space-2);
+  min-inline-size: 0;
+
+  // The brand belongs to the sidebar on desktop and to the bar on narrow screens, so it is hidden
+  // here and shown there rather than rendered twice.
+  @media (max-width: (tokens.$crm-bp-lg - 0.0625rem)) {
+    display: none;
+  }
+}
+
+// A small solid mark rather than a logo file: one accent square, which is the only place the accent
+// appears at rest. It reads as an institutional wordmark rather than an app icon.
+.crm-shell__mark {
+  inline-size: 0.875rem;
+  block-size: 0.875rem;
+  flex: 0 0 auto;
+  background: var(--crm-accent);
+  border-radius: var(--crm-radius-sm);
+}
+
+.crm-shell__brand-text {
+  font-size: var(--crm-text-md);
+  font-weight: var(--crm-weight-semibold);
+  letter-spacing: var(--crm-tracking-tight);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.crm-shell__links {
+  display: flex;
+  align-items: center;
+  gap: var(--crm-space-1);
+
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  // Narrow screens: the strip scrolls sideways rather than wrapping to two rows, so the header
+  // height never changes as items are added.
+  overflow-x: auto;
+
+  @media (min-width: tokens.$crm-bp-lg) {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--crm-space-1);
+    overflow-x: visible;
+  }
+}
+
+.crm-shell__link {
+  display: block;
+  padding-inline: var(--crm-space-3);
+  padding-block: var(--crm-space-2);
+
+  border-radius: var(--crm-radius);
+  color: var(--crm-ink-secondary);
+  font-size: var(--crm-text-md);
+  font-weight: var(--crm-weight-medium);
+  text-decoration: none;
+  white-space: nowrap;
+
+  transition: background-color var(--crm-duration) var(--crm-ease);
+
+  &:hover {
+    background: var(--crm-surface-sunken);
+    color: var(--crm-ink);
+  }
+
+  // The active item is marked three ways - weight, colour, and a rule on its inline edge - so it
+  // never depends on colour alone. The previous indicator was a 16% tint of the current colour,
+  // which is below any usable contrast threshold.
+  &--active {
+    background: var(--crm-accent-soft);
+    color: var(--crm-accent-strong);
+    font-weight: var(--crm-weight-semibold);
+    box-shadow: inset 2px 0 0 0 var(--crm-accent);
+  }
+}
+
+// The active marker is an inset rule on the leading edge, which must flip with the writing
+// direction. box-shadow has no logical form, so this is the one place a direction query is honest.
+:host-context([dir='rtl']) .crm-shell__link--active {
+  box-shadow: inset -2px 0 0 0 var(--crm-accent);
+}
+
+// ── Frame and bar ────────────────────────────────────────────────────────────
+.crm-shell__frame {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-inline-size: 0; // lets a wide table scroll instead of stretching the layout
 }
 
 .crm-shell__bar {
   display: flex;
-  gap: var(--crm-space-md);
+  align-items: center;
+  gap: var(--crm-space-2);
+
+  padding-inline: var(--crm-gutter);
+  padding-block: var(--crm-space-2);
+  block-size: var(--crm-space-8);
+
+  background: var(--crm-surface);
+  border-block-end: var(--crm-border-width) solid var(--crm-border);
 }
 
-.crm-shell__title {
-  font: var(--mat-sys-title-medium);
-}
+.crm-shell__bar-title {
+  font-size: var(--crm-text-md);
+  font-weight: var(--crm-weight-semibold);
 
-.crm-shell__nav {
-  display: flex;
-  gap: var(--crm-space-sm);
-}
-
-.crm-shell__link {
-  padding-inline: var(--crm-space-sm);
-  padding-block: var(--crm-space-xs);
-  border-radius: var(--crm-radius);
-  color: inherit;
-  text-decoration: none;
-
-  &--active {
-    background: color-mix(in srgb, currentColor 16%, transparent);
+  // On desktop the sidebar already carries the product name.
+  @media (min-width: tokens.$crm-bp-lg) {
+    display: none;
   }
 }
 
-.crm-shell__spacer {
-  flex: 1 1 auto;
-}
-
+// ── Content ──────────────────────────────────────────────────────────────────
 .crm-shell__content {
   flex: 1 1 auto;
+  background: var(--crm-surface-page);
+
+  padding-inline: var(--crm-gutter);
+  padding-block: var(--crm-space-5);
+
+  @media (min-width: tokens.$crm-bp-md) {
+    padding-inline: var(--crm-space-5);
+    padding-block: var(--crm-space-6);
+  }
+}
+
+.crm-shell__measure {
   inline-size: 100%;
-  max-inline-size: var(--crm-content-max);
+  max-inline-size: var(--crm-container);
   margin-inline: auto;
-  padding-inline: var(--crm-space-md);
-  padding-block: var(--crm-space-lg);
 }

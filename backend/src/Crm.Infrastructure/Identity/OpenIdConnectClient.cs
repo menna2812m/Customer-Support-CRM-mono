@@ -187,20 +187,15 @@ public sealed class OpenIdConnectClient(
 
         var names = options.ClaimNames;
 
+        // Organizational placement is not read from the provider (spec FR-018). The CRM owns it.
         return new ProviderIdentity(
             ReadClaim(token, names.Subject) ?? throw new IdentityProviderException("The identity token carried no subject."),
             ReadClaim(token, names.Email) ?? string.Empty,
-            ReadClaim(token, names.Name) ?? string.Empty,
-            ReadGuidClaim(token, names.Department),
-            ReadGuidClaim(token, names.Branch),
-            ReadGuidClaim(token, names.Team));
+            ReadClaim(token, names.Name) ?? string.Empty);
     }
 
     private static string? ReadClaim(JsonWebToken token, string type) =>
         token.TryGetClaim(type, out var claim) ? claim.Value : null;
-
-    private static Guid? ReadGuidClaim(JsonWebToken token, string type) =>
-        Guid.TryParse(ReadClaim(token, type), out var value) ? value : null;
 
     private static string CreateRandomValue() =>
         Base64Url(RandomNumberGenerator.GetBytes(32));
@@ -247,11 +242,7 @@ public sealed class ProviderClaimSettings
 
     public string Email { get; init; } = "email";
 
-    public string Department { get; init; } = "department";
-
-    public string Branch { get; init; } = "branch";
-
-    public string Team { get; init; } = "team";
+    // Placement claim names removed by feature 003 (spec FR-018).
 }
 
 /// <summary>Minimal query-string composition, kept local so Infrastructure needs no web dependency.</summary>

@@ -2,7 +2,6 @@ import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@ang
 import { DatePipe } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import {
@@ -12,7 +11,12 @@ import {
   applyServerErrors,
   serverErrorCodes,
 } from '@crm/core';
-import { StateContainerComponent } from '@crm/ui';
+import {
+  CodeComponent,
+  PageHeaderComponent,
+  PanelComponent,
+  StateContainerComponent,
+} from '@crm/ui';
 import { TranslocoPipe } from '@jsverse/transloco';
 import {
   DiagnosticItem,
@@ -29,11 +33,13 @@ import {
 @Component({
   selector: 'crm-diagnostics-page',
   imports: [
+    CodeComponent,
     DatePipe,
     MatButtonModule,
-    MatCardModule,
     MatFormFieldModule,
     MatInputModule,
+    PageHeaderComponent,
+    PanelComponent,
     ReactiveFormsModule,
     StateContainerComponent,
     TranslocoPipe,
@@ -41,22 +47,18 @@ import {
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './diagnostics.page.html',
   styles: `
-    .crm-diagnostics__section {
-      margin-block-end: var(--crm-space-lg);
-    }
-
     .crm-diagnostics__pager {
-      display: flex;
-      align-items: center;
-      gap: var(--crm-space-sm);
-      margin-block-start: var(--crm-space-md);
+      padding-inline: var(--crm-space-4);
+      padding-block: var(--crm-space-3);
+      border-block-start: var(--crm-border-width) solid var(--crm-border);
     }
 
-    .crm-diagnostics__form {
+    .crm-diagnostics__result {
       display: flex;
       flex-wrap: wrap;
-      gap: var(--crm-space-md);
-      align-items: start;
+      align-items: center;
+      gap: var(--crm-space-2);
+      margin-block-start: var(--crm-space-4);
     }
   `,
 })

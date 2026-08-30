@@ -1,86 +1,103 @@
-<h1>{{ 'diagnostics.title' | transloco }}</h1>
+<crm-page-header titleKey="diagnostics.title" descriptionKey="diagnostics.subtitle" />
 
-<section class="crm-diagnostics__section">
-  <h2>{{ 'diagnostics.items' | transloco }}</h2>
-
-  <crm-state-container [state]="items.value()" (retry)="load()">
-    <mat-card appearance="outlined">
-      <mat-card-content>
-        <ul>
-          @for (item of items.data()?.items ?? []; track item.id) {
-            <li>
-              {{ item.name }} &mdash; {{ item.createdAt | date: 'medium' : undefined : locale() }}
-            </li>
-          }
-        </ul>
-
-        <div class="crm-diagnostics__pager">
-          <button
-            matButton="outlined"
-            type="button"
-            [disabled]="page() <= 1"
-            (click)="goTo(page() - 1)"
-          >
-            {{ 'diagnostics.previous' | transloco }}
-          </button>
-
-          <span aria-live="polite">
+<div class="crm-stack">
+  <crm-panel titleKey="diagnostics.items" [flush]="true">
+    <crm-state-container [state]="items.value()" (retry)="load()">
+      <div class="crm-table-scroll">
+        <table class="crm-table">
+          <caption class="crm-visually-hidden">
             {{
-              'diagnostics.pageOf'
-                | transloco
-                  : {
-                      page: items.data()?.page,
-                      totalPages: items.data()?.totalPages,
-                      totalCount: items.data()?.totalCount,
-                    }
+              'diagnostics.items' | transloco
             }}
-          </span>
+          </caption>
 
-          <button
-            matButton="outlined"
-            type="button"
-            [disabled]="(items.data()?.totalPages ?? 1) <= page()"
-            (click)="goTo(page() + 1)"
-          >
-            {{ 'diagnostics.next' | transloco }}
-          </button>
-        </div>
-      </mat-card-content>
-    </mat-card>
-  </crm-state-container>
-</section>
+          <thead>
+            <tr>
+              <th scope="col">{{ 'diagnostics.itemName' | transloco }}</th>
+              <th scope="col">{{ 'diagnostics.itemCreated' | transloco }}</th>
+            </tr>
+          </thead>
 
-<section class="crm-diagnostics__section">
-  <h2>{{ 'diagnostics.echo' | transloco }}</h2>
+          <tbody>
+            @for (item of items.data()?.items ?? []; track item.id) {
+              <tr>
+                <td>{{ item.name }}</td>
+                <td>{{ item.createdAt | date: 'medium' : undefined : locale() }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
 
-  <form class="crm-diagnostics__form" [formGroup]="form" (ngSubmit)="submit()">
-    <mat-form-field>
-      <mat-label>{{ 'diagnostics.message' | transloco }}</mat-label>
-      <input matInput formControlName="message" />
-      @for (code of serverCodes('message'); track code) {
-        <mat-error>{{ 'errors.field.' + code | transloco }}</mat-error>
-      }
-    </mat-form-field>
+      <!--
+        The pager sits below the table on its own ruled row, which is where a reader expects it and
+        where it stays put when the table scrolls sideways.
+      -->
+      <div class="crm-cluster crm-cluster--between crm-diagnostics__pager">
+        <button
+          matButton="outlined"
+          type="button"
+          [disabled]="page() <= 1"
+          (click)="goTo(page() - 1)"
+        >
+          {{ 'diagnostics.previous' | transloco }}
+        </button>
 
-    <mat-form-field>
-      <mat-label>{{ 'diagnostics.repeatCount' | transloco }}</mat-label>
-      <input matInput type="number" formControlName="repeatCount" />
-      @for (code of serverCodes('repeatCount'); track code) {
-        <mat-error>{{ 'errors.field.' + code | transloco }}</mat-error>
-      }
-    </mat-form-field>
+        <span class="crm-hint" aria-live="polite">
+          {{
+            'diagnostics.pageOf'
+              | transloco
+                : {
+                    page: items.data()?.page,
+                    totalPages: items.data()?.totalPages,
+                    totalCount: items.data()?.totalCount,
+                  }
+          }}
+        </span>
 
-    <button matButton="filled" type="submit">{{ 'diagnostics.send' | transloco }}</button>
-  </form>
+        <button
+          matButton="outlined"
+          type="button"
+          [disabled]="(items.data()?.totalPages ?? 1) <= page()"
+          (click)="goTo(page() + 1)"
+        >
+          {{ 'diagnostics.next' | transloco }}
+        </button>
+      </div>
+    </crm-state-container>
+  </crm-panel>
 
-  @if (echoResult(); as result) {
-    <p role="status">{{ result.message }}</p>
-  }
+  <crm-panel titleKey="diagnostics.echo">
+    <form class="crm-form-row" [formGroup]="form" (ngSubmit)="submit()">
+      <mat-form-field>
+        <mat-label>{{ 'diagnostics.message' | transloco }}</mat-label>
+        <input matInput formControlName="message" />
+        @for (code of serverCodes('message'); track code) {
+          <mat-error>{{ 'errors.field.' + code | transloco }}</mat-error>
+        }
+      </mat-form-field>
 
-  @if (echoError(); as error) {
-    <p role="alert">
-      {{ 'diagnostics.rejected' | transloco: { code: error.code } }}
-      {{ 'states.server.reference' | transloco }} <code>{{ error.correlationId }}</code>
-    </p>
-  }
-</section>
+      <mat-form-field>
+        <mat-label>{{ 'diagnostics.repeatCount' | transloco }}</mat-label>
+        <input matInput type="number" formControlName="repeatCount" />
+        @for (code of serverCodes('repeatCount'); track code) {
+          <mat-error>{{ 'errors.field.' + code | transloco }}</mat-error>
+        }
+      </mat-form-field>
+
+      <button matButton="filled" type="submit">{{ 'diagnostics.send' | transloco }}</button>
+    </form>
+
+    @if (echoResult(); as result) {
+      <p class="crm-diagnostics__result" role="status">{{ result.message }}</p>
+    }
+
+    @if (echoError(); as error) {
+      <p class="crm-diagnostics__result" role="alert">
+        {{ 'diagnostics.rejected' | transloco: { code: error.code } }}
+        <span class="crm-hint">{{ 'states.server.reference' | transloco }}</span>
+        <crm-code>{{ error.correlationId }}</crm-code>
+      </p>
+    }
+  </crm-panel>
+</div>

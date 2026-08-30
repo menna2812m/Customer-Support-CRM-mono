@@ -28,6 +28,18 @@ public sealed class PermissionCatalogTests
         Permissions.Exists(permission).ShouldBeTrue();
     }
 
+    /// <summary>
+    /// Feature 003. Reading the structure is separated from maintaining it, so that feature 004 can
+    /// let most staff see where their work sits without letting them reorganize the business.
+    /// </summary>
+    [Theory]
+    [InlineData("organization.view")]
+    [InlineData("organization.manage")]
+    public void The_catalog_expresses_the_organization_permissions(string permission)
+    {
+        Permissions.Exists(permission).ShouldBeTrue();
+    }
+
     [Fact]
     public void Every_permission_follows_the_area_dot_action_convention()
     {

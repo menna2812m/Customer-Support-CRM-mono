@@ -1,5 +1,6 @@
 using Crm.Application.Authorization;
 using Crm.Domain.Identity;
+using Crm.Domain.Organization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -26,8 +27,34 @@ public sealed class UserConfiguration : IEntityTypeConfiguration<User>
         builder.HasIndex(user => user.Email).IsUnique();
         builder.HasIndex(user => user.IsActive);
 
-        // Placement deliberately carries no foreign key: the organization feature owns those tables
-        // and does not exist yet. Recorded in the plan's Complexity Tracking.
+        // Feature 003 closes the exception feature 002 recorded against Constitution VIII: the
+        // organization tables now exist, so placement carries real foreign keys.
+        //
+        // NO ACTION rather than a cascade is deliberate. FR-012 already refuses to delete a unit
+        // that has people placed in it, so these constraints exist to catch a bug, not to implement
+        // the rule. A cascade would quietly null placements the application intended to protect.
+        builder
+            .HasOne<Department>()
+            .WithMany()
+            .HasForeignKey(user => user.DepartmentId)
+            .OnDelete(DeleteBehavior.NoAction);
+
+        builder
+            .HasOne<Branch>()
+            .WithMany()
+            .HasForeignKey(user => user.BranchId)
+            .OnDelete(DeleteBehavior.NoAction);
+
+        builder
+            .HasOne<Team>()
+            .WithMany()
+            .HasForeignKey(user => user.TeamId)
+            .OnDelete(DeleteBehavior.NoAction);
+
+        // "Everyone on this team" is the query the team move runs to reassign members (FR-015).
+        builder.HasIndex(user => user.TeamId);
+        builder.HasIndex(user => user.DepartmentId);
+        builder.HasIndex(user => user.BranchId);
     }
 }
 

@@ -11,7 +11,9 @@
   },
   "nav": {
     "home": "Home",
-    "diagnostics": "Diagnostics"
+    "diagnostics": "Diagnostics",
+    "departments": "Departments",
+    "branches": "Branches"
   },
   "states": {
     "loading": "Loading...",
@@ -66,7 +68,11 @@
       "no_access": "You do not have access to this application.",
       "identity_collision": "This account needs an administrator to resolve a conflict before you can sign in.",
       "session_expired": "Your session has ended. Please sign in again.",
-      "rate_limited": "Too many attempts. Please wait a moment and try again."
+      "rate_limited": "Too many attempts. Please wait a moment and try again.",
+      "organization_code_conflict": "This code is already used by another unit.",
+      "organization_name_conflict": "This name is already in use.",
+      "organization_has_dependents": "This cannot be deleted while other records depend on it.",
+      "organization_department_inactive": "The destination department is not active."
     },
     "field": {
       "required": "This value is required.",
@@ -82,7 +88,8 @@
   "home": {
     "title": "Platform status",
     "apiReports": "API reports",
-    "milliseconds": "ms"
+    "milliseconds": "ms",
+    "subtitle": "Live status of the platform and its dependencies."
   },
   "diagnostics": {
     "title": "Diagnostics",
@@ -94,7 +101,10 @@
     "previous": "Previous",
     "next": "Next",
     "pageOf": "Page {{page}} of {{totalPages}} ({{totalCount}} items)",
-    "rejected": "The request was rejected ({{code}})."
+    "rejected": "The request was rejected ({{code}}).",
+    "subtitle": "A reference screen proving the platform conventions end to end.",
+    "itemName": "Name",
+    "itemCreated": "Created"
   },
   "auth": {
     "signIn": {
@@ -114,5 +124,63 @@
     "signOutEverywhere": "Sign out everywhere",
     "endDeviceAccess": "Also end access on this computer",
     "sessionExpired": "Your session has ended. Please sign in again."
+  },
+  "organization": {
+    "title": "Organization",
+    "departments": {
+      "title": "Departments",
+      "create": "New department",
+      "edit": "Edit department",
+      "empty": "No departments yet",
+      "teams": "Teams",
+      "description": "Functional divisions of the business, and the teams inside them."
+    },
+    "branches": {
+      "title": "Branches",
+      "create": "New branch",
+      "edit": "Edit branch",
+      "empty": "No branches yet",
+      "description": "Locations the organization operates from."
+    },
+    "teams": {
+      "title": "Teams",
+      "create": "New team",
+      "edit": "Edit team",
+      "empty": "No teams in this department yet"
+    },
+    "fields": {
+      "nameAr": "Arabic name",
+      "nameEn": "English name",
+      "code": "Code",
+      "status": "Status",
+      "department": "Department",
+      "name": "Name",
+      "actions": "Actions"
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "actions": {
+      "save": "Save",
+      "cancel": "Cancel",
+      "activate": "Activate",
+      "deactivate": "Deactivate",
+      "delete": "Delete",
+      "move": "Move to another department",
+      "search": "Search by name or code"
+    },
+    "move": {
+      "title": "Move team",
+      "destination": "Destination department",
+      "affected": "This will move {{count}} people with the team.",
+      "reassigned": "Moved. {{count}} people moved with the team.",
+      "confirm": "Move team"
+    },
+    "remove": {
+      "title": "Delete this?",
+      "message": "It will stop appearing everywhere. This cannot be undone from the interface."
+    },
+    "codeHint": "Set once and cannot be changed later."
   }
 }

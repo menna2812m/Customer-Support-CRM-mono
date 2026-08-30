@@ -89,11 +89,9 @@ public sealed class ProviderClaimNames
 
     public string Email { get; init; } = "email";
 
-    public string Department { get; init; } = "department";
-
-    public string Branch { get; init; } = "branch";
-
-    public string Team { get; init; } = "team";
+    // Department, branch, and team claim names were removed by feature 003 (spec FR-018): the CRM
+    // owns placement, and once it became a foreign key a provider-asserted value could only be a
+    // constraint violation.
 }
 
 /// <summary>External customer portal accounts, owned and issued by the CRM.</summary>

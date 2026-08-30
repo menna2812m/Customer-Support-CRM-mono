@@ -18,22 +18,24 @@ public interface IIdentityStore
     /// </summary>
     Task<UserRecord?> FindByEmailAsync(string email, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Creates a user. Placement is deliberately not a parameter: a new user has none, and the CRM
+    /// - not the provider - assigns it later (spec FR-018).
+    /// </summary>
     Task<UserRecord> ProvisionAsync(
         string providerSubject,
         string email,
         string displayName,
-        OrganizationScope? placement,
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Refreshes what the provider owns - name, email, and placement when asserted - and records the
-    /// sign-in time.
+    /// Refreshes what the provider owns - name and email - and records the sign-in time. Placement
+    /// is not refreshed, because the provider does not own it (spec FR-018).
     /// </summary>
     Task RefreshAsync(
         Guid userId,
         string email,
         string displayName,
-        OrganizationScope? placement,
         CancellationToken cancellationToken = default);
 
     /// <summary>The union of the permissions the user's roles grant (spec FR-021).</summary>
