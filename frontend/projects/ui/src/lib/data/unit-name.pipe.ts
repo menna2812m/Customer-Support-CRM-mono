@@ -1,6 +1,5 @@
 import { Pipe, PipeTransform, inject } from '@angular/core';
 import { LanguageService } from '@crm/core';
-import { OrganizationUnit } from './organization-api.service';
 
 /**
  * Shows a unit's name in the reader's language (spec FR-007).
@@ -20,7 +19,7 @@ import { OrganizationUnit } from './organization-api.service';
 export class UnitNamePipe implements PipeTransform {
   private readonly languages = inject(LanguageService);
 
-  transform(unit: Pick<OrganizationUnit, 'nameAr' | 'nameEn'> | null | undefined): string {
+  transform(unit: BilingualName | null | undefined): string {
     if (!unit) {
       return '';
     }
@@ -29,4 +28,17 @@ export class UnitNamePipe implements PipeTransform {
       ? unit.nameAr || unit.nameEn
       : unit.nameEn || unit.nameAr;
   }
+}
+
+/**
+ * Anything carrying a name in both languages.
+ *
+ * Structural rather than tied to one feature's type: an organization unit satisfies it, and so does
+ * a placement's branch, department, or team. That is why this pipe lives in `@crm/ui` - two
+ * features now need the same rule about which language wins, and a second copy of that rule is a
+ * second thing that can drift.
+ */
+export interface BilingualName {
+  nameAr: string;
+  nameEn: string;
 }

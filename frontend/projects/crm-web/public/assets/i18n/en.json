@@ -13,7 +13,8 @@
     "home": "Home",
     "diagnostics": "Diagnostics",
     "departments": "Departments",
-    "branches": "Branches"
+    "branches": "Branches",
+    "people": "People"
   },
   "states": {
     "loading": "Loading...",

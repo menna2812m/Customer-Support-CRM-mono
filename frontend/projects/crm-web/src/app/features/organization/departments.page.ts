@@ -12,6 +12,7 @@ import {
   PanelComponent,
   StateContainerComponent,
   NoticeComponent,
+  UnitNamePipe,
 } from '@crm/ui';
 import { TranslocoPipe } from '@jsverse/transloco';
 import {
@@ -22,7 +23,6 @@ import {
   TeamMoveResult,
 } from './organization-api.service';
 import { MoveTeamDialog, MoveTeamDialogData } from './move-team.dialog';
-import { UnitNamePipe } from './unit-name.pipe';
 
 /**
  * Departments, and the teams inside them.

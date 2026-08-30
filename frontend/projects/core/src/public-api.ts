@@ -50,6 +50,8 @@ export {
 } from './lib/state/request-state';
 export type { RequestState, RequestStatus } from './lib/state/request-state';
 
+export type { PagedResult } from './lib/http/paged-result';
+
 export { GlobalErrorHandler } from './lib/errors/global-error-handler';
 
 export { applyServerErrors, serverErrorCodes } from './lib/forms/apply-server-errors';

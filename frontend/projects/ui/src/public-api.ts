@@ -33,4 +33,7 @@ export { PanelComponent } from './lib/layout/panel.component';
 export { BadgeComponent } from './lib/data/badge.component';
 export type { BadgeTone } from './lib/data/badge.component';
 export { CodeComponent } from './lib/data/code.component';
+
+export { UnitNamePipe } from './lib/data/unit-name.pipe';
+export type { BilingualName } from './lib/data/unit-name.pipe';
 export { NoticeComponent } from './lib/states/notice.component';

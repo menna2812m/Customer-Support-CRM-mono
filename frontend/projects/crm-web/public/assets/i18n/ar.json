@@ -13,7 +13,8 @@
     "home": "الرئيسية",
     "diagnostics": "التشخيص",
     "departments": "الإدارات",
-    "branches": "الفروع"
+    "branches": "الفروع",
+    "people": "الأشخاص"
   },
   "states": {
     "loading": "جارٍ التحميل...",

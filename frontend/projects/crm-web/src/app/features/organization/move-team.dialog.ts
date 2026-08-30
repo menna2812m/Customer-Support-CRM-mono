@@ -5,6 +5,7 @@ import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/materia
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { AppError } from '@crm/core';
+import { UnitNamePipe } from '@crm/ui';
 import { TranslocoPipe } from '@jsverse/transloco';
 import {
   OrganizationApiService,
@@ -12,7 +13,6 @@ import {
   Team,
   TeamMoveResult,
 } from './organization-api.service';
-import { UnitNamePipe } from './unit-name.pipe';
 
 export interface MoveTeamDialogData {
   team: Team;

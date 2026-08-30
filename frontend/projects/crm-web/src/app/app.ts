@@ -28,6 +28,11 @@ export class App {
     // unlike a team there is no parent screen to reach it through - it needs its own destination or
     // it has none at all.
     {
+      path: '/identity/people',
+      labelKey: 'nav.people',
+      permission: 'identity.view',
+    },
+    {
       path: '/organization/departments',
       labelKey: 'nav.departments',
       permission: 'organization.view',

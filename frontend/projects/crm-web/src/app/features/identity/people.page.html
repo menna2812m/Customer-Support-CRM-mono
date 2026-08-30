@@ -1,0 +1,98 @@
+<crm-page-header titleKey="identity.people.title" descriptionKey="identity.people.description" />
+
+@if (formError(); as error) {
+  <crm-notice [messageKey]="'errors.code.' + error.code" />
+}
+
+<div class="crm-stack">
+  <crm-panel titleKey="identity.create.title">
+    <form class="crm-form-row" [formGroup]="form" (ngSubmit)="create()">
+      <mat-form-field>
+        <mat-label>{{ 'identity.fields.email' | transloco }}</mat-label>
+        <input matInput formControlName="email" type="email" dir="ltr" />
+        @if (form.controls.email.touched && form.controls.email.hasError('required')) {
+          <mat-error>{{ 'errors.field.required' | transloco }}</mat-error>
+        }
+        @if (form.controls.email.touched && form.controls.email.hasError('email')) {
+          <mat-error>{{ 'errors.field.format' | transloco }}</mat-error>
+        }
+        @for (code of serverCodes('email'); track code) {
+          <mat-error>{{ 'errors.field.' + code | transloco }}</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field>
+        <mat-label>{{ 'identity.fields.displayName' | transloco }}</mat-label>
+        <input matInput formControlName="displayName" />
+        @if (form.controls.displayName.touched && form.controls.displayName.hasError('required')) {
+          <mat-error>{{ 'errors.field.required' | transloco }}</mat-error>
+        }
+      </mat-form-field>
+
+      <button matButton="filled" type="submit">
+        {{ 'identity.create.submit' | transloco }}
+      </button>
+    </form>
+  </crm-panel>
+
+  <crm-panel [flush]="true">
+    <div class="crm-form-row crm-people__filters">
+      <mat-form-field>
+        <mat-label>{{ 'identity.filters.search' | transloco }}</mat-label>
+        <input matInput [value]="search()" (change)="applySearch($any($event.target).value)" />
+      </mat-form-field>
+
+      <mat-checkbox [checked]="activeOnly()" (change)="toggleActiveOnly($event.checked)">
+        {{ 'identity.filters.activeOnly' | transloco }}
+      </mat-checkbox>
+
+      <mat-checkbox [checked]="unlinkedOnly()" (change)="toggleUnlinkedOnly($event.checked)">
+        {{ 'identity.filters.unlinkedOnly' | transloco }}
+      </mat-checkbox>
+    </div>
+
+    <crm-state-container [state]="people.value()" (retry)="load()">
+      <div class="crm-table-scroll">
+        <table class="crm-table">
+          <caption class="crm-visually-hidden">
+            {{
+              'identity.people.title' | transloco
+            }}
+          </caption>
+
+          <thead>
+            <tr>
+              <th scope="col">{{ 'identity.fields.displayName' | transloco }}</th>
+              <th scope="col">{{ 'identity.fields.email' | transloco }}</th>
+              <th scope="col">{{ 'identity.fields.status' | transloco }}</th>
+              <th scope="col">{{ 'identity.fields.department' | transloco }}</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            @for (person of people.data()?.items ?? []; track person.id) {
+              <tr [class.crm-table__row--muted]="!person.isActive">
+                <td>
+                  <a [routerLink]="['/identity/people', person.id]">{{ person.displayName }}</a>
+                </td>
+                <td dir="ltr">{{ person.email }}</td>
+                <td>
+                  <crm-badge [tone]="tone(person.status)">
+                    {{ 'identity.status.' + person.status | transloco }}
+                  </crm-badge>
+                </td>
+                <td>
+                  @if (departmentName(person); as department) {
+                    {{ department | unitName }}
+                  } @else {
+                    <span aria-hidden="true">—</span>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </crm-state-container>
+  </crm-panel>
+</div>

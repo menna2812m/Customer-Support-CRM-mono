@@ -1,0 +1,117 @@
+<crm-page-header titleKey="identity.people.title" />
+
+@if (formError(); as error) {
+  <crm-notice [messageKey]="'errors.code.' + error.code" />
+}
+
+<crm-state-container [state]="person.value()" (retry)="load()">
+  @if (person.data(); as detail) {
+    <div class="crm-stack">
+      <crm-panel titleKey="identity.person.identity">
+        <dl class="crm-details">
+          <dt>{{ 'identity.fields.displayName' | transloco }}</dt>
+          <dd>{{ detail.summary.displayName }}</dd>
+
+          <dt>{{ 'identity.fields.email' | transloco }}</dt>
+          <dd dir="ltr">{{ detail.summary.email }}</dd>
+
+          <dt>{{ 'identity.fields.status' | transloco }}</dt>
+          <dd>
+            <crm-badge [tone]="tone(detail.summary.status)">
+              {{ 'identity.status.' + detail.summary.status | transloco }}
+            </crm-badge>
+          </dd>
+        </dl>
+
+        @if (!detail.summary.hasSignedIn) {
+          <p>{{ 'identity.person.neverSignedIn' | transloco }}</p>
+        }
+
+        <div class="crm-table__actions">
+          <button matButton type="button" [disabled]="isSelf()" (click)="toggleActivation()">
+            {{
+              (detail.summary.isActive
+                ? 'identity.actions.deactivate'
+                : 'identity.actions.activate'
+              ) | transloco
+            }}
+          </button>
+        </div>
+
+        @if (isSelf()) {
+          <!-- Stated rather than hidden: a control that vanishes is indistinguishable from a
+               feature that does not exist. The server refuses this independently. -->
+          <p>{{ 'identity.guards.self' | transloco }}</p>
+        } @else if (detail.summary.isActive) {
+          <p>{{ 'identity.guards.sessionsEnd' | transloco }}</p>
+        }
+      </crm-panel>
+
+      <crm-panel titleKey="identity.person.roles">
+        @for (role of roles(); track role.id) {
+          <mat-checkbox
+            [checked]="holds(role.id)"
+            [disabled]="isSelf()"
+            (change)="toggleRole(role.id, holds(role.id))"
+          >
+            {{ role.name }}
+          </mat-checkbox>
+        }
+
+        <h3>{{ 'identity.person.effectivePermissions' | transloco }}</h3>
+        <p>{{ 'identity.person.effectiveHint' | transloco }}</p>
+
+        <!-- Rendered as code rather than as controls: these are the consequence of the roles
+             above, and showing them alike would invite an attempt to edit one. -->
+        <ul class="crm-permissions">
+          @for (permission of detail.effectivePermissions; track permission) {
+            <li>
+              <crm-code>{{ permission }}</crm-code>
+            </li>
+          }
+        </ul>
+      </crm-panel>
+
+      <crm-panel titleKey="identity.person.placement">
+        <form class="crm-form-row" [formGroup]="placement" (ngSubmit)="savePlacement()">
+          <mat-form-field>
+            <mat-label>{{ 'identity.fields.branch' | transloco }}</mat-label>
+            <mat-select formControlName="branchId">
+              <mat-option value="">—</mat-option>
+              @for (branch of branches(); track branch.id) {
+                <mat-option [value]="branch.id">{{ branch | unitName }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field>
+            <mat-label>{{ 'identity.fields.department' | transloco }}</mat-label>
+            <mat-select
+              formControlName="departmentId"
+              (selectionChange)="onDepartmentChanged($event.value)"
+            >
+              <mat-option value="">—</mat-option>
+              @for (department of departments(); track department.id) {
+                <mat-option [value]="department.id">{{ department | unitName }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field>
+            <mat-label>{{ 'identity.fields.team' | transloco }}</mat-label>
+            <mat-select formControlName="teamId" (selectionChange)="onTeamChanged($event.value)">
+              <mat-option value="">—</mat-option>
+              @for (team of teams(); track team.id) {
+                <mat-option [value]="team.id">{{ team | unitName }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+
+          <button matButton="filled" type="submit">
+            {{ 'identity.actions.save' | transloco }}
+          </button>
+        </form>
+      </crm-panel>
+    </div>
+  }
+</crm-state-container>

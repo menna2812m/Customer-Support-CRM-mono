@@ -1,15 +1,9 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
+import { PagedResult } from '@crm/core';
 
-/** Mirrors the shared pagination contract (contracts/pagination-contract.md). */
-export interface PagedResult<T> {
-  items: T[];
-  page: number;
-  pageSize: number;
-  totalCount: number;
-  totalPages: number;
-}
+export type { PagedResult };
 
 /** A branch or a department. Both carry the same shape; only teams add anything. */
 export interface OrganizationUnit {

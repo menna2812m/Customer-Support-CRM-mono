@@ -11,10 +11,10 @@ import {
   PanelComponent,
   StateContainerComponent,
   NoticeComponent,
+  UnitNamePipe,
 } from '@crm/ui';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { OrganizationApiService, OrganizationUnit, PagedResult } from './organization-api.service';
-import { UnitNamePipe } from './unit-name.pipe';
 
 /**
  * Branches: geography, and the simpler half of the model. A branch contains nothing and belongs to

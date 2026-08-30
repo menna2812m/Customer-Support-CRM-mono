@@ -45,6 +45,16 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./features/organization/branches.page').then((m) => m.BranchesPage),
   },
+  {
+    path: 'identity/people',
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/identity/people.page').then((m) => m.PeoplePage),
+  },
+  {
+    path: 'identity/people/:id',
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/identity/person.page').then((m) => m.PersonPage),
+  },
   { path: 'organization', pathMatch: 'full', redirectTo: 'organization/departments' },
   { path: '', pathMatch: 'full', redirectTo: 'home' },
   { path: '**', redirectTo: 'home' },

@@ -162,26 +162,26 @@ placement, and confirm both are reflected on that person's next request.
 - [X] T028 [P] [US1] Integration tests in
       `backend/tests/Crm.IntegrationTests/Identity/GuardTests.cs` proving both guards refuse through
       the endpoint, not only in the use case
-- [ ] T029 [P] [US1] Add `identity-api.service.ts` in
+- [X] T029 [P] [US1] Add `identity-api.service.ts` in
       `frontend/projects/crm-web/src/app/features/identity/` as the only place `HttpClient` appears
       in this feature
-- [ ] T030 [US1] Add `frontend/projects/crm-web/src/app/features/identity/people.page.ts` and its
+- [X] T030 [US1] Add `frontend/projects/crm-web/src/app/features/identity/people.page.ts` and its
       template: list, search, the filters, and all six UI states
-- [ ] T031 [US1] Add `frontend/projects/crm-web/src/app/features/identity/person.page.ts` with three
+- [X] T031 [US1] Add `frontend/projects/crm-web/src/app/features/identity/person.page.ts` with three
       separated blocks - identity read-only, a roles checklist, and effective permissions rendered
       as derived and visually distinct from the roles above them
-- [ ] T032 [US1] Add
+- [X] T032 [US1] Add
       `frontend/projects/crm-web/src/app/features/identity/placement-form.component.ts` where
       choosing a team fills the department and disables it, and clearing the team makes it selectable
       again; choosers request `activeOnly=true`
-- [ ] T033 [US1] On the acting administrator's own row, disable the administrator checkbox and the
+- [X] T033 [US1] On the acting administrator's own row, disable the administrator checkbox and the
       deactivate and delete controls with a stated reason rather than hiding them, in
       `frontend/projects/crm-web/src/app/features/identity/person.page.ts`
-- [ ] T034 [US1] Add the People entry to the shell navigation in
+- [X] T034 [US1] Add the People entry to the shell navigation in
       `frontend/projects/crm-web/src/app/app.ts`, visible only to a session holding `identity.view`,
       in the same change as the routes - SC-007 exists because feature 003 shipped a screen nothing
       linked to
-- [ ] T035 [P] [US1] Frontend specs
+- [X] T035 [P] [US1] Frontend specs
       `frontend/projects/crm-web/src/app/features/identity/people.page.spec.ts`,
       `person.page.spec.ts`, `placement-form.component.spec.ts`, and `identity-api.service.spec.ts`
 - [X] T036 [US1] Remove `x-status: planned` from the paths this story implements in
