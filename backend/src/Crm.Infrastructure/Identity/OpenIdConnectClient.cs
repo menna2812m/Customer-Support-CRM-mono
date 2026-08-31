@@ -192,11 +192,24 @@ public sealed class OpenIdConnectClient(
             token.Issuer,
             ReadClaim(token, names.Subject) ?? throw new IdentityProviderException("The identity token carried no subject."),
             ReadClaim(token, names.Email) ?? string.Empty,
-            ReadClaim(token, names.Name) ?? string.Empty);
+            ReadClaim(token, names.Name) ?? string.Empty,
+            ReadBooleanClaim(token, names.EmailVerified));
     }
 
     private static string? ReadClaim(JsonWebToken token, string type) =>
         token.TryGetClaim(type, out var claim) ? claim.Value : null;
+
+    /// <summary>
+    /// Reads an asserted boolean. Absent, unparseable, or spelled under a different name all read
+    /// as false, because only a positive assertion may unlock a claim (spec FR-016).
+    /// </summary>
+    /// <remarks>
+    /// The value is compared as a string rather than deserialized, because providers disagree about
+    /// whether it is a JSON boolean or the text "true" - Keycloak sends the former, several others
+    /// the latter, and a strict read would silently refuse every claim at half of them.
+    /// </remarks>
+    private static bool ReadBooleanClaim(JsonWebToken token, string type) =>
+        string.Equals(ReadClaim(token, type), "true", StringComparison.OrdinalIgnoreCase);
 
     private static string CreateRandomValue() =>
         Base64Url(RandomNumberGenerator.GetBytes(32));
@@ -242,6 +255,9 @@ public sealed class ProviderClaimSettings
     public string Name { get; init; } = "name";
 
     public string Email { get; init; } = "email";
+
+    /// <summary>The verified-email assertion a first sign-in may claim a record on (spec FR-021).</summary>
+    public string EmailVerified { get; init; } = "email_verified";
 
     // Placement claim names removed by feature 003 (spec FR-018).
 }

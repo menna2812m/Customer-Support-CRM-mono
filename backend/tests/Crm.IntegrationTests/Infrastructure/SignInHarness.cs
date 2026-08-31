@@ -227,12 +227,27 @@ public sealed partial class SignInHarness : IAsyncDisposable
     }
 
     /// <summary>Seeds a user directly, for tests about collisions and deactivation.</summary>
-    public async Task<Guid> SeedUserAsync(string subject, string email, bool isActive = true)
+    /// <param name="provider">
+    /// Which issuer minted the subject. Defaults to the one the in-process provider stamps, because
+    /// an identity is the provider and the subject together (spec FR-015a) - a record seeded under a
+    /// different issuer is a different person, which is occasionally the point and usually a trap.
+    /// </param>
+    public async Task<Guid> SeedUserAsync(
+        string subject,
+        string email,
+        bool isActive = true,
+        string? provider = null)
     {
         using var scope = _factory.Services.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<CrmDbContext>();
 
-        var user = User.Provision(TestProvider, subject, email, "Seeded", (int)CallerPopulation.Staff, OrganizationPlacement.None);
+        var user = User.Provision(
+            provider ?? FakeOidcProvider.Issuer,
+            subject,
+            email,
+            "Seeded",
+            (int)CallerPopulation.Staff,
+            OrganizationPlacement.None);
 
         if (!isActive)
         {
@@ -243,6 +258,90 @@ public sealed partial class SignInHarness : IAsyncDisposable
         await context.SaveChangesAsync();
 
         return user.Id;
+    }
+
+    /// <summary>
+    /// Prepares somebody who has never signed in, as an administrator would before their first day
+    /// (spec FR-013), optionally holding a role and placed in a branch.
+    /// </summary>
+    /// <remarks>
+    /// Written straight to the database rather than through the endpoint, because a claim test is
+    /// about what the sign-in does with the record - arranging it through HTTP would make every one
+    /// of those tests also a test of the create endpoint, which has its own.
+    /// </remarks>
+    public async Task<PreparedPerson> PreparePersonAsync(
+        string email,
+        string? roleName = null,
+        bool withBranch = false)
+    {
+        using var scope = _factory.Services.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<CrmDbContext>();
+
+        var person = User.PreProvision(email, "Prepared Person", (int)CallerPopulation.Staff);
+
+        Guid? branchId = null;
+
+        if (withBranch)
+        {
+            var suffix = Guid.CreateVersion7().ToString("n")[..8];
+            var branch = Crm.Domain.Organization.Branch.Create($"فرع {suffix}", $"Branch {suffix}", $"BR-{suffix}");
+
+            context.Branches.Add(branch);
+            branchId = branch.Id;
+
+            person.Place(branch.Id, departmentId: null, team: null);
+        }
+
+        context.Users.Add(person);
+
+        if (roleName is not null)
+        {
+            var role = await context.Roles.SingleAsync(entry => entry.Name == roleName);
+
+            context.RoleAssignments.Add(new RoleAssignment
+            {
+                UserId = person.Id,
+                RoleId = role.Id,
+                GrantedAt = DateTimeOffset.UtcNow,
+            });
+        }
+
+        await context.SaveChangesAsync();
+
+        return new PreparedPerson(person.Id, email, branchId);
+    }
+
+    /// <summary>The stored person, so a claim test can assert on what binding did and did not do.</summary>
+    public async Task<User?> GetPersonAsync(Guid personId)
+    {
+        using var scope = _factory.Services.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<CrmDbContext>();
+
+        return await context.Users.AsNoTracking().FirstOrDefaultAsync(entry => entry.Id == personId);
+    }
+
+    /// <summary>How many people hold an address. The number a claim must not increase.</summary>
+    public async Task<int> CountByEmailAsync(string email)
+    {
+        using var scope = _factory.Services.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<CrmDbContext>();
+
+        var normalized = User.NormalizeEmail(email);
+
+        return await context.Users.CountAsync(entry => entry.Email == normalized);
+    }
+
+    /// <summary>The roles a person holds, by name.</summary>
+    public async Task<List<string>> GetRoleNamesAsync(Guid personId)
+    {
+        using var scope = _factory.Services.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<CrmDbContext>();
+
+        return await context.RoleAssignments
+            .AsNoTracking()
+            .Where(assignment => assignment.UserId == personId)
+            .Join(context.Roles, assignment => assignment.RoleId, role => role.Id, (_, role) => role.Name)
+            .ToListAsync();
     }
 
     /// <summary>
@@ -367,6 +466,9 @@ public sealed partial class SignInHarness : IAsyncDisposable
     [GeneratedRegex(@"^(?<name>[^=]+)=(?<value>[^;]*)")]
     private static partial Regex CookiePattern();
 }
+
+/// <summary>Somebody arranged in advance, and what was arranged for them.</summary>
+public sealed record PreparedPerson(Guid Id, string Email, Guid? BranchId);
 
 /// <param name="Error">The machine-readable code the callback redirected with, when it refused.</param>
 public sealed record SignInResult(

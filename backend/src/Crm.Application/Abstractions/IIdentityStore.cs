@@ -7,16 +7,50 @@ namespace Crm.Application.Abstractions;
 public interface IIdentityStore
 {
     /// <summary>
-    /// Finds a user by the provider's stable subject. This is the only lookup used to recognise a
-    /// returning person: names and email addresses change, subjects do not (spec FR-004).
+    /// Finds a user by the provider that issued their subject, together with the subject. This is
+    /// the only lookup used to recognise a returning person: names and email addresses change,
+    /// subjects do not (spec FR-004).
     /// </summary>
-    Task<UserRecord?> FindBySubjectAsync(string providerSubject, CancellationToken cancellationToken = default);
+    /// <remarks>
+    /// The provider is part of the lookup because a subject is only unique within the issuer that
+    /// minted it (spec FR-015a). With one provider configured the distinction is invisible; with
+    /// two, matching on the subject alone is how one person becomes somebody else.
+    /// </remarks>
+    Task<UserRecord?> FindBySubjectAsync(
+        string provider,
+        string providerSubject,
+        CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Finds a user by email. Used **only** to detect a collision before provisioning, never to
+    /// Every person holding the address, bound or not. Used **only** to decide a claim, never to
     /// authenticate somebody (spec FR-005) - an email match is not an identity match.
     /// </summary>
-    Task<UserRecord?> FindByEmailAsync(string email, CancellationToken cancellationToken = default);
+    /// <remarks>
+    /// A list rather than one record, because the claim decision must be able to tell "exactly one
+    /// prepared record" from "several" (spec FR-016, FR-017). Today the filtered unique index means
+    /// it never returns more than one; the decision handles more anyway, and would rather be handed
+    /// the truth than a first row.
+    /// </remarks>
+    Task<IReadOnlyList<UserRecord>> FindAllByEmailAsync(
+        string email,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Binds a prepared person to the identity that just arrived, and records the sign-in
+    /// (spec FR-016, FR-020).
+    /// </summary>
+    /// <remarks>
+    /// Nothing prepared is disturbed: the roles and placement an administrator arranged are exactly
+    /// what the person signs in with. Binding is refused outright on a person who already has an
+    /// identity, in the domain rather than here (INV-5).
+    /// </remarks>
+    Task<UserRecord> ClaimAsync(
+        Guid personId,
+        string provider,
+        string providerSubject,
+        string email,
+        string displayName,
+        CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Creates a user. Placement is deliberately not a parameter: a new user has none, and the CRM
@@ -76,4 +110,11 @@ public sealed record UserRecord(
     string Email,
     string DisplayName,
     bool IsActive,
-    OrganizationScope? Scope);
+    OrganizationScope? Scope)
+{
+    /// <summary>
+    /// Whether a real identity has been bound yet. False means prepared and not yet arrived - the
+    /// only kind of record a first sign-in may claim (spec FR-016).
+    /// </summary>
+    public bool HasBoundIdentity => ProviderSubject is not null;
+}

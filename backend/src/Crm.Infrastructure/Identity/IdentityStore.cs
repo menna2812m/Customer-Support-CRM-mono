@@ -19,25 +19,68 @@ public sealed class IdentityStore(
     ILogger<IdentityStore> logger) : IIdentityStore
 {
     public async Task<UserRecord?> FindBySubjectAsync(
+        string provider,
         string providerSubject,
         CancellationToken cancellationToken = default)
     {
+        // Both halves, because a subject is only unique within the provider that issued it
+        // (spec FR-015a). The filtered unique index is on the pair for the same reason.
         var user = await context.Users
             .AsNoTracking()
-            .FirstOrDefaultAsync(entry => entry.ProviderSubject == providerSubject, cancellationToken);
+            .FirstOrDefaultAsync(
+                entry => entry.Provider == provider && entry.ProviderSubject == providerSubject,
+                cancellationToken);
 
         return ToRecord(user);
     }
 
-    public async Task<UserRecord?> FindByEmailAsync(string email, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<UserRecord>> FindAllByEmailAsync(
+        string email,
+        CancellationToken cancellationToken = default)
     {
         var normalized = User.NormalizeEmail(email);
 
-        var user = await context.Users
+        var users = await context.Users
             .AsNoTracking()
-            .FirstOrDefaultAsync(entry => entry.Email == normalized, cancellationToken);
+            .Where(entry => entry.Email == normalized)
+            .ToListAsync(cancellationToken);
 
-        return ToRecord(user);
+        // The soft-delete query filter is what keeps a departed colleague out of this answer, so a
+        // reissued address is claimable rather than a permanent collision (spec FR-026).
+        return users.Select(user => ToRecord(user)!).ToList();
+    }
+
+    public async Task<UserRecord> ClaimAsync(
+        Guid personId,
+        string provider,
+        string providerSubject,
+        string email,
+        string displayName,
+        CancellationToken cancellationToken = default)
+    {
+        var person = await context.Users.FirstOrDefaultAsync(entry => entry.Id == personId, cancellationToken)
+            ?? throw new InvalidOperationException($"No person with identifier {personId} exists to claim.");
+
+        // Throws on a person who already has an identity. The sign-in path refuses that case before
+        // reaching here; this is the second refusal, because the cost of getting it wrong is
+        // somebody else\x27s account (INV-5).
+        person.BindIdentity(provider, providerSubject);
+
+        // Roles and placement are untouched on purpose: what an administrator arranged in advance is
+        // exactly what the person arrives holding (spec FR-020).
+        person.RefreshFromProvider(email, displayName);
+        person.RecordSignIn(clock.GetUtcNow());
+
+        await context.SaveChangesAsync(cancellationToken);
+
+        if (logger.IsEnabled(LogLevel.Information))
+        {
+            logger.LogInformation(
+                "Person {UserId} was claimed by the identity that signed in with their prepared address.",
+                person.Id);
+        }
+
+        return ToRecord(person)!;
     }
 
     public async Task<UserRecord?> FindByIdAsync(Guid userId, CancellationToken cancellationToken = default)

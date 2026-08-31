@@ -89,6 +89,18 @@ public sealed class ProviderClaimNames
 
     public string Email { get; init; } = "email";
 
+    /// <summary>
+    /// The assertion that the address has been verified, on which a first sign-in may claim a record
+    /// prepared for that address (spec FR-016, FR-021).
+    /// </summary>
+    /// <remarks>
+    /// Configuration rather than a hard-coded Keycloak spelling, for the same reason the other three
+    /// are: this product states that its provider is configurable, and a provider that names this
+    /// something else would otherwise silently assert nothing - which fails closed, but for a reason
+    /// nobody could find. "email_verified" is the OpenID Connect standard name and the default.
+    /// </remarks>
+    public string EmailVerified { get; init; } = "email_verified";
+
     // Department, branch, and team claim names were removed by feature 003 (spec FR-018): the CRM
     // owns placement, and once it became a foreign key a provider-asserted value could only be a
     // constraint violation.

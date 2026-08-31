@@ -117,10 +117,21 @@ because its failure mode is silent and a reader needs to see every branch at onc
 |---------------|---------------|----------|---------|
 | yes | - | - | Returning person; sign in unchanged |
 | no | one unclaimed | yes | **Claim**: bind provider and subject, keep prepared roles and placement, audit the claim |
-| no | one unclaimed | no or absent | No claim. Create an ordinary person; audit the refusal (`identity_email_not_verified`) |
-| no | more than one unclaimed | any | No claim. Create an ordinary person; audit the ambiguity (`identity_email_ambiguous`) |
+| no | one unclaimed | no or absent | No claim. **Refuse sign-in**; audit the refusal (`identity_email_not_verified`) |
+| no | more than one unclaimed | any | No claim. **Refuse sign-in**; audit the ambiguity (`identity_email_ambiguous`) |
 | no | one already bound | any | **Refuse sign-in**; audit the collision (`identity_subject_collision`) |
 | no | none | - | Create an ordinary person, as today |
 
 Every row that does not claim either creates a plain person or refuses outright. Nothing partially
 claims, and no row modifies a record that is already bound.
+
+The two middle rows refuse rather than creating a person beside the one they declined to claim,
+which is a correction to what FR-017 first said. The address is not available: it belongs to the
+unclaimed record, and `UNIQUE (Email) WHERE IsDeleted = 0` is what makes that true rather than
+intended. A second live row simply cannot be written, so refusal is the only reachable outcome -
+and the one that tells the administrator their preparation went unused.
+
+The ambiguous row is unreachable through this schema for the same reason: at most one live person
+can hold an address, so "more than one unclaimed match" cannot be produced today. It stays in the
+decision, and in the tests, because the decision is a pure function over what it is handed and the
+branch costs nothing - and because the day that index filter changes, the branch is already right.

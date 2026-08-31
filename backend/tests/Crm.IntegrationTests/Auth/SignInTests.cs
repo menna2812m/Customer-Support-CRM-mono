@@ -79,7 +79,10 @@ public sealed class SignInTests(SqlServerFixture database)
         var second = await harness.SignInAsync(account);
         second.Succeeded.ShouldBeTrue();
 
-        // Identity is keyed on the provider subject, so a returning person is the same record.
+        // Feature 004 turned this path from create-if-absent into match-then-create: the first visit
+        // now looks for a prepared record before creating anything, and finds none. The outcome for
+        // somebody arriving unannounced is unchanged, which is the point of asserting it here.
+        // Identity is the provider and subject together, so a returning person is the same record.
         (await harness.GetUserIdAsync(account.Subject)).ShouldBe(userId);
     }
 
@@ -89,6 +92,10 @@ public sealed class SignInTests(SqlServerFixture database)
         await using var harness = SignInHarness.Create(database.ConnectionString);
 
         const string sharedEmail = "reissued.address@fake.local";
+
+        // Seeded with an identity already bound, which is what makes this a collision rather than a
+        // claim. An address held by an unclaimed record takes the other path entirely - see
+        // Identity/ClaimingTests, where feature 004 covers the rest of the matrix.
         var existingUserId = await harness.SeedUserAsync("original|subject", sharedEmail);
 
         // The new hire who inherited a leaver's email address.
@@ -136,6 +143,10 @@ public sealed class SignInTests(SqlServerFixture database)
     {
         await using var harness = SignInHarness.Create(database.ConnectionString);
 
+        // The seeded record carries the issuer the in-process provider stamps, because feature 004
+        // made the identity the provider and the subject together (FR-015a). Seeded under any other
+        // issuer this is a different person, and the sign-in would collide on the address instead of
+        // recognising them.
         await harness.SeedUserAsync("inactive|subject", "inactive@fake.local", isActive: false);
         var account = harness.Provider.AddAccount(subject: "inactive|subject", email: "inactive@fake.local");
 

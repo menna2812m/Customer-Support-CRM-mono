@@ -27,7 +27,11 @@ public sealed class PeopleEndpointsTests(SqlServerFixture database)
         await using var _ = harness;
         using var client = await SignInAsync(harness, email);
 
-        var response = await client.GetAsync(Route($"{People}?page=1&pageSize=50"));
+        // Searched rather than read off the first page. The suite shares one database, so "is my
+        // row among the first fifty" is a question whose answer depends on how many other tests ran
+        // first - it passed until this feature added enough people to push the answer over.
+        var response = await client.GetAsync(
+            Route($"{People}?page=1&pageSize=50&search={Uri.EscapeDataString(email)}"));
 
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
@@ -85,12 +89,20 @@ public sealed class PeopleEndpointsTests(SqlServerFixture database)
         var prepared = $"{Tag()}@prepared.local";
         await client.PostAsJsonAsync(Route(People), new { email = prepared, displayName = "Prepared" });
 
-        var response = await client.GetAsync(Route($"{People}?unlinkedOnly=true&pageSize=50"));
-        var body = await response.Content.ReadAsStringAsync();
+        // Asked twice, each search narrowed to one address. The suite shares a database, so a
+        // single unfiltered page proves only that the person landed in the first fifty rows of it.
+        var included = await client.GetAsync(
+            Route($"{People}?unlinkedOnly=true&search={Uri.EscapeDataString(prepared)}"));
+
+        var excluded = await client.GetAsync(
+            Route($"{People}?unlinkedOnly=true&search={Uri.EscapeDataString(email)}"));
 
         // The question pre-provisioning creates: who has been prepared and not yet arrived.
-        body.ShouldContain(prepared);
-        body.ShouldNotContain(email);
+        (await included.Content.ReadAsStringAsync()).ShouldContain(prepared);
+
+        // And the half that makes it a filter rather than a list: somebody who has signed in is not
+        // in the answer, even when the search would otherwise find them.
+        (await excluded.Content.ReadAsStringAsync()).ShouldNotContain(email);
     }
 
     [Fact]

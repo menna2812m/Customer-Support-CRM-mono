@@ -48,7 +48,18 @@ public sealed record AuthorizationRequest(Uri AuthorizationUri, string CodeVerif
 /// foreign key to real records, so a provider-asserted identifier is no longer merely unhelpful -
 /// it is a constraint violation. The CRM owns placement outright; the provider owns who someone is.
 /// </remarks>
-public sealed record ProviderIdentity(string Issuer, string Subject, string Email, string DisplayName);
+/// <param name="EmailVerified">
+/// Whether the provider asserted that the address is verified. False when the assertion is absent,
+/// which is what makes an absent claim fail closed rather than quietly count as verification
+/// (spec FR-016). This is the only thing that permits a first sign-in to claim a record somebody
+/// prepared for that address.
+/// </param>
+public sealed record ProviderIdentity(
+    string Issuer,
+    string Subject,
+    string Email,
+    string DisplayName,
+    bool EmailVerified = false);
 
 /// <summary>
 /// The provider could not be reached, or refused the exchange. Distinct from a user error, because

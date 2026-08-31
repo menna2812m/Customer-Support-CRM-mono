@@ -55,6 +55,10 @@ builder.Services.AddScoped<ICurrentUser, CurrentUser>();
 
 // Authentication composition - the single shared registration point this feature touches.
 builder.Services.AddScoped<Crm.Application.Identity.StaffSignIn>();
+
+// Feature 004: what a first sign-in did with the records it found, recorded apart from the sign-in
+// path so that what is written - and what deliberately is not - reads in one place (spec AR-008).
+builder.Services.AddScoped<Crm.Application.Identity.Claiming.ClaimAudit>();
 builder.Services.AddScoped<Crm.Application.Identity.DeactivateUser>();
 builder.Services.AddScoped<Crm.Api.Auth.AuthCookies>();
 builder.Services.AddScoped<Crm.Application.Abstractions.ICorrelationAccessor, Crm.Api.Auth.HttpCorrelationAccessor>();

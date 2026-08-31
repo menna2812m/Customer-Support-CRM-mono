@@ -34,17 +34,24 @@ public sealed class FakeOidcProvider
     /// <summary>When set, every request fails - used to prove the provider-unavailable path.</summary>
     public bool IsUnavailable { get; set; }
 
+    /// <param name="emailVerified">
+    /// Whether the identity token asserts <c>email_verified</c>. True by default because a
+    /// corporate directory normally does assert it, so the tests that turn it off are the ones
+    /// saying something (spec FR-016, FR-017).
+    /// </param>
     public FakeOidcAccount AddAccount(
         string? subject = null,
         string? email = null,
         string displayName = "Fake Staff",
-        Guid? departmentId = null)
+        Guid? departmentId = null,
+        bool emailVerified = true)
     {
         var account = new FakeOidcAccount(
             subject ?? $"fake|{Guid.CreateVersion7():n}",
             email ?? $"{Guid.CreateVersion7():n}@fake.local",
             displayName,
-            departmentId);
+            departmentId,
+            emailVerified);
 
         Accounts[account.Subject] = account;
         return account;
@@ -133,6 +140,13 @@ public sealed class FakeOidcProvider
             new("nonce", nonce),
         };
 
+        if (account.EmailVerified)
+        {
+            // Present only when true. A provider that has not verified an address usually omits the
+            // claim rather than sending false, and omission is the case the CRM must fail closed on.
+            claims.Add(new Claim("email_verified", "true"));
+        }
+
         if (account.DepartmentId is { } department)
         {
             claims.Add(new Claim("department", department.ToString()));
@@ -216,7 +230,12 @@ public sealed class FakeOidcProvider
 }
 
 /// <param name="DepartmentId">Optional: a provider that carries no organizational data is normal.</param>
-public sealed record FakeOidcAccount(string Subject, string Email, string DisplayName, Guid? DepartmentId);
+public sealed record FakeOidcAccount(
+    string Subject,
+    string Email,
+    string DisplayName,
+    Guid? DepartmentId,
+    bool EmailVerified = true);
 
 /// <summary>Routes the CRM's provider calls to the in-process provider instead of the network.</summary>
 public sealed class FakeOidcHandler(FakeOidcProvider provider) : HttpMessageHandler

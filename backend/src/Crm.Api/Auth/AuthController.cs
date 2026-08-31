@@ -150,6 +150,8 @@ public sealed class AuthController(
             return RedirectToApp(flow, outcome.Refusal switch
             {
                 SignInRefusal.IdentityCollision => ErrorCodes.IdentityCollision,
+                SignInRefusal.EmailNotVerified => ErrorCodes.IdentityEmailNotVerified,
+                SignInRefusal.EmailAmbiguous => ErrorCodes.IdentityEmailAmbiguous,
                 SignInRefusal.Inactive => ErrorCodes.NoAccess,
                 _ => ErrorCodes.NoAccess,
             });

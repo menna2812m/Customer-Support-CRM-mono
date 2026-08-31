@@ -130,4 +130,40 @@ describe('PeoplePage', () => {
 
     expect(page.formError()?.code).toBe('identity_email_in_use');
   });
+
+  it('reloads the list after preparing somebody, so they appear without a refresh', () => {
+    const fixture = render([]);
+    const page = fixture.componentInstance as unknown as {
+      form: { setValue: (value: { email: string; displayName: string }) => void };
+      create: () => void;
+    };
+
+    page.form.setValue({ email: 'noor@example.com', displayName: 'Noor Abdullah' });
+    page.create();
+
+    const prepared = person('p-new', 'Noor Abdullah', 'invited');
+
+    http.expectOne('/api/v1/identity/people').flush({
+      summary: prepared,
+      roles: [],
+      effectivePermissions: [],
+      lastSignedInAt: null,
+    });
+
+    // A prepared person the administrator cannot see is indistinguishable from one who was never
+    // prepared, so the list is re-read rather than patched in memory.
+    http
+      .expectOne((request) => request.method === 'GET')
+      .flush({
+        items: [prepared],
+        page: 1,
+        pageSize: 100,
+        totalCount: 1,
+        totalPages: 1,
+      });
+
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('Noor Abdullah');
+  });
 });

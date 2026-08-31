@@ -41,8 +41,14 @@ starting from nothing.
   roles held. There are no deny or override semantics; a role only ever adds.
 - Q: On what basis may a first sign-in claim a pre-provisioned record? → A: A verified email, and
   nothing weaker. If the provider does not assert that the email is verified, or if more than one
-  pre-provisioned record matches, the claim fails closed and an ordinary new account is created
-  instead. Email is a one-time bootstrap; after binding, the provider and subject are the identity.
+  pre-provisioned record matches, the claim fails closed and the sign-in is refused. Email is a
+  one-time bootstrap; after binding, the provider and subject are the identity.
+- Q: Why refused, rather than an ordinary account beside the record? → A: Because the address is
+  already held. FR-014 reserves an address to the person who has it, and the filtered unique index
+  enforces that among people who are not deleted, so a second live person holding the same address
+  cannot be written at all. Refusing is also the better answer: the administrator who prepared the
+  address learns their preparation was not picked up, instead of finding a duplicate person beside
+  it.
 - Q: What happens when the email belongs to somebody already bound to a different subject? → A:
   Sign-in is refused and the collision is recorded for a person to resolve. Re-binding an established
   account from an email would be an account takeover with extra steps.
@@ -206,8 +212,11 @@ the audit records what they held.
   person only when exactly one unclaimed record matches the normalized email address and the identity
   provider asserts that the address is verified.
 - **FR-017**: When the provider does not assert a verified email, or when more than one record
-  matches, the system MUST NOT claim any record, MUST create an ordinary new person, and MUST record
-  the refused claim.
+  matches, the system MUST NOT claim any record, MUST refuse the sign-in, and MUST record the
+  refused claim - as `identity_email_not_verified` and `identity_email_ambiguous` respectively.
+  Creating an ordinary new person instead is not available to it: FR-014 reserves the address to the
+  record that already holds it, and the filtered unique index enforces that at the database, so the
+  second live row could not be written.
 - **FR-018**: When an email address belongs to a person already bound to a different provider
   subject, the system MUST refuse the sign-in and record the collision for manual resolution.
 - **FR-019**: Once a person is bound to a provider and subject, the system MUST NOT re-bind them on

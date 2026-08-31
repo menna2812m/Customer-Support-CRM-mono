@@ -62,7 +62,8 @@ Navigate to **People**. Your own account is there, because you have signed in.
    Tier 1.
 2. Note they appear as **Invited**. Filter the list by "never signed in" and they are the only one.
 3. **Sign in as that person** in a private window, with a Keycloak account whose email matches and
-   whose email is verified.
+   whose email is verified. Without the verified flag the sign-in is refused rather than claiming -
+   the address belongs to the prepared record, so there is nowhere to put a second account.
 4. Return to the list as an administrator. There is **one** record, now **Active**, still holding
    Agent and still in Tier 1. The preparation survived, and no duplicate was created.
 
@@ -126,7 +127,7 @@ looks exactly like a correctly claimed one. Each of these must **not** claim:
 
 | Set up | Sign in as | Expect |
 |--------|-----------|--------|
-| A prepared address, and a Keycloak user whose email is **not** verified | that user | No claim. A separate ordinary account appears, the preparation is untouched, and the refusal is audited |
+| A prepared address, and a Keycloak user whose email is **not** verified | that user | No claim, and sign-in is **refused** with `identity_email_not_verified`. The preparation is untouched, no second account appears, and the refusal is audited |
 | A prepared address matching a person who has **already signed in** | a new Keycloak user with that email | Sign-in **refused**. The collision is audited and nothing is rebound |
 
 In Keycloak (`http://localhost:8080`, realm `crm`), the email-verified flag is on the user's Details
