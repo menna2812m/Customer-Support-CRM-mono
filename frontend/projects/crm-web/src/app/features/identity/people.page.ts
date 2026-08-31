@@ -1,5 +1,12 @@
-import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  OnInit,
+  inject,
+  signal,
+  viewChild,
+} from '@angular/core';
+import { FormBuilder, FormGroupDirective, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -62,6 +69,8 @@ export class PeoplePage implements OnInit {
   protected readonly activeOnly = signal(false);
   protected readonly unlinkedOnly = signal(false);
 
+  private readonly formDirective = viewChild(FormGroupDirective);
+
   /** Both names are not asked for here: the provider owns a person's name (spec FR-004). */
   protected readonly form = this.formBuilder.nonNullable.group({
     email: ['', [Validators.required, Validators.email, Validators.maxLength(256)]],
@@ -114,7 +123,11 @@ export class PeoplePage implements OnInit {
 
     this.api.preProvision(this.form.getRawValue()).subscribe({
       next: () => {
-        this.form.reset();
+        // resetForm rather than reset. Resetting the group alone leaves the directive marked as
+        // submitted, and Material's default error matcher treats a submitted form as touched - so
+        // both required fields render as errors the instant a creation succeeds, which reads as a
+        // failure of the thing that just worked.
+        this.formDirective()?.resetForm();
         this.load();
       },
       error: (error: AppError) => {

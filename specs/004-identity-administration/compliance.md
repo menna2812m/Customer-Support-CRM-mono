@@ -21,7 +21,7 @@ plus the Definition of Done from Constitution section 17.
 | X | Error handling and UI states | **PASS** | Seven codes, each translated in both languages. The two new sign-in refusals - `identity_email_not_verified` and `identity_email_ambiguous` - reach the browser through the existing callback redirect, so a refused claim says why rather than reading as a generic failure. Both screens use `crm-state-container`. |
 | XI | Structured logging | **PASS**, and it needed the care the plan predicted | `ClaimAudit` is a separate type for exactly this reason: the entries most tempting to enrich with a token or a claim dump are the refusals. `ClaimAuditTests` asserts the **exact set** of metadata keys rather than the presence of the address, so adding a third one is a failing test rather than an unnoticed leak. |
 | XII | File handling abstraction | **N/A** | No file handling in this feature. |
-| XIII | Testing | **PASS** | 277 backend tests and 114 frontend, all passing. The claim matrix has a test per row at the unit level and a second pass end to end through the real handshake; both lockout guards, the placement invariant, delete atomicity, and immediate session ending each have one. |
+| XIII | Testing | **PASS** | 281 backend tests and 115 frontend, all passing. The claim matrix has a test per row at the unit level and a second pass end to end through the real handshake; both lockout guards, the placement invariant, delete atomicity, and immediate session ending each have one. |
 | XIV | AI optional | **N/A** | No AI capability. |
 | XV | Integrations behind adapters | **PASS** | The identity provider stays behind feature 002's `OpenIdConnectClient`. This feature reads one additional claim through it, whose name is configuration (`Authentication:Staff:ClaimNames:EmailVerified`) rather than a hard-coded Keycloak spelling. |
 
@@ -65,6 +65,54 @@ to write by accident on the day that index filter changes.
   wrong value. Worth recording because both shapes look correct in a test and only one of them is
   what the client actually receives.
 
+## What the browser found, and the automated suites could not
+
+The walkthrough was run against the real Keycloak container on 2026-09-01. It found three defects,
+all of which had passed every gate.
+
+**1. Every person who signed in before this feature was locked out of their own account.** The
+migration adds `Provider` without backfilling it - T008 confirmed the absence of a default
+deliberately, reasoning that one would falsely claim existing rows came from an unknown issuer. The
+reasoning was right about a literal default and wrong about the consequence: those rows *did* come
+from the configured issuer, and leaving them NULL orphans them from the composite lookup this
+feature introduced. Sign-in then falls through to the address lookup, finds the person's own bound
+record, and reads it as somebody else's - refusing with `identity_collision`, which tells the person
+an administrator must resolve a conflict. The administrator is among the locked out.
+
+No test could have caught it. Testcontainers builds the schema from migrations into an empty
+database, so `Provider` is always populated by `ProvisionAsync` and a pre-migration row never exists.
+
+Fixed by making the lookup self-healing: the exact `(provider, subject)` pair is tried first and
+always wins; failing that, a row carrying the subject and no provider is accepted, and the provider
+that just authenticated its owner is recorded onto it. Each row heals once, on its owner's next
+visit, and needs no deployment step that could be skipped. `User.AdoptProvider` refuses a row that
+already names one, so this can never become a rebind. Covered by
+`ClaimingTests.Somebody_bound_before_the_provider_was_recorded_still_signs_in`, which seeds the row
+with SQL because the domain will not create one any more.
+
+**2. Every status badge rendered its own translation key.** The screen showed
+`identity.status.Active` rather than "نشط". `JsonStringEnumConverter` was registered without a
+naming policy, so `PersonStatus` serialized as `Active` while both resource files - and the
+published contract, which declares `enum: [invited, active, inactive]` - use lowercase. The client
+builds a translation key from the value, and transloco prints the key it cannot find.
+
+The test that should have caught it could not, for a reason worth recording: **Shouldly compares
+strings case-insensitively by default.** `body.ShouldContain("\"status\":\"active\"")` passes
+against `"status":"Active"`, and so does the same line with `Case.Insensitive` written out. Only
+`Case.Sensitive`, passed explicitly, fails. Both status assertions now pass it, and the converter
+takes `JsonNamingPolicy.CamelCase`.
+
+**3. A successful creation left the form looking rejected.** Both required fields turned red the
+instant a person was prepared. `form.reset()` resets the group but not the `FormGroupDirective`,
+which stays marked submitted, and Material's default error matcher treats a submitted form as
+touched. Fixed with `resetForm()` on the directive.
+
+Its test needed two corrections before it was worth having. Asserting on `form.pristine` passed
+either way, because `reset()` does clear pristine. Asserting on `mat-error` also passed either way,
+because this template gates `mat-error` on `touched` alone - the red is Material's own field state,
+not an error element. The assertion that fails without the fix is on `.mat-form-field-invalid`,
+after submitting through the template rather than by calling the method.
+
 ## Deviations from the plan, and why
 
 | Planned | Delivered | Reason |
@@ -80,29 +128,46 @@ to write by accident on the day that index filter changes.
 |---|---|
 | Specification, plan, and task list committed | **Yes** - spec (31 FR, 12 clarifications), plan, research, data model, contracts, quickstart, tasks |
 | Constitution Check passed and re-verified after implementation | **Yes** - the table above |
-| All tests pass | **Yes** - 277 backend, 114 frontend, both suites run in full |
+| All tests pass | **Yes** - 281 backend, 115 frontend, both suites run in full |
 | Format, lint, i18n parity, and logical-CSS gates pass | **Yes** - 174 shared keys; no physical direction properties |
 | Contract published and drift-checked | **Yes** - no `x-status: planned` marker remains, verified in both directions by test |
 | Relevant documentation updated | **Yes** - `docs/getting-started.md` gains "Put people in it"; `quickstart.md` corrected where it expected the old FR-017 |
 | Migration reviewed rather than assumed | **Yes** - T008's four checks, by hand |
 | Both verification scripts run as scripts | **Yes** - `verify-backend.ps1` and `verify-frontend.ps1` both pass end to end. Feature 003 could not run the frontend script; this one could, with nothing holding `node_modules` |
-| Manual walkthrough completed | **Not yet** - see below |
+| Manual walkthrough completed | **Mostly** - run against the real provider and it found three defects, all fixed. Two parts need a second provider account; see below |
 
 ## Outstanding
 
-**The feature has not been exercised in a browser.** Every rule it enforces has an automated test,
-the API is verified through HTTP by the integration suite, and the claim matrix is driven end to end
-through the real OIDC handshake against the in-process provider. What remains is `quickstart.md`'s
-manual walkthrough (T069), and specifically the three parts an in-process provider cannot stand in
-for:
+**The walkthrough is mostly done.** Run on 2026-09-01 against the real Keycloak container, signed in
+as the bootstrap administrator. Confirmed by hand:
 
-- **Keycloak with its email-verified flag turned off.** The suite proves the CRM fails closed when
-  the assertion is absent; only a real provider proves Keycloak spells it the way the default
-  configuration expects.
-- **RTL layout on both screens** (T065). The gates prove no physical direction property is used and
-  that both languages carry the same keys. Neither proves the people list reads correctly in Arabic.
+- **Sign-in through the real provider**, including the repair of the legacy row above - the same
+  account that was refused a minute earlier signed in, and the row now records its issuer.
+- **RTL on both screens** (T065). The people list, the add-a-person form, the filters, the identity
+  block, the roles checklist, the effective-permissions list and the placement row all read
+  right-to-left, with addresses left-to-right inside them.
+- **The list orders identically in both languages** (LR-002) and unit names follow the reader -
+  "الفوترة" in Arabic, "Billing" in English (LR-003).
+- **Placement derivation on screen**: with a team chosen, the department is filled from it and
+  disabled.
+- **Self-protection on screen** (T033): on the administrator's own record, delete and deactivate are
+  disabled and the administrator checkbox is checked and disabled, each with the reason stated
+  rather than the control hidden.
+- **Preparing somebody**: created, listed as Invited with no department, and the list refreshed
+  without a reload.
+- **The SQL scans** from `quickstart.md`: zero INV-2 violations, zero duplicate live addresses, zero
+  bound rows still missing a provider, and one active administrator.
+
+Two parts are still outstanding, and both need a **second** account at the identity provider, which
+means creating one and typing its password:
+
+- **The claim matrix end to end** - a prepared address claimed by a verified sign-in, and refused
+  when Keycloak's email-verified flag is off. The decision itself is covered by
+  `ClaimDecisionTests` and `ClaimingTests` against the in-process provider; what is unproven is only
+  that Keycloak spells the assertion `email_verified`, as the default configuration expects.
 - **The session-ending check by hand**, watching a second signed-in window be refused on its next
-  request rather than at credential expiry.
+  request. `SessionEndingTests` proves the 403-to-401 transition through real HTTP; what is
+  unproven is only the same thing in a browser.
 
 One warning is carried knowingly: the production bundle is 536 kB against a 500 kB budget. It
 predates this feature's close-out and is a warning rather than a gate failure.

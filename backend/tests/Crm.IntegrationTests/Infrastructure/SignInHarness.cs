@@ -261,6 +261,29 @@ public sealed partial class SignInHarness : IAsyncDisposable
     }
 
     /// <summary>
+    /// Seeds a person as the product wrote them before the <c>Provider</c> column existed: a real
+    /// subject, and no record of which provider issued it.
+    /// </summary>
+    /// <remarks>
+    /// The domain cannot create such a row any more - <c>User.Provision</c> requires a provider - so
+    /// the column is cleared afterwards with SQL. That is the point: every row written before the
+    /// IdentityAdministration migration looks exactly like this, and no test that builds its
+    /// database from migrations into an empty schema will ever produce one by accident.
+    /// </remarks>
+    public async Task<Guid> SeedLegacyUserAsync(string subject, string email)
+    {
+        var id = await SeedUserAsync(subject, email);
+
+        using var scope = _factory.Services.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<CrmDbContext>();
+
+        await context.Database.ExecuteSqlInterpolatedAsync(
+            $"UPDATE [User] SET Provider = NULL WHERE Id = {id}");
+
+        return id;
+    }
+
+    /// <summary>
     /// Prepares somebody who has never signed in, as an administrator would before their first day
     /// (spec FR-013), optionally holding a role and placed in a branch.
     /// </summary>

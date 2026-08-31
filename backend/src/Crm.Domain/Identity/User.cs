@@ -174,6 +174,41 @@ public sealed class User : Entity, IAuditableEntity, ISoftDeletable, IHasOrganiz
     }
 
     /// <summary>
+    /// Records which provider issued a subject that was bound before the CRM kept track of it
+    /// (spec FR-015a).
+    /// </summary>
+    /// <remarks>
+    /// Feature 004 made the identity the provider and the subject together, and added the
+    /// <c>Provider</c> column without inventing a value for rows that already existed - correctly,
+    /// because a default would have asserted something nobody knew. The consequence is that those
+    /// rows match no provider at all, and their owners are refused as though their own account
+    /// belonged to somebody else.
+    ///
+    /// This is the repair, and it happens once per row: the provider that just authenticated the
+    /// person holding this subject is, by construction, the one that issued it. It is not a rebind -
+    /// <see cref="BindIdentity"/> refuses that and continues to. The subject does not change; only
+    /// the record of where it came from is filled in.
+    /// </remarks>
+    public void AdoptProvider(string provider)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(provider);
+
+        if (ProviderSubject is null)
+        {
+            throw new InvalidOperationException(
+                "This person has no subject, so there is no issuer to record. Use BindIdentity.");
+        }
+
+        if (Provider is not null)
+        {
+            throw new InvalidOperationException(
+                "This person already records the provider that issued their subject.");
+        }
+
+        Provider = provider;
+    }
+
+    /// <summary>
     /// Records where this person sits: a branch, and either a department or a team within one
     /// (spec FR-009, FR-010, FR-011).
     /// </summary>

@@ -52,6 +52,39 @@ public sealed class UserIdentityTests
     }
 
     [Fact]
+    public void A_subject_bound_before_the_provider_was_tracked_can_record_it_once()
+    {
+        var person = User.PreProvision("layla@example.com", "Layla Hassan", population: 1);
+        person.BindIdentity(Provider, "subject-1");
+
+        // Reproduces the row the IdentityAdministration migration leaves behind: a real subject and
+        // no record of who issued it. Nothing writes such a row any more; every row written before
+        // the column existed is one.
+        typeof(User).GetProperty(nameof(User.Provider))!.SetValue(person, null);
+
+        person.AdoptProvider(Provider);
+
+        person.Provider.ShouldBe(Provider);
+
+        // The subject never moved. This fills a blank in; it is not a rebind, and doing it twice is
+        // how a blank-filling repair would quietly become one.
+        person.ProviderSubject.ShouldBe("subject-1");
+        Should.Throw<InvalidOperationException>(() => person.AdoptProvider("https://elsewhere.example"));
+    }
+
+    [Fact]
+    public void A_prepared_person_has_no_subject_to_record_a_provider_for()
+    {
+        var person = User.PreProvision("layla@example.com", "Layla Hassan", population: 1);
+
+        // Adopting here would record an issuer for an identity that does not exist, and leave a row
+        // that is neither prepared nor bound.
+        Should.Throw<InvalidOperationException>(() => person.AdoptProvider(Provider));
+
+        person.HasBoundIdentity.ShouldBeFalse();
+    }
+
+    [Fact]
     public void A_person_provisioned_by_sign_in_is_bound_immediately()
     {
         var person = User.Provision(

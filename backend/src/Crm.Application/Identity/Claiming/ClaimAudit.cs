@@ -20,6 +20,20 @@ public sealed class ClaimAudit(
     ICorrelationAccessor correlation,
     TimeProvider clock)
 {
+    /// <summary>
+    /// A subject bound before the CRM tracked its issuer had that issuer recorded (FR-015a).
+    /// </summary>
+    /// <remarks>
+    /// Recorded because it is a change to an identity, even though nobody asked for it and nothing
+    /// about the person's access moves. A trail that showed the column full without ever showing it
+    /// being filled would leave the question open.
+    /// </remarks>
+    public Task RecordProviderAdoptedAsync(
+        Guid personId,
+        string email,
+        CancellationToken cancellationToken = default) =>
+        RecordAsync("identity.person.provider_recorded", personId, email, reason: null, cancellationToken);
+
     /// <summary>A prepared record was bound to the identity that arrived for it (FR-020).</summary>
     public Task RecordClaimedAsync(Guid personId, string email, CancellationToken cancellationToken = default) =>
         RecordAsync("identity.person.claimed", personId, email, reason: null, cancellationToken);

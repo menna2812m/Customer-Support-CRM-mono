@@ -166,4 +166,44 @@ describe('PeoplePage', () => {
 
     expect(fixture.nativeElement.textContent).toContain('Noor Abdullah');
   });
+
+  it('leaves the form clean after a success rather than showing it as invalid', () => {
+    const fixture = render([]);
+    const page = fixture.componentInstance as unknown as {
+      form: { setValue: (value: { email: string; displayName: string }) => void };
+    };
+
+    page.form.setValue({ email: 'noor@example.com', displayName: 'Noor Abdullah' });
+
+    // Submitted through the template rather than by calling create() directly. The flag that causes
+    // this defect lives on FormGroupDirective, and only a real submit event sets it - a test that
+    // calls the method passes whether the bug is present or not.
+    const form = fixture.nativeElement.querySelector('form') as HTMLFormElement;
+    form.dispatchEvent(new Event('submit'));
+    fixture.detectChanges();
+
+    http.expectOne('/api/v1/identity/people').flush({
+      summary: person('p-new', 'Noor Abdullah', 'invited'),
+      roles: [],
+      effectivePermissions: [],
+      lastSignedInAt: null,
+    });
+
+    http
+      .expectOne((request) => request.method === 'GET')
+      .flush({
+        items: [],
+        page: 1,
+        pageSize: 100,
+        totalCount: 0,
+        totalPages: 0,
+      });
+
+    fixture.detectChanges();
+
+    // Resetting the group without the directive leaves it marked submitted, and Material renders
+    // every required field as an error the moment the creation succeeds. The empty form must read
+    // as ready for the next person, not as a rejected one.
+    expect(fixture.nativeElement.querySelectorAll('.mat-form-field-invalid').length).toBe(0);
+  });
 });

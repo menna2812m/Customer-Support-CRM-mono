@@ -212,5 +212,60 @@ public sealed class ClaimingTests(SqlServerFixture database)
         arrived.Email.ShouldBe(account.Email);
     }
 
+    [Fact]
+    public async Task Somebody_bound_before_the_provider_was_recorded_still_signs_in()
+    {
+        await using var harness = SignInHarness.Create(database.ConnectionString);
+
+        var email = Address();
+
+        // Exactly what every row written before the IdentityAdministration migration looks like.
+        var legacyId = await harness.SeedLegacyUserAsync("legacy|subject", email);
+
+        var result = await harness.SignInAsync(
+            harness.Provider.AddAccount(subject: "legacy|subject", email: email));
+
+        // Without the fallback this refuses with identity_collision: the composite lookup cannot
+        // match a NULL provider, so the address lookup finds the person's own bound record and reads
+        // it as somebody else's. Every existing user would be locked out by their own row, and told
+        // an administrator must resolve it - including the administrator.
+        result.Succeeded.ShouldBeTrue();
+
+        var person = await harness.GetPersonAsync(legacyId);
+        person.ShouldNotBeNull();
+
+        // Healed in passing, once. The next visit matches on the pair like everybody else.
+        person.Provider.ShouldBe(FakeOidcProvider.Issuer);
+        person.ProviderSubject.ShouldBe("legacy|subject");
+
+        (await harness.CountByEmailAsync(email)).ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task An_exact_provider_match_is_preferred_over_a_row_that_records_none()
+    {
+        await using var harness = SignInHarness.Create(database.ConnectionString);
+
+        const string sharedSubject = "contested|subject";
+
+        // A legacy row and a properly bound row carrying the same subject. The bound one is the
+        // person arriving; adopting the legacy row instead would hand them somebody else's account.
+        await harness.SeedLegacyUserAsync(sharedSubject, Address());
+
+        var boundEmail = Address();
+        var boundId = await harness.SeedUserAsync(sharedSubject, boundEmail);
+
+        var result = await harness.SignInAsync(
+            harness.Provider.AddAccount(subject: sharedSubject, email: boundEmail));
+
+        result.Succeeded.ShouldBeTrue();
+
+        var arrived = await harness.WithServicesAsync(async services =>
+            await services.GetRequiredService<IIdentityStore>()
+                .FindBySubjectAsync(FakeOidcProvider.Issuer, sharedSubject));
+
+        arrived!.Id.ShouldBe(boundId);
+    }
+
     private static string Address() => $"{Guid.CreateVersion7():n}@prepared.local";
 }

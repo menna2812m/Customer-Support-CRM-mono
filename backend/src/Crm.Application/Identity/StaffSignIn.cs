@@ -108,10 +108,20 @@ public sealed class StaffSignIn(
         switch (verdict.Outcome)
         {
             case ClaimOutcome.Returning:
+                // A row bound before the CRM recorded which provider issued the subject. It matched
+                // on the subject alone, and this is the one visit that repairs it - otherwise the
+                // person is refused on every future sign-in as though their own account belonged to
+                // somebody else (spec FR-015a).
+                if (subjectMatch!.AwaitsProvider)
+                {
+                    await identityStore.AdoptProviderAsync(subjectMatch.Id, provider.Issuer, cancellationToken);
+                    await claims.RecordProviderAdoptedAsync(subjectMatch.Id, email, cancellationToken);
+                }
+
                 // Only what the provider owns is refreshed. Placement is left alone, because the CRM
                 // owns it and what an administrator set survives every sign-in (spec FR-018).
                 await identityStore.RefreshAsync(
-                    subjectMatch!.Id,
+                    subjectMatch.Id,
                     email,
                     provider.DisplayName,
                     cancellationToken);

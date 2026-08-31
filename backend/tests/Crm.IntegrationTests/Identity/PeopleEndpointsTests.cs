@@ -40,7 +40,13 @@ public sealed class PeopleEndpointsTests(SqlServerFixture database)
 
         // Somebody who has signed in is active, not invited - the status is derived from whether an
         // identity is bound, and theirs is.
-        body.ShouldContain("\"status\":\"active\"", Case.Insensitive);
+        //
+        // Case.Sensitive is passed explicitly, and that is the whole point of the line. Shouldly
+        // compares strings case-insensitively by default, so the original assertion held while the
+        // API sent "Active" and the screen rendered the untranslated key "identity.status.Active"
+        // to every reader. The client switches on this exact string and translates it as a key -
+        // "Active" and "active" are not the same answer.
+        body.ShouldContain("\"status\":\"active\"", Case.Sensitive);
     }
 
     [Fact]
@@ -60,7 +66,7 @@ public sealed class PeopleEndpointsTests(SqlServerFixture database)
 
         var body = await response.Content.ReadAsStringAsync();
         body.ShouldContain(prepared);
-        body.ShouldContain("\"status\":\"invited\"", Case.Insensitive);
+        body.ShouldContain("\"status\":\"invited\"", Case.Sensitive);
         body.ShouldContain("\"hasSignedIn\":false", Case.Insensitive);
     }
 

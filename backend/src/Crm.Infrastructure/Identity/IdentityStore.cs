@@ -31,7 +31,36 @@ public sealed class IdentityStore(
                 entry => entry.Provider == provider && entry.ProviderSubject == providerSubject,
                 cancellationToken);
 
+        // Rows bound before the provider was tracked carry a subject and no issuer, so the pair
+        // matches nothing and their owners are refused as though their own account were somebody
+        // else's. The exact match above is tried first and always wins - a row that names a
+        // provider is never displaced by one that names none.
+        user ??= await context.Users
+            .AsNoTracking()
+            .FirstOrDefaultAsync(
+                entry => entry.Provider == null && entry.ProviderSubject == providerSubject,
+                cancellationToken);
+
         return ToRecord(user);
+    }
+
+    public async Task AdoptProviderAsync(
+        Guid userId,
+        string provider,
+        CancellationToken cancellationToken = default)
+    {
+        var user = await context.Users.FirstOrDefaultAsync(entry => entry.Id == userId, cancellationToken);
+
+        if (user is null)
+        {
+            return;
+        }
+
+        // Throws if the row already names one. Two sign-ins racing here is the only way that
+        // happens, and losing the race is not a reason to overwrite what the winner recorded.
+        user.AdoptProvider(provider);
+
+        await context.SaveChangesAsync(cancellationToken);
     }
 
     public async Task<IReadOnlyList<UserRecord>> FindAllByEmailAsync(
@@ -241,6 +270,7 @@ public sealed class IdentityStore(
             ? null
             : new UserRecord(
                 user.Id,
+                user.Provider,
                 user.ProviderSubject,
                 user.Email,
                 user.DisplayName,

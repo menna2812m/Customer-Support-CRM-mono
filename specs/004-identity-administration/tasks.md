@@ -333,6 +333,11 @@ the audit records what they held.
 - [ ] T069 Walk `specs/004-identity-administration/quickstart.md` by hand, including the claim
       matrix with Keycloak's verified-email flag turned off, the session-ending check, and the SQL
       invariant scan
+      - **Mostly done (2026-09-01)**, against the real Keycloak container: sign-in, RTL on both
+        screens, identical ordering across languages, placement derivation, the self-protection
+        controls, preparing somebody, and all four SQL scans. It found three defects, all fixed -
+        see `compliance.md`. Still open: the claim matrix end to end and the session-ending check in
+        a browser, both of which need a second account at the provider
 
 ---
 

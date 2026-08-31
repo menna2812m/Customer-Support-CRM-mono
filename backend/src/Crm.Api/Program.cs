@@ -43,8 +43,13 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
         options.JsonSerializerOptions.DefaultIgnoreCondition =
             System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
+        // camelCase, matching the property naming above. Without the policy an enum serializes
+        // under its C# name - "Active" beside "isActive" - and the client, which translates the
+        // value as a translation key, renders the key itself on screen. The published contract
+        // says [invited, active, inactive]; this is what makes that true.
         options.JsonSerializerOptions.Converters.Add(
-            new System.Text.Json.Serialization.JsonStringEnumConverter());
+            new System.Text.Json.Serialization.JsonStringEnumConverter(
+                System.Text.Json.JsonNamingPolicy.CamelCase));
     });
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 

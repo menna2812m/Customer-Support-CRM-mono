@@ -16,9 +16,23 @@ public interface IIdentityStore
     /// minted it (spec FR-015a). With one provider configured the distinction is invisible; with
     /// two, matching on the subject alone is how one person becomes somebody else.
     /// </remarks>
+    /// <remarks>
+    /// Falls back to a row that carries this subject and records no provider at all. Those rows
+    /// were written before the provider was tracked, and matching only the pair would refuse their
+    /// owners as though their own account belonged to somebody else. An exact match always wins.
+    /// </remarks>
     Task<UserRecord?> FindBySubjectAsync(
         string provider,
         string providerSubject,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Records which provider issued a subject bound before the CRM kept track of it (FR-015a).
+    /// Called once, on the first sign-in after the column existed.
+    /// </summary>
+    Task AdoptProviderAsync(
+        Guid userId,
+        string provider,
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -106,12 +120,19 @@ public sealed record RolePermissionGrant(string RoleName, string Permission);
 /// <summary>What the sign-in use case needs to know about a user. Not the entity.</summary>
 public sealed record UserRecord(
     Guid Id,
+    string? Provider,
     string? ProviderSubject,
     string Email,
     string DisplayName,
     bool IsActive,
     OrganizationScope? Scope)
 {
+    /// <summary>
+    /// True when the subject is bound but nothing records who issued it - a row written before the
+    /// provider was tracked, which the next sign-in repairs.
+    /// </summary>
+    public bool AwaitsProvider => ProviderSubject is not null && Provider is null;
+
     /// <summary>
     /// Whether a real identity has been bound yet. False means prepared and not yet arrived - the
     /// only kind of record a first sign-in may claim (spec FR-016).
