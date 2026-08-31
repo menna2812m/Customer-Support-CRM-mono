@@ -37,8 +37,8 @@ docs/  scripts/
 ```powershell
 dotnet run --project backend/src/Crm.Api          # API on https://localhost:7283
 npm --prefix frontend start                       # frontend on http://localhost:4200
-./scripts/verify-backend.ps1                      # build + 192 tests + format + publish (~2m)
-./scripts/verify-frontend.ps1                     # lint + format + i18n + css + 77 tests + build (~170s)
+./scripts/verify-backend.ps1                      # build + 277 tests + format + publish (~2m)
+./scripts/verify-frontend.ps1                     # lint + format + i18n + css + 114 tests + build (~170s)
 npm --prefix frontend run i18n:check              # ar/en translation key parity
 npm --prefix frontend run css:check               # no physical direction properties
 dotnet ef migrations add <Name> --project backend/src/Crm.Infrastructure --startup-project backend/src/Crm.Api

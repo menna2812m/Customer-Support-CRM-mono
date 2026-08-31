@@ -202,11 +202,11 @@ confirm the prepared roles and placement survive with no duplicate record.
 
 ### Tests for User Story 2
 
-- [ ] T037 [P] [US2] Unit tests in `backend/tests/Crm.UnitTests/Identity/ClaimDecisionTests.cs`
+- [X] T037 [P] [US2] Unit tests in `backend/tests/Crm.UnitTests/Identity/ClaimDecisionTests.cs`
       covering every row of the claim matrix in data-model.md: subject match, single unclaimed match
       with a verified email, unverified, absent claim, ambiguous match, already-bound collision, and
       no match at all
-- [ ] T038 [P] [US2] Unit tests in `backend/tests/Crm.UnitTests/Identity/PreProvisionTests.cs`: an
+- [X] T038 [P] [US2] Unit tests in `backend/tests/Crm.UnitTests/Identity/PreProvisionTests.cs`: an
       address belonging to a live person is refused, an address belonging to a deleted person is
       accepted, and a prepared person may carry roles and placement immediately
 
@@ -220,30 +220,30 @@ confirm the prepared roles and placement survive with no duplicate record.
 - [X] T041 [P] [US2] Integration tests in
       `backend/tests/Crm.IntegrationTests/Identity/PreProvisionEndpointTests.cs` covering creation
       with and without roles and placement, and the duplicate-address refusal
-- [ ] T042 [US2] Add `EmailVerified` to `ProviderClaimNames` in
+- [X] T042 [US2] Add `EmailVerified` to `ProviderClaimNames` in
       `backend/src/Crm.Api/Configuration/CrmOptions.cs` and to
       `backend/src/Crm.Api/appsettings.Development.json`, so the assertion's name is configuration
       rather than a hard-coded Keycloak spelling (FR-021)
-- [ ] T043 [US2] Add the claim decision in
+- [X] T043 [US2] Add the claim decision in
       `backend/src/Crm.Application/Identity/Claiming/ClaimDecision.cs` as one function over the
       matrix, so every branch is visible in one place rather than spread through the sign-in path
-- [ ] T044 [US2] Change `backend/src/Crm.Infrastructure/Identity/StaffSignIn.cs` from
+- [X] T044 [US2] Change `backend/src/Crm.Infrastructure/Identity/StaffSignIn.cs` from
       create-if-absent to match-then-create, binding provider and subject exactly once and never
       re-binding an established account (FR-015, FR-019)
-- [ ] T045 [US2] Record the refused claim and the subject collision through `IAuditRecorder` in
+- [X] T045 [US2] Record the refused claim and the subject collision through `IAuditRecorder` in
       `backend/src/Crm.Application/Identity/Claiming/`, carrying the address involved and nothing
       else - no tokens, no claim dumps (AR-008, Constitution XI)
-- [ ] T046 [P] [US2] Integration tests in
+- [X] T046 [P] [US2] Integration tests in
       `backend/tests/Crm.IntegrationTests/Identity/ClaimingTests.cs` driving the matrix end to end
       through a real sign-in, including the collision refusing the sign-in outright
-- [ ] T047 [US2] Update the affected feature 002 tests in
+- [X] T047 [US2] Update the affected feature 002 tests in
       `backend/tests/Crm.IntegrationTests/Auth/` so they assert the new behaviour rather than the
       old: sign-in now matches before it creates, and an unclaimed record is claimed only on a
       verified address
-- [ ] T048 [US2] Add
+- [X] T048 [US2] Add
       `frontend/projects/crm-web/src/app/features/identity/pre-provision-form.component.ts`, the
       Invited badge in the list, and the never-signed-in filter
-- [ ] T049 [P] [US2] Frontend spec
+- [X] T049 [P] [US2] Frontend spec
       `frontend/projects/crm-web/src/app/features/identity/pre-provision-form.component.spec.ts`,
       including the duplicate-address refusal
 - [X] T050 [US2] Remove `x-status: planned` from the create path in
@@ -308,26 +308,26 @@ the audit records what they held.
 
 ## Phase 6: Polish & Cross-Cutting Concerns
 
-- [ ] T062 [P] Confirm the contract drift test in `backend/tests/Crm.IntegrationTests/Contracts`
+- [X] T062 [P] Confirm the contract drift test in `backend/tests/Crm.IntegrationTests/Contracts`
       passes with no `x-status: planned` markers remaining in
       `specs/004-identity-administration/contracts/identity-api.yaml`, meaning every published path
       is implemented and nothing implemented is unpublished
-- [ ] T063 [P] Add an integration test in
+- [X] T063 [P] Add an integration test in
       `backend/tests/Crm.IntegrationTests/Identity/InvariantTests.cs` scanning for people whose
       department disagrees with their team's department after a sequence of placements, a team move,
       and a deletion; it must return zero rows (SC-002, INV-2)
-- [ ] T064 [P] Assert in `backend/tests/Crm.UnitTests/Identity/ClaimAuditTests.cs` that a refused
+- [X] T064 [P] Assert in `backend/tests/Crm.UnitTests/Identity/ClaimAuditTests.cs` that a refused
       claim and a collision log the address and nothing more - no tokens, no claim dumps
       (Constitution XI)
-- [ ] T065 [P] Verify RTL layout on both screens under
+- [X] T065 [P] Verify RTL layout on both screens under
       `frontend/projects/crm-web/src/app/features/identity/` and keep `npm run i18n:check` and
       `npm run css:check` green, confirming the people list orders identically in both languages
       (LR-002) while unit names follow the reader's language (LR-003)
-- [ ] T066 [P] Update `docs/getting-started.md` with how to prepare and place a person locally,
+- [X] T066 [P] Update `docs/getting-started.md` with how to prepare and place a person locally,
       following `quickstart.md`
-- [ ] T067 [P] Add the feature's compliance record at
+- [X] T067 [P] Add the feature's compliance record at
       `specs/004-identity-administration/compliance.md`, matching the shape of features 002 and 003
-- [ ] T068 Run `./scripts/verify-backend.ps1` and `./scripts/verify-frontend.ps1` and confirm both
+- [X] T068 Run `./scripts/verify-backend.ps1` and `./scripts/verify-frontend.ps1` and confirm both
       pass; before the frontend script, check that nothing holds a lock on `node_modules` - a running
       `ng serve` or a stray `esbuild.exe` leaves the tree broken part-way through `npm ci`
 - [ ] T069 Walk `specs/004-identity-administration/quickstart.md` by hand, including the claim

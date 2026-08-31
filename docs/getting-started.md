@@ -158,13 +158,43 @@ grants `organization.manage`, so an `Agent` sees no such entry and is refused th
 The code is set once and cannot be changed afterwards. A unit created with the wrong code is
 deleted and recreated, which frees the code again.
 
-Nobody can be *placed* in any of this yet - that is the users-and-permissions feature. Until then
-the structure is real and unused.
-
 `specs/003-organization/quickstart.md` lists the rules worth trying to break, and the SQL that
 proves a team move carried its members.
 
-## 8. Run the verification suites
+## 8. Put people in it
+
+Open **People**. It is the same `Administrator` role that reaches it - `identity.view` and
+`identity.manage` are granted to Administrator and to nothing else, so an `Agent` sees no entry.
+
+Your own account is already listed, because you have signed in.
+
+1. **Place somebody.** Open a person and choose Riyadh, then Tier 2. The department fills in as
+   Technical Support and turns read-only: you never chose it, and you cannot change it while the
+   team stands. Clear the team and it becomes selectable again.
+2. **Grant a role.** Tick a second role and watch the effective permissions below grow to the union
+   of both. They are shown as derived, never edited directly - a permission is something a role
+   carries, not something a person is handed.
+3. **Prepare somebody who has not arrived.** Add a person by an email address that has never signed
+   in, and give them Agent and a placement straight away. They appear as **Invited**, and the
+   "never signed in" filter finds only them.
+4. **Sign in as that person** in a private window, using a Keycloak account with the same address
+   and its email-verified flag on. Come back as an administrator: there is one record, now
+   **Active**, still holding Agent and still placed. Nothing was duplicated.
+5. **Try it without the verified flag.** Turn email-verified off in Keycloak for a second prepared
+   address and sign in. The sign-in is refused rather than claiming, and no second account appears
+   beside the preparation - the address belongs to it.
+
+Three things are deliberately refused, and each says why: removing your own administrator role,
+deactivating or deleting your own account, and removing the last administrator anywhere in the
+system. Somebody else has to do it, which is what stops the product locking everybody out.
+
+Deactivating or deleting somebody ends their sessions immediately, not at the next renewal. To see
+it, leave a second signed-in window on a page that loads data, deactivate them, and refresh.
+
+`specs/004-identity-administration/quickstart.md` carries the full list, including the claim rules
+and the SQL that proves a person's department never disagrees with their team's.
+
+## 9. Run the verification suites
 
 ```powershell
 ./scripts/verify-backend.ps1      # restore, build, tests, format check
@@ -176,7 +206,7 @@ database, and disposes of it at the end - it never touches `CrmDev`. The first r
 image (about 2.3 GB); later runs take about 20 seconds. If Docker is not running, the suite fails
 with a message naming Docker rather than a misleading test failure.
 
-## 9. Add your first feature
+## 10. Add your first feature
 
 1. Create the branch and specification with `/speckit.specify`.
 2. Backend: entity and rules in `Crm.Domain`, use case, DTOs and validator in `Crm.Application`,
